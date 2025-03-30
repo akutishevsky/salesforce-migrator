@@ -1,13 +1,18 @@
 import * as vscode from "vscode";
 import { SfCommandService } from "./SfCommandService";
 import { HtmlService } from "./HtmlService";
+import { OrgService } from "./OrgService";
 
 export type OrgSelectorType = "source" | "target";
 
-export class OrgSelector implements vscode.WebviewViewProvider {
+/**
+ * Webview UI component for selecting Salesforce orgs
+ */
+export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _sfCommandService: SfCommandService;
     private _htmlService!: HtmlService;
+    private _orgService: OrgService;
     private _type: OrgSelectorType;
     private _sourceOrg: string | undefined;
     private _targetOrg: string | undefined;
@@ -18,13 +23,10 @@ export class OrgSelector implements vscode.WebviewViewProvider {
     ) {
         this._extensionContext = extensionContext;
         this._type = type;
+        this._orgService = new OrgService(extensionContext);
 
-        this._sourceOrg = this._extensionContext.workspaceState.get<string>(
-            "salesforceMigrator.sourceOrg"
-        );
-        this._targetOrg = this._extensionContext.workspaceState.get<string>(
-            "salesforceMigrator.targetOrg"
-        );
+        this._sourceOrg = this._orgService.getSourceOrg();
+        this._targetOrg = this._orgService.getTargetOrg();
 
         this._sfCommandService = new SfCommandService();
     }
@@ -100,16 +102,10 @@ export class OrgSelector implements vscode.WebviewViewProvider {
 
                 if (this._type === "source") {
                     this._sourceOrg = orgAlias;
-                    this._extensionContext.workspaceState.update(
-                        "salesforceMigrator.sourceOrg",
-                        orgAlias
-                    );
+                    this._orgService.setSourceOrg(orgAlias);
                 } else if (this._type === "target") {
                     this._targetOrg = orgAlias;
-                    this._extensionContext.workspaceState.update(
-                        "salesforceMigrator.targetOrg",
-                        orgAlias
-                    );
+                    this._orgService.setTargetOrg(orgAlias);
                 }
 
                 vscode.window.showInformationMessage(
