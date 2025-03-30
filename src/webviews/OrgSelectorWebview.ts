@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
-import { SfCommandService } from "./SfCommandService";
-import { HtmlService } from "./HtmlService";
-import { OrgService } from "./OrgService";
+import { SfCommandService } from "../services/SfCommandService";
+import { HtmlService } from "../services/HtmlService";
+import { OrgService } from "../services/OrgService";
 
 export type OrgSelectorType = "source" | "target";
 

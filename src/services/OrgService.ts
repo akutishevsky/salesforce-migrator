@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { OrgSelectorType } from "./OrgSelectorWebview";
+import { OrgSelectorType } from "../webviews/OrgSelectorWebview";
 
 /**
  * Service for managing Salesforce org state
@@ -17,14 +17,18 @@ export class OrgService {
      * Get the currently selected source org
      */
     public getSourceOrg(): string | undefined {
-        return this._extensionContext.workspaceState.get<string>(this._sourceOrgKey);
+        return this._extensionContext.workspaceState.get<string>(
+            this._sourceOrgKey
+        );
     }
 
     /**
      * Get the currently selected target org
      */
     public getTargetOrg(): string | undefined {
-        return this._extensionContext.workspaceState.get<string>(this._targetOrgKey);
+        return this._extensionContext.workspaceState.get<string>(
+            this._targetOrgKey
+        );
     }
 
     /**
@@ -38,22 +42,28 @@ export class OrgService {
      * Set the source org
      */
     public setSourceOrg(orgAlias: string): Thenable<void> {
-        return this._extensionContext.workspaceState.update(this._sourceOrgKey, orgAlias);
+        return this._extensionContext.workspaceState.update(
+            this._sourceOrgKey,
+            orgAlias
+        );
     }
 
     /**
      * Set the target org
      */
     public setTargetOrg(orgAlias: string): Thenable<void> {
-        return this._extensionContext.workspaceState.update(this._targetOrgKey, orgAlias);
+        return this._extensionContext.workspaceState.update(
+            this._targetOrgKey,
+            orgAlias
+        );
     }
 
     /**
      * Set an org based on the selector type (source or target)
      */
     public setOrg(type: OrgSelectorType, orgAlias: string): Thenable<void> {
-        return type === "source" 
-            ? this.setSourceOrg(orgAlias) 
+        return type === "source"
+            ? this.setSourceOrg(orgAlias)
             : this.setTargetOrg(orgAlias);
     }
 }
