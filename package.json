@@ -24,13 +24,13 @@
         "views": {
             "salesforce-migrator": [
                 {
-                    "id": "salesforce-migrator.source-org",
+                    "id": "salesforce-migrator.source-org-selector",
                     "name": "Source Org",
                     "icon": "src/common/resources/icon.png",
                     "type": "webview"
                 },
                 {
-                    "id": "salesforce-migrator.target-org",
+                    "id": "salesforce-migrator.target-org-selector",
                     "name": "Target Org",
                     "icon": "src/common/resources/icon.png",
                     "type": "webview"
