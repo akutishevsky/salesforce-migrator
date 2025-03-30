@@ -44,19 +44,6 @@ export class OrgSelector implements vscode.WebviewViewProvider {
         );
     }
 
-    private _processWebviewMessage(message: any): void {
-        switch (message.command) {
-            case "orgSelected":
-                this._selectedOrgAlias = message.orgAlias;
-                break;
-            default:
-                vscode.window.showErrorMessage(
-                    `Unknown command: ${message.command}`
-                );
-                break;
-        }
-    }
-
     private _composeOrgsHtml(orgs: any): string {
         let html = `<div>`;
         for (const orgCategory of Object.keys(orgs)) {
@@ -78,5 +65,18 @@ export class OrgSelector implements vscode.WebviewViewProvider {
         html += "</div>";
 
         return html;
+    }
+
+    private _processWebviewMessage(message: any): void {
+        switch (message.command) {
+            case "orgSelected":
+                this._selectedOrgAlias = message.orgAlias;
+                break;
+            default:
+                vscode.window.showErrorMessage(
+                    `Unknown command: ${message.command}`
+                );
+                break;
+        }
     }
 }
