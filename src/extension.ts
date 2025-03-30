@@ -15,6 +15,17 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             "target"
         );
 
+        // Register commands for refreshing orgs
+        const refreshSourceOrgsCommand = vscode.commands.registerCommand(
+            'salesforce-migrator.refreshSourceOrgs',
+            () => sourceOrgSelector.refresh()
+        );
+        
+        const refreshTargetOrgsCommand = vscode.commands.registerCommand(
+            'salesforce-migrator.refreshTargetOrgs', 
+            () => targetOrgSelector.refresh()
+        );
+
         extensionContext.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.source-org-selector",
@@ -23,7 +34,9 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.target-org-selector",
                 targetOrgSelector
-            )
+            ),
+            refreshSourceOrgsCommand,
+            refreshTargetOrgsCommand
         );
     } catch (error) {
         vscode.window.showErrorMessage(

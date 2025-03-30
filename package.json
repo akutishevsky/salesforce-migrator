@@ -36,6 +36,32 @@
                     "type": "webview"
                 }
             ]
+        },
+        "commands": [
+            {
+                "command": "salesforce-migrator.refreshSourceOrgs",
+                "title": "Refresh Source Orgs",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "salesforce-migrator.refreshTargetOrgs",
+                "title": "Refresh Target Orgs",
+                "icon": "$(refresh)"
+            }
+        ],
+        "menus": {
+            "view/title": [
+                {
+                    "command": "salesforce-migrator.refreshSourceOrgs",
+                    "when": "view == salesforce-migrator.source-org-selector",
+                    "group": "navigation"
+                },
+                {
+                    "command": "salesforce-migrator.refreshTargetOrgs",
+                    "when": "view == salesforce-migrator.target-org-selector",
+                    "group": "navigation"
+                }
+            ]
         }
     },
     "scripts": {

@@ -16,6 +16,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _type: OrgSelectorType;
     private _sourceOrg: string | undefined;
     private _targetOrg: string | undefined;
+    private _webviewView: vscode.WebviewView | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -36,6 +37,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         context: vscode.WebviewViewResolveContext,
         token: vscode.CancellationToken
     ): Promise<void> {
+        this._webviewView = webviewView;
         this._htmlService = new HtmlService({
             view: webviewView,
             extensionUri: this._extensionContext.extensionUri,
@@ -46,20 +48,58 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionContext.extensionUri],
         };
 
-        const orgs = await this._sfCommandService.execute("sf org list");
-        if (orgs.length === 0) {
-            webviewView.webview.html = "<p>No orgs found</p>";
-            return;
-        }
-
-        webviewView.webview.html = this._htmlService.composeHtml({
-            body: this._composeOrgsHtml(orgs),
-            scripts: ["/resources/js/orgSelector.js"],
-        });
+        const orgs = await this._fetchOrgs();
+        this._updateView(orgs);
 
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this)
         );
+    }
+
+    /**
+     * Refresh the org list
+     */
+    public async refresh(): Promise<void> {
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Refreshing ${this._type} orgs...`,
+                cancellable: false,
+            },
+            async () => {
+                const orgs = await this._fetchOrgs();
+                this._updateView(orgs);
+                vscode.window.showInformationMessage(
+                    `${this._type} orgs refreshed successfully.`
+                );
+            }
+        );
+    }
+
+    /**
+     * Fetch orgs from Salesforce CLI
+     */
+    private async _fetchOrgs(): Promise<any> {
+        return await this._sfCommandService.execute("sf org list");
+    }
+
+    /**
+     * Update the webview with org data
+     */
+    private _updateView(orgs: any): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        if (orgs.length === 0) {
+            this._webviewView.webview.html = "<p>No orgs found</p>";
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.composeHtml({
+            body: this._composeOrgsHtml(orgs),
+            scripts: ["/resources/js/orgSelector.js"],
+        });
     }
 
     private _composeOrgsHtml(orgs: any): string {
