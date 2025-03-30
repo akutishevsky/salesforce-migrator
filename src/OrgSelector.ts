@@ -6,6 +6,7 @@ export class OrgSelector implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _sfCommandService: SfCommandService;
     private _htmlService!: HtmlService;
+    private _selectedOrgAlias: string | undefined;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
@@ -37,6 +38,23 @@ export class OrgSelector implements vscode.WebviewViewProvider {
             body: this._composeOrgsHtml(orgs),
             scripts: ["/resources/js/orgSelector.js"],
         });
+
+        webviewView.webview.onDidReceiveMessage(
+            this._processWebviewMessage.bind(this)
+        );
+    }
+
+    private _processWebviewMessage(message: any): void {
+        switch (message.command) {
+            case "orgSelected":
+                this._selectedOrgAlias = message.orgAlias;
+                break;
+            default:
+                vscode.window.showErrorMessage(
+                    `Unknown command: ${message.command}`
+                );
+                break;
+        }
     }
 
     private _composeOrgsHtml(orgs: any): string {
@@ -51,7 +69,7 @@ export class OrgSelector implements vscode.WebviewViewProvider {
             for (const org of orgs[orgCategory]) {
                 html += `
                     <div>
-                        <input type="radio" id="${org.alias}"/ >
+                        <input type="radio" id="${org.alias}" value="${org.alias}"/ >
                         <label for="${org.alias}">${org.alias}</label>
                     </div>
                 `;
