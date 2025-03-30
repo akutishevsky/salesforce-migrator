@@ -11,7 +11,33 @@
     ],
     "activationEvents": [],
     "main": "./out/extension.js",
-    "contributes": {},
+    "contributes": {
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "salesforce-migrator",
+                    "title": "Salesforce Migrator",
+                    "icon": "src/common/resources/icon.png"
+                }
+            ]
+        },
+        "views": {
+            "salesforce-migrator": [
+                {
+                    "id": "salesforce-migrator.source-org",
+                    "name": "Source Org",
+                    "icon": "src/common/resources/icon.png",
+                    "type": "webview"
+                },
+                {
+                    "id": "salesforce-migrator.target-org",
+                    "name": "Target Org",
+                    "icon": "src/common/resources/icon.png",
+                    "type": "webview"
+                }
+            ]
+        }
+    },
     "scripts": {
         "vscode:prepublish": "npm run compile",
         "compile": "tsc -p ./",
