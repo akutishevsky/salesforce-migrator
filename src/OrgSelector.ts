@@ -2,14 +2,30 @@ import * as vscode from "vscode";
 import { SfCommandService } from "./SfCommandService";
 import { HtmlService } from "./HtmlService";
 
+export type OrgSelectorType = "source" | "target";
+
 export class OrgSelector implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _sfCommandService: SfCommandService;
     private _htmlService!: HtmlService;
-    private _selectedOrgAlias: string | undefined;
+    private _type: OrgSelectorType;
+    private _sourceOrg: string | undefined;
+    private _targetOrg: string | undefined;
 
-    constructor(extensionContext: vscode.ExtensionContext) {
+    constructor(
+        extensionContext: vscode.ExtensionContext,
+        type: OrgSelectorType
+    ) {
         this._extensionContext = extensionContext;
+        this._type = type;
+
+        this._sourceOrg = this._extensionContext.workspaceState.get<string>(
+            "salesforceMigrator.sourceOrg"
+        );
+        this._targetOrg = this._extensionContext.workspaceState.get<string>(
+            "salesforceMigrator.targetOrg"
+        );
+
         this._sfCommandService = new SfCommandService();
     }
 
@@ -45,7 +61,11 @@ export class OrgSelector implements vscode.WebviewViewProvider {
     }
 
     private _composeOrgsHtml(orgs: any): string {
-        let html = `<div>`;
+        const selectedOrg =
+            this._type === "source" ? this._sourceOrg : this._targetOrg;
+
+        let html = `<div data-selector-type="${this._type}">`;
+
         for (const orgCategory of Object.keys(orgs)) {
             if (orgs[orgCategory].length === 0) {
                 continue;
@@ -54,10 +74,16 @@ export class OrgSelector implements vscode.WebviewViewProvider {
             html += `<p><strong>${orgCategory}</strong></p>`;
 
             for (const org of orgs[orgCategory]) {
+                const isChecked = org.alias === selectedOrg ? "checked" : "";
                 html += `
                     <div>
-                        <input type="radio" id="${org.alias}" value="${org.alias}"/ >
-                        <label for="${org.alias}">${org.alias}</label>
+                        <input type="radio" 
+                               id="${this._type}-${org.alias}" 
+                               name="${this._type}-org" 
+                               value="${org.alias}" 
+                               data-org-alias="${org.alias}"
+                               ${isChecked}/>
+                        <label for="${this._type}-${org.alias}">${org.alias}</label>
                     </div>
                 `;
             }
@@ -70,9 +96,24 @@ export class OrgSelector implements vscode.WebviewViewProvider {
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
             case "orgSelected":
-                this._selectedOrgAlias = message.orgAlias;
+                const orgAlias = message.orgAlias;
+
+                if (this._type === "source") {
+                    this._sourceOrg = orgAlias;
+                    this._extensionContext.workspaceState.update(
+                        "salesforceMigrator.sourceOrg",
+                        orgAlias
+                    );
+                } else if (this._type === "target") {
+                    this._targetOrg = orgAlias;
+                    this._extensionContext.workspaceState.update(
+                        "salesforceMigrator.targetOrg",
+                        orgAlias
+                    );
+                }
+
                 vscode.window.showInformationMessage(
-                    `Selected org: ${this._selectedOrgAlias}`
+                    `Selected ${this._type} org: ${orgAlias}`
                 );
                 break;
             default:

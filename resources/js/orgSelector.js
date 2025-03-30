@@ -1,17 +1,13 @@
 const vscode = acquireVsCodeApi();
 
-function selectSalesforceOrg(event, radios) {
+function selectSalesforceOrg(event) {
     const selectedOrgAlias = event.target.value;
-
-    radios.forEach((r) => {
-        if (r !== event.target) {
-            r.checked = false;
-        }
-    });
+    const selectorType = event.target.closest('[data-selector-type]').dataset.selectorType;
 
     vscode.postMessage({
-        action: "orgSelected",
+        command: "orgSelected",
         orgAlias: selectedOrgAlias,
+        selectorType: selectorType
     });
 }
 
@@ -20,7 +16,7 @@ function selectSalesforceOrg(event, radios) {
         const radios = document.querySelectorAll("input[type='radio']");
         radios.forEach((radio) => {
             radio.addEventListener("change", (event) => {
-                selectSalesforceOrg(event, radios);
+                selectSalesforceOrg(event);
             });
         });
     });

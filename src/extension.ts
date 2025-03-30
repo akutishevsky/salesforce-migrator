@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import { OrgSelector } from "./OrgSelector";
+import { OrgSelector, OrgSelectorType } from "./OrgSelector";
 
 export function activate(extensionContext: vscode.ExtensionContext) {
     try {
-        const sourceOrgSelector = new OrgSelector(extensionContext);
-        const targetOrgSelector = new OrgSelector(extensionContext);
+        const sourceOrgSelector = new OrgSelector(extensionContext, "source");
+        const targetOrgSelector = new OrgSelector(extensionContext, "target");
 
         extensionContext.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
