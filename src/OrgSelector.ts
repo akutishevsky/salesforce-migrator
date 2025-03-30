@@ -71,6 +71,9 @@ export class OrgSelector implements vscode.WebviewViewProvider {
         switch (message.command) {
             case "orgSelected":
                 this._selectedOrgAlias = message.orgAlias;
+                vscode.window.showInformationMessage(
+                    `Selected org: ${this._selectedOrgAlias}`
+                );
                 break;
             default:
                 vscode.window.showErrorMessage(
