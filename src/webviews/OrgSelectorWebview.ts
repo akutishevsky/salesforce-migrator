@@ -1,5 +1,4 @@
 import * as vscode from "vscode";
-import { SfCommandService } from "../services/SfCommandService";
 import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 
@@ -10,7 +9,6 @@ export type OrgSelectorType = "source" | "target";
  */
 export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
-    private _sfCommandService: SfCommandService;
     private _htmlService!: HtmlService;
     private _orgService: OrgService;
     private _type: OrgSelectorType;
@@ -28,8 +26,6 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
         this._sourceOrg = this._orgService.getSourceOrg();
         this._targetOrg = this._orgService.getTargetOrg();
-
-        this._sfCommandService = new SfCommandService();
     }
 
     public async resolveWebviewView(
@@ -48,7 +44,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionContext.extensionUri],
         };
 
-        const orgs = await this._fetchOrgs();
+        const orgs = await this._orgService.fetchOrgs();
         this._updateView(orgs);
 
         webviewView.webview.onDidReceiveMessage(
@@ -67,20 +63,13 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 cancellable: false,
             },
             async () => {
-                const orgs = await this._fetchOrgs();
+                const orgs = await this._orgService.fetchOrgs();
                 this._updateView(orgs);
                 vscode.window.showInformationMessage(
                     `${this._type} orgs refreshed successfully.`
                 );
             }
         );
-    }
-
-    /**
-     * Fetch orgs from Salesforce CLI
-     */
-    private async _fetchOrgs(): Promise<any> {
-        return await this._sfCommandService.execute("sf org list");
     }
 
     /**

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { OrgSelectorType } from "../webviews/OrgSelectorWebview";
+import { SfCommandService } from "./SfCommandService";
 
 /**
  * Service for managing Salesforce org state
@@ -8,9 +9,11 @@ export class OrgService {
     private readonly _extensionContext: vscode.ExtensionContext;
     private readonly _sourceOrgKey = "salesforceMigrator.sourceOrg";
     private readonly _targetOrgKey = "salesforceMigrator.targetOrg";
+    private readonly _sfCommandService: SfCommandService;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
+        this._sfCommandService = new SfCommandService();
     }
 
     /**
@@ -65,5 +68,12 @@ export class OrgService {
         return type === "source"
             ? this.setSourceOrg(orgAlias)
             : this.setTargetOrg(orgAlias);
+    }
+
+    /**
+     * Fetch orgs from Salesforce CLI
+     */
+    public async fetchOrgs(): Promise<any> {
+        return await this._sfCommandService.execute("sf org list");
     }
 }
