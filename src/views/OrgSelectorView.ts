@@ -88,8 +88,8 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: this._composeOrgsHtml(orgs),
-            scripts: ["/resources/js/orgSelector.js"],
-            styles: ["/resources/css/orgSelector.css"],
+            scripts: ["/resources/js/orgSelectorView.js"],
+            styles: ["/resources/css/orgSelectorView.css"],
         });
     }
 

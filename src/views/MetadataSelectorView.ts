@@ -61,8 +61,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: this._composeMetadataHtml(metadataObjects),
-            styles: ["/resources/css/metadataSelector.css"],
-            scripts: ["/resources/js/metadataSelector.js"],
+            styles: ["/resources/css/metadataSelectorView.css"],
+            scripts: ["/resources/js/metadataSelectorView.js"],
         });
     }
 

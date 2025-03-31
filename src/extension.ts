@@ -12,7 +12,7 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             extensionContext,
             "target"
         );
-        const metadataSelector = new MetadataSelectorView(extensionContext);
+        const metadataSelectorView = new MetadataSelectorView(extensionContext);
 
         // Register commands for refreshing orgs
         const refreshSourceOrgsCommand = vscode.commands.registerCommand(
@@ -36,7 +36,7 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             ),
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.metadata-selector",
-                metadataSelector
+                metadataSelectorView
             ),
             refreshSourceOrgsCommand,
             refreshTargetOrgsCommand
