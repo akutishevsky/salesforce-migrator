@@ -25,6 +25,11 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             () => targetOrgSelector.refresh()
         );
 
+        const refreshMetadataCommand = vscode.commands.registerCommand(
+            "salesforce-migrator.refreshMetadata",
+            () => metadataSelectorView.refreshMetadata()
+        );
+
         extensionContext.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.source-org-selector",
@@ -39,7 +44,8 @@ export function activate(extensionContext: vscode.ExtensionContext) {
                 metadataSelectorView
             ),
             refreshSourceOrgsCommand,
-            refreshTargetOrgsCommand
+            refreshTargetOrgsCommand,
+            refreshMetadataCommand
         );
     } catch (error) {
         vscode.window.showErrorMessage(

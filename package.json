@@ -53,6 +53,11 @@
                 "command": "salesforce-migrator.refreshTargetOrgs",
                 "title": "Refresh Target Orgs",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "salesforce-migrator.refreshMetadata",
+                "title": "Refresh Metadata",
+                "icon": "$(refresh)"
             }
         ],
         "menus": {
@@ -65,6 +70,11 @@
                 {
                     "command": "salesforce-migrator.refreshTargetOrgs",
                     "when": "view == salesforce-migrator.target-org-selector",
+                    "group": "navigation"
+                },
+                {
+                    "command": "salesforce-migrator.refreshMetadata",
+                    "when": "view == salesforce-migrator.metadata-selector",
                     "group": "navigation"
                 }
             ]

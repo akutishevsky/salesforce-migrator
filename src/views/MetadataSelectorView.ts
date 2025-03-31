@@ -18,6 +18,39 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         this._orgService = new OrgService(extensionContext);
     }
 
+    /**
+     * Refresh the metadata list from the source org
+     */
+    public async refreshMetadata(): Promise<void> {
+        if (!this._webviewView) {
+            return;
+        }
+
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            vscode.window.showErrorMessage(
+                "No source org selected. Please select a source org first."
+            );
+            return;
+        }
+
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Refreshing metadata...",
+                cancellable: false,
+            },
+            async () => {
+                const metadataObjects: MetadataObject[] =
+                    await this._metadataService.fetchMetadataObjects(sourceOrg);
+                this._composeWebviewHtml(metadataObjects);
+                vscode.window.showInformationMessage(
+                    "Metadata refreshed successfully."
+                );
+            }
+        );
+    }
+
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
