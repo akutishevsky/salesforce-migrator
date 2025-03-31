@@ -95,78 +95,88 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _composeOrgsHtml(orgs: any): string {
         const selectedOrg =
             this._type === "source" ? this._sourceOrg : this._targetOrg;
-
         let html = `<div data-selector-type="${this._type}">`;
+        const categories = this._categorizeOrgs(Object.values(orgs).flat());
 
-        // Categorize orgs based on their type
-        const categorizedOrgs: { [key: string]: any[] } = {
+        for (const [category, categoryOrgs] of Object.entries(categories)) {
+            if (categoryOrgs.length === 0) {
+                continue;
+            }
+
+            html += `<p class="category-heading">${category}</p>`;
+
+            for (const org of categoryOrgs) {
+                const isChecked = org.alias === selectedOrg ? "checked" : "";
+                const isConnected = org.connectedStatus === "Connected";
+                const statusClass = isConnected
+                    ? "status-connected"
+                    : "status-disconnected";
+                const statusIcon = isConnected
+                    ? "codicon-check"
+                    : "codicon-error";
+                const statusText = isConnected ? "Connected" : "Disconnected";
+
+                html += this._composeOrgHtml(
+                    org,
+                    isChecked,
+                    statusClass,
+                    statusIcon,
+                    statusText
+                );
+            }
+        }
+
+        html += "</div>";
+        return html;
+    }
+
+    private _categorizeOrgs(orgs: any[]): { [key: string]: any[] } {
+        const categories: { [key: string]: any[] } = {
             "DevHub Orgs": [],
             "Sandbox Orgs": [],
             "Scratch Orgs": [],
             "Other Orgs": [],
         };
 
-        // Flatten the array of orgs
-        const allOrgs = Object.values(orgs).flat();
-
-        // Categorize each org
-        allOrgs.forEach((org: any) => {
+        orgs.forEach((org) => {
             if (org.isDevHub) {
-                categorizedOrgs["DevHub Orgs"].push(org);
+                categories["DevHub Orgs"].push(org);
             } else if (org.isScratch) {
-                categorizedOrgs["Scratch Orgs"].push(org);
+                categories["Scratch Orgs"].push(org);
             } else if (org.isSandbox) {
-                categorizedOrgs["Sandbox Orgs"].push(org);
+                categories["Sandbox Orgs"].push(org);
             } else {
-                categorizedOrgs["Other Orgs"].push(org);
+                categories["Other Orgs"].push(org);
             }
         });
 
-        // Render each category
-        for (const category of Object.keys(categorizedOrgs)) {
-            if (categorizedOrgs[category].length === 0) {
-                continue;
-            }
+        return categories;
+    }
 
-            html += `<p class="category-heading">${category}</p>`;
-
-            for (const org of categorizedOrgs[category]) {
-                const isChecked = org.alias === selectedOrg ? "checked" : "";
-                const statusClass =
-                    org.connectedStatus === "Connected"
-                        ? "status-connected"
-                        : "status-disconnected";
-                const statusIcon =
-                    org.connectedStatus === "Connected"
-                        ? "codicon-check"
-                        : "codicon-error";
-                const statusText =
-                    org.connectedStatus === "Connected"
-                        ? "Connected"
-                        : "Disconnected";
-
-                html += `
-                    <div>
-                        <input type="radio" 
-                               id="${this._type}-${org.alias}" 
-                               name="${this._type}-org" 
-                               value="${org.alias}" 
-                               data-org-alias="${org.alias}"
-                               ${isChecked}/>
-                        <label for="${this._type}-${org.alias}">
-                            ${org.alias}
-                            <span class="${statusClass}">
-                                <span class="codicon ${statusIcon} status-icon"></span>
-                                ${statusText}
-                            </span>
-                        </label>
-                    </div>
-                `;
-            }
-        }
-        html += "</div>";
-
-        return html;
+    private _composeOrgHtml(
+        org: any,
+        isChecked: string,
+        statusClass: string,
+        statusIcon: string,
+        statusText: string
+    ): string {
+        return `
+            <div>
+                <input type="radio" 
+                       id="${this._type}-${org.alias}" 
+                       name="${this._type}-org" 
+                       value="${org.alias}" 
+                       data-org-alias="${org.alias}"
+                       ${isChecked}/>
+                <label for="${this._type}-${org.alias}">
+                    ${org.alias}
+                    <span class="${statusClass}">
+                        <span class="codicon ${statusIcon} status-icon"></span>
+                        ${statusText}
+                    </span>
+                </label>
+            </div>
+        `;
     }
 
     private _processWebviewMessage(message: any): void {
