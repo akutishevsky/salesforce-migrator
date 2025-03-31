@@ -48,7 +48,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         }
 
         const metadataObjects: MetadataObject[] =
-            await this._metadataService.fetchMetadataTypes(sourceOrg);
+            await this._metadataService.fetchMetadataObjects(sourceOrg);
 
         this._composeWebviewHtml(metadataObjects);
         this._setupMessageListener(webviewView);
