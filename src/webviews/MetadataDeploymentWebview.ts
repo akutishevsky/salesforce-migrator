@@ -31,26 +31,7 @@ export class MetadataDeploymentWebview {
     public async reveal(metadataType?: string): Promise<void> {
         try {
             const webviewTitle = `${metadataType} Deployment`;
-
-            if (!this._panel) {
-                this._panel = vscode.window.createWebviewPanel(
-                    "salesforce-migrator.metadata-deployment",
-                    webviewTitle,
-                    vscode.ViewColumn.One,
-                    {
-                        enableScripts: true,
-                        localResourceRoots: [
-                            this._extensionContext.extensionUri,
-                        ],
-                    }
-                );
-
-                this._panel.onDidDispose(() => {
-                    this._panel = undefined;
-                });
-            }
-
-            this._panel.title = webviewTitle;
+            this._initializePanel(webviewTitle);
 
             const sourceOrg = this._orgService.getSourceOrg();
             if (!sourceOrg) {
@@ -73,17 +54,37 @@ export class MetadataDeploymentWebview {
                 metadataType!
             );
 
-            this._panel.webview.html = this._htmlService.composeHtml({
+            this._panel!.webview.html = this._htmlService.composeHtml({
                 body: this._composeWebviewHtml(metadata),
                 styles: ["/resources/css/metadataDeploymentWebview.css"],
             });
 
-            this._panel.reveal();
+            this._panel!.reveal();
         } catch (error) {
             vscode.window.showErrorMessage(
                 `Error while deploying metadata: ${error}`
             );
         }
+    }
+
+    private _initializePanel(title: string): void {
+        if (!this._panel) {
+            this._panel = vscode.window.createWebviewPanel(
+                "salesforce-migrator.metadata-deployment",
+                title,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    localResourceRoots: [this._extensionContext.extensionUri],
+                }
+            );
+
+            this._panel.onDidDispose(() => {
+                this._panel = undefined;
+            });
+        }
+
+        this._panel.title = title;
     }
 
     private _composeWebviewHtml(metadata: any): string {
