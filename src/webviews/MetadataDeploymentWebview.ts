@@ -13,6 +13,7 @@ export class MetadataDeploymentWebview {
     private _sfCommandService!: SfCommandService;
     private _metadataService!: MetadataService;
     private _messageListener: vscode.Disposable | undefined;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -88,20 +89,13 @@ export class MetadataDeploymentWebview {
                 }
             );
 
-            this._panel.onDidDispose(() => {
-                // Dispose the message listener when the panel is disposed
-                if (this._messageListener) {
-                    this._messageListener.dispose();
-                    const index = this._extensionContext.subscriptions.indexOf(
-                        this._messageListener
-                    );
-                    if (index > -1) {
-                        this._extensionContext.subscriptions.splice(index, 1);
-                    }
-                    this._messageListener = undefined;
-                }
-                this._panel = undefined;
+            // Register the panel's dispose event
+            const panelDisposeListener = this._panel.onDidDispose(() => {
+                this._disposePanel();
             });
+            
+            // Add to disposables
+            this._disposables.push(panelDisposeListener);
         }
 
         this._panel.title = webviewTitle;
@@ -175,17 +169,8 @@ export class MetadataDeploymentWebview {
         metadataType: string,
         sourceOrg: string
     ): void {
-        // Dispose previous listener if it exists
-        if (this._messageListener) {
-            this._messageListener.dispose();
-            // Remove from subscriptions array if possible
-            const index = this._extensionContext.subscriptions.indexOf(
-                this._messageListener
-            );
-            if (index > -1) {
-                this._extensionContext.subscriptions.splice(index, 1);
-            }
-        }
+        // Clean up previous listener if it exists
+        this._clearMessageListener();
 
         // Create a new listener
         this._messageListener = webview.onDidReceiveMessage(async (message) => {
@@ -207,8 +192,8 @@ export class MetadataDeploymentWebview {
             }
         });
 
-        // Add to subscriptions for auto-disposal
-        this._extensionContext.subscriptions.push(this._messageListener);
+        // Add to disposables array for proper cleanup
+        this._disposables.push(this._messageListener);
     }
 
     private async _retrieveMetadata(
@@ -409,5 +394,30 @@ export class MetadataDeploymentWebview {
         if (selection === "View Deploy URL") {
             vscode.env.openExternal(deployResult?.deployUrl);
         }
+    }
+
+    /**
+     * Clear the message listener and remove it from subscriptions
+     */
+    private _clearMessageListener(): void {
+        if (this._messageListener) {
+            this._messageListener.dispose();
+            this._messageListener = undefined;
+        }
+    }
+
+    /**
+     * Dispose all panel resources
+     */
+    private _disposePanel(): void {
+        // Clear message listener
+        this._clearMessageListener();
+        
+        // Dispose all disposables
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        
+        // Clear panel reference
+        this._panel = undefined;
     }
 }
