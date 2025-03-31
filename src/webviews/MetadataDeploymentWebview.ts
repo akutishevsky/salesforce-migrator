@@ -12,6 +12,7 @@ export class MetadataDeploymentWebview {
     private _orgService!: OrgService;
     private _sfCommandService!: SfCommandService;
     private _metadataService!: MetadataService;
+    private _messageListener: vscode.Disposable | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -88,6 +89,17 @@ export class MetadataDeploymentWebview {
             );
 
             this._panel.onDidDispose(() => {
+                // Dispose the message listener when the panel is disposed
+                if (this._messageListener) {
+                    this._messageListener.dispose();
+                    const index = this._extensionContext.subscriptions.indexOf(
+                        this._messageListener
+                    );
+                    if (index > -1) {
+                        this._extensionContext.subscriptions.splice(index, 1);
+                    }
+                    this._messageListener = undefined;
+                }
                 this._panel = undefined;
             });
         }
@@ -163,29 +175,40 @@ export class MetadataDeploymentWebview {
         metadataType: string,
         sourceOrg: string
     ): void {
-        webview.onDidReceiveMessage(
-            async (message) => {
-                console.log(message);
-                switch (message.command) {
-                    case "retrieve":
-                        await this._retrieveMetadata(
-                            metadataType,
-                            message.metadataTypeName,
-                            sourceOrg
-                        );
-                        break;
-                    case "deploy":
-                        this._deployMetadata(
-                            metadataType,
-                            message.metadataTypeName,
-                            sourceOrg
-                        );
-                        break;
-                }
-            },
-            undefined,
-            this._extensionContext.subscriptions
-        );
+        // Dispose previous listener if it exists
+        if (this._messageListener) {
+            this._messageListener.dispose();
+            // Remove from subscriptions array if possible
+            const index = this._extensionContext.subscriptions.indexOf(
+                this._messageListener
+            );
+            if (index > -1) {
+                this._extensionContext.subscriptions.splice(index, 1);
+            }
+        }
+
+        // Create a new listener
+        this._messageListener = webview.onDidReceiveMessage(async (message) => {
+            switch (message.command) {
+                case "retrieve":
+                    await this._retrieveMetadata(
+                        metadataType,
+                        message.metadataTypeName,
+                        sourceOrg
+                    );
+                    break;
+                case "deploy":
+                    this._deployMetadata(
+                        metadataType,
+                        message.metadataTypeName,
+                        sourceOrg
+                    );
+                    break;
+            }
+        });
+
+        // Add to subscriptions for auto-disposal
+        this._extensionContext.subscriptions.push(this._messageListener);
     }
 
     private async _retrieveMetadata(
@@ -238,14 +261,19 @@ export class MetadataDeploymentWebview {
                     deployResult = await this._sfCommandService.execute(
                         `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`
                     );
+                } catch (error: any) {
+                    throw Error(`Error while deploying metadata: ${error}`);
+                }
 
+                let deployMessage = `${metadataTypeName} successfully deployed.`;
+                if (deployResult.success) {
                     progress.report({
                         increment: 100,
                     });
 
                     vscode.window
                         .showInformationMessage(
-                            `${metadataTypeName} deployed successfully.`,
+                            deployMessage,
                             "View Deploy URL"
                         )
                         .then((selection) => {
@@ -255,9 +283,26 @@ export class MetadataDeploymentWebview {
                                 );
                             }
                         });
-                } catch (error: any) {
-                    console.error("error", error);
+                } else {
+                    const componentFailures =
+                        deployResult?.details?.componentFailures;
+                    deployMessage = `Failed. Problems: `;
+                    let problems: string[] = [];
+                    for (const failure of componentFailures) {
+                        problems.push(failure.problem);
+                    }
+                    deployMessage += problems.join(" • ");
+                    vscode.window
+                        .showErrorMessage(deployMessage, "View Deploy URL")
+                        .then((selection) => {
+                            if (selection === "View Deploy URL") {
+                                vscode.env.openExternal(
+                                    deployResult?.deployUrl
+                                );
+                            }
+                        });
                 }
+
                 console.log("deployResult", deployResult);
             }
         );
