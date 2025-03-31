@@ -56,7 +56,14 @@ export class MetadataDeploymentWebview {
             this._panel!.webview.html = this._htmlService.composeHtml({
                 body: this._composeWebviewHtml(metadata),
                 styles: ["/resources/css/metadataDeploymentWebview.css"],
+                scripts: ["/resources/js/metadataDeploymentWebview.js"],
             });
+
+            this._setupMessageListener(
+                this._panel!.webview,
+                metadataType!,
+                sourceOrg
+            );
 
             this._panel!.reveal();
         } catch (error) {
@@ -129,8 +136,12 @@ export class MetadataDeploymentWebview {
             html += `
                 <tr>
                     <td data-label="Action">
-                        <button>Retrieve</button>
-                        <button>Deploy</button>
+                        <button class="btn-action" id="retrieve" value="${
+                            item.fullName
+                        }">Retrieve</button>
+                        <button class="btn-action" id="deploy" value="${
+                            item.fullName
+                        }">Deploy</button>
                     </td>
                     <td data-label="Full Name">${item.fullName}</td>
                     <td data-label="Created By">${item.createdByName}</td>
@@ -145,5 +156,48 @@ export class MetadataDeploymentWebview {
         }
 
         return html;
+    }
+
+    private _setupMessageListener(
+        webview: vscode.Webview,
+        metadataType: string,
+        sourceOrg: string
+    ): void {
+        webview.onDidReceiveMessage(
+            async (message) => {
+                console.log(message);
+                switch (message.command) {
+                    case "retrieve":
+                        await this._retrieveMetadata(
+                            metadataType,
+                            message.metadataTypeName,
+                            sourceOrg
+                        );
+                        break;
+                    case "deploy":
+                        // Handle deploy action
+                        break;
+                }
+            },
+            undefined,
+            this._extensionContext.subscriptions
+        );
+    }
+
+    private async _retrieveMetadata(
+        metadataType: string,
+        metadataTypeName: string,
+        sourceOrg: string
+    ): Promise<void> {
+        vscode.window.showInformationMessage(
+            `Retrieving metadata of type: ${metadataTypeName}`
+        );
+
+        const command = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
+        await this._sfCommandService.execute(command);
+
+        vscode.window.showInformationMessage(
+            `Metadata of type ${metadataTypeName} retrieved successfully.`
+        );
     }
 }
