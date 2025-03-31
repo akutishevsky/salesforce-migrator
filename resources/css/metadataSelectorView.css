@@ -5,7 +5,6 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    background-color: var(--vscode-editor-background);
     padding: 0.5rem 0;
     box-shadow: var(--vscode-widget-shadow);
 }
@@ -16,7 +15,6 @@
     border: var(--vscode-input-border);
     padding: 0.25rem 0.5rem;
     width: calc(100% - 1rem);
-    margin: 0 0.5rem;
     box-sizing: border-box;
 }
 
