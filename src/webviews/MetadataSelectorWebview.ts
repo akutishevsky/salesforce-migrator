@@ -1,18 +1,18 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
-import { SfCommandService } from "../services/SfCommandService";
 import { OrgService } from "../services/OrgService";
+import { MetadataService, MetadataObject } from "../services/MetadataService";
 
 export class MetadataSelectorWebview implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
     private _webviewView: vscode.WebviewView | undefined;
-    private _sfCommandService: SfCommandService;
+    private _metadataService: MetadataService;
     private _orgService: OrgService;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
-        this._sfCommandService = new SfCommandService();
+        this._metadataService = new MetadataService();
         this._orgService = new OrgService(extensionContext);
     }
 
@@ -40,11 +40,7 @@ export class MetadataSelectorWebview implements vscode.WebviewViewProvider {
             return;
         }
 
-        const metadata = await this._sfCommandService.execute(
-            `sf org list metadata-types --target-org ${sourceOrg}`
-        );
-        const metadataObjects = metadata.metadataObjects;
-
-        console.log(metadataObjects);
+        const metadataObjects: MetadataObject[] =
+            await this._metadataService.fetchMetadataTypes(sourceOrg);
     }
 }
