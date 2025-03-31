@@ -88,6 +88,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: this._composeOrgsHtml(orgs),
             scripts: ["/resources/js/orgSelector.js"],
+            styles: ["/resources/css/orgSelector.css"],
         });
     }
 
@@ -97,15 +98,53 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
         let html = `<div data-selector-type="${this._type}">`;
 
-        for (const orgCategory of Object.keys(orgs)) {
-            if (orgs[orgCategory].length === 0) {
+        // Categorize orgs based on their type
+        const categorizedOrgs: { [key: string]: any[] } = {
+            "DevHub Orgs": [],
+            "Sandbox Orgs": [],
+            "Scratch Orgs": [],
+            "Other Orgs": [],
+        };
+
+        // Flatten the array of orgs
+        const allOrgs = Object.values(orgs).flat();
+
+        // Categorize each org
+        allOrgs.forEach((org: any) => {
+            if (org.isDevHub) {
+                categorizedOrgs["DevHub Orgs"].push(org);
+            } else if (org.isScratch) {
+                categorizedOrgs["Scratch Orgs"].push(org);
+            } else if (org.isSandbox) {
+                categorizedOrgs["Sandbox Orgs"].push(org);
+            } else {
+                categorizedOrgs["Other Orgs"].push(org);
+            }
+        });
+
+        // Render each category
+        for (const category of Object.keys(categorizedOrgs)) {
+            if (categorizedOrgs[category].length === 0) {
                 continue;
             }
 
-            html += `<p><strong>${orgCategory}</strong></p>`;
+            html += `<p class="category-heading">${category}</p>`;
 
-            for (const org of orgs[orgCategory]) {
+            for (const org of categorizedOrgs[category]) {
                 const isChecked = org.alias === selectedOrg ? "checked" : "";
+                const statusClass =
+                    org.connectedStatus === "Connected"
+                        ? "status-connected"
+                        : "status-disconnected";
+                const statusIcon =
+                    org.connectedStatus === "Connected"
+                        ? "codicon-check"
+                        : "codicon-error";
+                const statusText =
+                    org.connectedStatus === "Connected"
+                        ? "Connected"
+                        : "Disconnected";
+
                 html += `
                     <div>
                         <input type="radio" 
@@ -114,7 +153,13 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                                value="${org.alias}" 
                                data-org-alias="${org.alias}"
                                ${isChecked}/>
-                        <label for="${this._type}-${org.alias}">${org.alias}</label>
+                        <label for="${this._type}-${org.alias}">
+                            ${org.alias}
+                            <span class="${statusClass}">
+                                <span class="codicon ${statusIcon} status-icon"></span>
+                                ${statusText}
+                            </span>
+                        </label>
                     </div>
                 `;
             }

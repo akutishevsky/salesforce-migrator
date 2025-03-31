@@ -1,0 +1,19 @@
+.status-connected {
+    color: var(--vscode-terminal-ansiGreen);
+    margin-left: 0.5rem;
+}
+
+.status-disconnected {
+    color: var(--vscode-terminal-ansiRed);
+    margin-left: 0.5rem;
+}
+
+.status-icon {
+    margin-right: 0.2rem;
+}
+
+.category-heading {
+    font-weight: bold;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+}
