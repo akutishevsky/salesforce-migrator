@@ -45,7 +45,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         };
 
         const orgs = await this._orgService.fetchOrgs();
-        this._updateView(orgs);
+        this._composeWebviewHtml(orgs);
 
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this)
@@ -64,7 +64,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
             },
             async () => {
                 const orgs = await this._orgService.fetchOrgs();
-                this._updateView(orgs);
+                this._composeWebviewHtml(orgs);
                 vscode.window.showInformationMessage(
                     `${this._type} orgs refreshed successfully.`
                 );
@@ -75,7 +75,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     /**
      * Update the webview with org data
      */
-    private _updateView(orgs: Record<string, SalesforceOrg[]>): void {
+    private _composeWebviewHtml(orgs: Record<string, SalesforceOrg[]>): void {
         if (!this._webviewView) {
             return;
         }
