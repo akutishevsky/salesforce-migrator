@@ -119,7 +119,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     return;
                 }
 
-                this._deploymentWebview.reveal();
+                this._deploymentWebview.reveal(message.metadata);
                 break;
         }
     }

@@ -5,6 +5,7 @@ export class MetadataDeploymentWebview {
     private _extensionContext: vscode.ExtensionContext;
     private _webviewView: vscode.WebviewView;
     private _htmlService: HtmlService;
+    private _panel: vscode.WebviewPanel | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -18,23 +19,34 @@ export class MetadataDeploymentWebview {
         });
     }
 
-    public reveal(): void {
-        const webviewPanel = vscode.window.createWebviewPanel(
-            "metadataDeployment",
-            "Metadata Deployment",
-            vscode.ViewColumn.One,
-            {
-                enableScripts: true,
-                localResourceRoots: [this._extensionContext.extensionUri],
-            }
-        );
+    public reveal(metadata?: string): void {
+        const webviewTitle = `${metadata} Deployment`;
 
-        webviewPanel.onDidDispose(() => {
-            webviewPanel.dispose();
+        if (!this._panel) {
+            this._panel = vscode.window.createWebviewPanel(
+                "salesforce-migrator.metadata-deployment",
+                webviewTitle,
+                vscode.ViewColumn.One,
+                {
+                    enableScripts: true,
+                    localResourceRoots: [this._extensionContext.extensionUri],
+                }
+            );
+
+            this._panel.onDidDispose(() => {
+                this._panel = undefined;
+            });
+        }
+
+        this._panel.title = webviewTitle;
+        const content = metadata
+            ? `Selected metadata: ${metadata}`
+            : "Hello, Metadata Deployment!";
+
+        this._panel.webview.html = this._htmlService.composeHtml({
+            body: content,
         });
 
-        webviewPanel.webview.html = this._htmlService.composeHtml({
-            body: "Hello, Metadata Deployment!",
-        });
+        this._panel.reveal();
     }
 }
