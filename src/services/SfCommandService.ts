@@ -30,8 +30,10 @@ export class SfCommandService {
     ): Promise<any> {
         const commandWithJsonFlag = this._addJsonFlag(command);
 
+        // Use a more appropriate buffer size (100MB) instead of the excessive 1GB
+        // This is sufficient for most Salesforce metadata operations while using significantly less memory
         const childProcess = exec(commandWithJsonFlag, {
-            maxBuffer: 1024 * 1024 * 1024, // 1GB buffer
+            maxBuffer: 100 * 1024 * 1024, // 100MB buffer
             cwd: this._workspacePath,
         });
 
