@@ -246,65 +246,97 @@ export class MetadataDeploymentWebview {
                     );
                     return;
                 }
-                progress.report({
-                    increment: 33,
-                });
 
-                const retrieveCommand = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
-                await this._sfCommandService.execute(retrieveCommand);
-                progress.report({
-                    increment: 66,
-                });
-
-                let deployResult: any;
-                try {
-                    deployResult = await this._sfCommandService.execute(
-                        `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`
-                    );
-                } catch (error: any) {
-                    throw Error(`Error while deploying metadata: ${error}`);
-                }
-
-                let deployMessage = `${metadataTypeName} successfully deployed.`;
-                if (deployResult.success) {
-                    progress.report({
-                        increment: 100,
-                    });
-
-                    vscode.window
-                        .showInformationMessage(
-                            deployMessage,
-                            "View Deploy URL"
-                        )
-                        .then((selection) => {
-                            if (selection === "View Deploy URL") {
-                                vscode.env.openExternal(
-                                    deployResult?.deployUrl
-                                );
-                            }
-                        });
-                } else {
-                    const componentFailures =
-                        deployResult?.details?.componentFailures;
-                    deployMessage = `Failed. Problems: `;
-                    let problems: string[] = [];
-                    for (const failure of componentFailures) {
-                        problems.push(failure.problem);
-                    }
-                    deployMessage += problems.join(" • ");
-                    vscode.window
-                        .showErrorMessage(deployMessage, "View Deploy URL")
-                        .then((selection) => {
-                            if (selection === "View Deploy URL") {
-                                vscode.env.openExternal(
-                                    deployResult?.deployUrl
-                                );
-                            }
-                        });
-                }
-
-                console.log("deployResult", deployResult);
+                await this._retrieveMetadataWithProgress(
+                    progress,
+                    metadataType,
+                    metadataTypeName,
+                    sourceOrg
+                );
+                const deployResult = await this._deployToTargetOrg(
+                    progress,
+                    metadataType,
+                    metadataTypeName,
+                    targetOrg
+                );
+                await this._showDeploymentResult(
+                    deployResult,
+                    metadataTypeName,
+                    progress
+                );
             }
         );
+    }
+
+    private async _retrieveMetadataWithProgress(
+        progress: vscode.Progress<{ increment?: number }>,
+        metadataType: string,
+        metadataTypeName: string,
+        sourceOrg: string
+    ): Promise<void> {
+        progress.report({ increment: 33 });
+        const retrieveCommand = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
+        await this._sfCommandService.execute(retrieveCommand);
+    }
+
+    private async _deployToTargetOrg(
+        progress: vscode.Progress<{ increment?: number }>,
+        metadataType: string,
+        metadataTypeName: string,
+        targetOrg: string
+    ): Promise<any> {
+        progress.report({ increment: 66 });
+        try {
+            return await this._sfCommandService.execute(
+                `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`
+            );
+        } catch (error: any) {
+            throw Error(`Error while deploying metadata: ${error}`);
+        }
+    }
+
+    private async _showDeploymentResult(
+        deployResult: any,
+        metadataTypeName: string,
+        progress: vscode.Progress<{ increment?: number }>
+    ): Promise<void> {
+        progress.report({ increment: 100 });
+        if (deployResult.success) {
+            await this._showSuccessNotification(deployResult, metadataTypeName);
+        } else {
+            await this._showErrorNotification(deployResult);
+        }
+    }
+
+    private async _showSuccessNotification(
+        deployResult: any,
+        metadataTypeName: string
+    ): Promise<void> {
+        const deployMessage = `${metadataTypeName} successfully deployed.`;
+        const selection = await vscode.window.showInformationMessage(
+            deployMessage,
+            "View Deploy URL"
+        );
+
+        if (selection === "View Deploy URL") {
+            vscode.env.openExternal(deployResult?.deployUrl);
+        }
+    }
+
+    private async _showErrorNotification(deployResult: any): Promise<void> {
+        const componentFailures = deployResult?.details?.componentFailures;
+        const problems = componentFailures.map(
+            (failure: any) => failure.problem
+        );
+        const deployMessage = `Failed. Problems: ${problems.join(" • ")}`;
+
+        const selection = await vscode.window.showErrorMessage(
+            deployMessage,
+            "View Deploy URL"
+        );
+
+        if (selection === "View Deploy URL") {
+            vscode.env.openExternal(deployResult?.deployUrl);
+        }
     }
 }
