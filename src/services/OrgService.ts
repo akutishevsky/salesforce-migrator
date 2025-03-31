@@ -2,6 +2,31 @@ import * as vscode from "vscode";
 import { OrgSelectorType } from "../webviews/OrgSelectorWebview";
 import { SfCommandService } from "./SfCommandService";
 
+export interface SalesforceOrg {
+    accessToken: string;
+    instanceUrl: string;
+    orgId: string;
+    username: string;
+    loginUrl: string;
+    clientId: string;
+    isDevHub: boolean;
+    instanceApiVersion: string;
+    instanceApiVersionLastRetrieved: string;
+    name: string;
+    instanceName: string;
+    namespacePrefix: string | null;
+    isSandbox: boolean;
+    isScratch: boolean;
+    trailExpirationDate: string | null;
+    tracksSource: boolean;
+    alias: string;
+    isDefaultDevHubUsername: boolean;
+    isDefaultUsername: boolean;
+    lastUsed: string;
+    connectedStatus: string;
+    defaultMarker: string;
+}
+
 /**
  * Service for managing Salesforce org state
  */
@@ -73,7 +98,7 @@ export class OrgService {
     /**
      * Fetch orgs from Salesforce CLI
      */
-    public async fetchOrgs(): Promise<any> {
+    public async fetchOrgs(): Promise<Record<string, SalesforceOrg[]>> {
         return await this._sfCommandService.execute("sf org list");
     }
 }

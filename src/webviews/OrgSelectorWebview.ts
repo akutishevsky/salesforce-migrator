@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
-import { OrgService } from "../services/OrgService";
+import { OrgService, SalesforceOrg } from "../services/OrgService";
 
 export type OrgSelectorType = "source" | "target";
 
@@ -75,12 +75,13 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     /**
      * Update the webview with org data
      */
-    private _updateView(orgs: any): void {
+    private _updateView(orgs: Record<string, SalesforceOrg[]>): void {
         if (!this._webviewView) {
             return;
         }
 
-        if (orgs.length === 0) {
+        const orgCount = Object.values(orgs).flat().length;
+        if (orgCount === 0) {
             this._webviewView.webview.html = "<p>No orgs found</p>";
             return;
         }
@@ -92,11 +93,18 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         });
     }
 
-    private _composeOrgsHtml(orgs: any): string {
+    private _composeOrgsHtml(orgs: Record<string, SalesforceOrg[]>): string {
         const selectedOrg =
             this._type === "source" ? this._sourceOrg : this._targetOrg;
         let html = `<div data-selector-type="${this._type}">`;
-        const categories = this._categorizeOrgs(Object.values(orgs).flat());
+
+        const flatOrgs = Object.values(orgs).flat() as SalesforceOrg[];
+        const uniqueOrgs = Array.from(
+            new Map(
+                flatOrgs.map((org: SalesforceOrg) => [org.alias, org])
+            ).values()
+        );
+        const categories = this._categorizeOrgs(uniqueOrgs);
 
         for (const [category, categoryOrgs] of Object.entries(categories)) {
             if (categoryOrgs.length === 0) {
@@ -130,8 +138,10 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         return html;
     }
 
-    private _categorizeOrgs(orgs: any[]): { [key: string]: any[] } {
-        const categories: { [key: string]: any[] } = {
+    private _categorizeOrgs(orgs: SalesforceOrg[]): {
+        [key: string]: SalesforceOrg[];
+    } {
+        const categories: { [key: string]: SalesforceOrg[] } = {
             "DevHub Orgs": [],
             "Sandbox Orgs": [],
             "Scratch Orgs": [],
@@ -154,7 +164,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     }
 
     private _composeOrgHtml(
-        org: any,
+        org: SalesforceOrg,
         isChecked: string,
         statusClass: string,
         statusIcon: string,
