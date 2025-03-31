@@ -12,6 +12,11 @@ const vscode = acquireVsCodeApi();
                     i.classList.remove("active");
                 });
                 item.classList.add("active");
+
+                vscode.postMessage({
+                    command: "metadataSelected",
+                    metadata: item.textContent.trim(),
+                });
             });
         });
 
@@ -20,7 +25,7 @@ const vscode = acquireVsCodeApi();
         if (filterInput) {
             filterInput.addEventListener("input", (e) => {
                 const filterValue = e.target.value.toLowerCase().trim();
-                
+
                 metadataListItems.forEach((item) => {
                     const itemText = item.textContent.toLowerCase();
                     if (itemText.includes(filterValue)) {

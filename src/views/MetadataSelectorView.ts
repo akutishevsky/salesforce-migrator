@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { MetadataService, MetadataObject } from "../services/MetadataService";
+import { MetadataDeploymentWebview } from "../webviews/MetadataDeploymentWebview";
 
 export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
@@ -9,6 +10,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _webviewView: vscode.WebviewView | undefined;
     private _metadataService: MetadataService;
     private _orgService: OrgService;
+    private _deploymentWebview: MetadataDeploymentWebview | undefined;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
@@ -32,6 +34,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             localResourceRoots: [this._extensionContext.extensionUri],
         };
 
+        this._deploymentWebview = new MetadataDeploymentWebview(
+            this._extensionContext,
+            this._webviewView
+        );
+
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
             vscode.window.showErrorMessage(
@@ -44,6 +51,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             await this._metadataService.fetchMetadataTypes(sourceOrg);
 
         this._composeWebviewHtml(metadataObjects);
+        this._setupMessageListener(webviewView);
     }
 
     private _composeWebviewHtml(metadataObjects: MetadataObject[]): void {
@@ -91,5 +99,28 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         html += `</div>`;
 
         return html;
+    }
+
+    private _setupMessageListener(webviewView: vscode.WebviewView): void {
+        webviewView.webview.onDidReceiveMessage(
+            this._processWebviewMessage.bind(this),
+            undefined,
+            this._extensionContext.subscriptions
+        );
+    }
+
+    private _processWebviewMessage(message: any): void {
+        switch (message.command) {
+            case "metadataSelected":
+                if (!this._deploymentWebview) {
+                    vscode.window.showErrorMessage(
+                        "Deployment webview is not initialized."
+                    );
+                    return;
+                }
+
+                this._deploymentWebview.reveal();
+                break;
+        }
     }
 }
