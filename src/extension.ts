@@ -3,6 +3,7 @@ import {
     OrgSelectorWebview,
     OrgSelectorType,
 } from "./webviews/OrgSelectorWebview";
+import { MetadataSelectorWebview } from "./webviews/MetadataSelectorWebview";
 
 export function activate(extensionContext: vscode.ExtensionContext) {
     try {
@@ -14,15 +15,16 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             extensionContext,
             "target"
         );
+        const metadataSelector = new MetadataSelectorWebview(extensionContext);
 
         // Register commands for refreshing orgs
         const refreshSourceOrgsCommand = vscode.commands.registerCommand(
-            'salesforce-migrator.refreshSourceOrgs',
+            "salesforce-migrator.refreshSourceOrgs",
             () => sourceOrgSelector.refresh()
         );
-        
+
         const refreshTargetOrgsCommand = vscode.commands.registerCommand(
-            'salesforce-migrator.refreshTargetOrgs', 
+            "salesforce-migrator.refreshTargetOrgs",
             () => targetOrgSelector.refresh()
         );
 
@@ -34,6 +36,10 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.target-org-selector",
                 targetOrgSelector
+            ),
+            vscode.window.registerWebviewViewProvider(
+                "salesforce-migrator.metadata-selector",
+                metadataSelector
             ),
             refreshSourceOrgsCommand,
             refreshTargetOrgsCommand

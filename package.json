@@ -34,6 +34,12 @@
                     "name": "Target Org",
                     "icon": "src/common/resources/icon.png",
                     "type": "webview"
+                },
+                {
+                    "id": "salesforce-migrator.metadata-selector",
+                    "name": "Metadata",
+                    "icon": "src/common/resources/icon.png",
+                    "type": "webview"
                 }
             ]
         },
