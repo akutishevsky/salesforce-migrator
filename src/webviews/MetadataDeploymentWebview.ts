@@ -71,6 +71,7 @@ export class MetadataDeploymentWebview {
 
             this._panel.webview.html = this._htmlService.composeHtml({
                 body: this._composeWebviewHtml(metadata),
+                styles: ["/resources/css/metadataDeploymentWebview.css"],
             });
 
             this._panel.reveal();
@@ -121,15 +122,19 @@ export class MetadataDeploymentWebview {
         for (const item of metadata) {
             html += `
                 <tr>
-                    <td>
+                    <td data-label="Action">
                         <button>Retrieve</button>
                         <button>Deploy</button>
                     </td>
-                    <td>${item.fullName}</td>
-                    <td>${item.createdByName}</td>
-                    <td>${item.lastModifiedByName}</td>
-                    <td>${new Date(item.createdDate).toLocaleString()}</td>
-                    <td>${new Date(item.lastModifiedDate).toLocaleString()}</td>
+                    <td data-label="Full Name">${item.fullName}</td>
+                    <td data-label="Created By">${item.createdByName}</td>
+                    <td data-label="Modified By">${item.lastModifiedByName}</td>
+                    <td data-label="Created Date">
+                        ${new Date(item.createdDate).toLocaleString()}
+                    </td>
+                    <td data-label="Modified Date">
+                        ${new Date(item.lastModifiedDate).toLocaleString()}
+                    </td>
                 </tr>`;
         }
 
