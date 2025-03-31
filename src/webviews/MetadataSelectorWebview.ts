@@ -63,23 +63,32 @@ export class MetadataSelectorWebview implements vscode.WebviewViewProvider {
             return a.xmlName.localeCompare(b.xmlName);
         });
 
-        let html = "<div>";
+        let html = `
+            <div>
+                ${this._composeMetadataFilterHtml()}
+                ${this._composeMetadataListHtml(metadataObjects)}
+            </div>
+        `;
 
-        html += `
+        return html;
+    }
+
+    private _composeMetadataFilterHtml(): string {
+        return `
             <div class="metadata-filter-container">
                 <input type="text" id="metadata-filter" placeholder="Filter Metadata" />
             </div>
         `;
+    }
 
-        html += `<div class="metadata-list">`;
+    private _composeMetadataListHtml(
+        metadataObjects: MetadataObject[]
+    ): string {
+        let html = `<div class="metadata-list">`;
         for (const metadataObject of metadataObjects) {
-            html += `
-                <div class="metadata-list-item">${metadataObject.xmlName}</div>
-            `;
+            html += `<div class="metadata-list-item">${metadataObject.xmlName}</div>`;
         }
-
-        html += `   </div>`;
-        html += "</div>";
+        html += `</div>`;
 
         return html;
     }
