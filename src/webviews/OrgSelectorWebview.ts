@@ -94,46 +94,19 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     }
 
     private _composeOrgsHtml(orgs: Record<string, SalesforceOrg[]>): string {
-        const selectedOrg =
-            this._type === "source" ? this._sourceOrg : this._targetOrg;
-        let html = `<div data-selector-type="${this._type}">`;
-
-        const flatOrgs = Object.values(orgs).flat() as SalesforceOrg[];
-        const uniqueOrgs = Array.from(
-            new Map(
-                flatOrgs.map((org: SalesforceOrg) => [org.alias, org])
-            ).values()
-        );
+        const selectedOrg = this._type === "source" ? this._sourceOrg : this._targetOrg;
+        const uniqueOrgs = this._getUniqueOrgs(orgs);
         const categories = this._categorizeOrgs(uniqueOrgs);
-
+        
+        let html = `<div data-selector-type="${this._type}">`;
+        
         for (const [category, categoryOrgs] of Object.entries(categories)) {
-            if (categoryOrgs.length === 0) {
-                continue;
-            }
-
+            if (categoryOrgs.length === 0) { continue; }
+            
             html += `<p class="category-heading">${category}</p>`;
-
-            for (const org of categoryOrgs) {
-                const isChecked = org.alias === selectedOrg ? "checked" : "";
-                const isConnected = org.connectedStatus === "Connected";
-                const statusClass = isConnected
-                    ? "status-connected"
-                    : "status-disconnected";
-                const statusIcon = isConnected
-                    ? "codicon-check"
-                    : "codicon-error";
-                const statusText = isConnected ? "Connected" : "Disconnected";
-
-                html += this._composeOrgHtml(
-                    org,
-                    isChecked,
-                    statusClass,
-                    statusIcon,
-                    statusText
-                );
-            }
+            html += this._renderOrgList(categoryOrgs, selectedOrg);
         }
-
+        
         html += "</div>";
         return html;
     }
@@ -163,6 +136,34 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         return categories;
     }
 
+    /**
+     * Get unique orgs from the org list by removing duplicates
+     */
+    private _getUniqueOrgs(orgs: Record<string, SalesforceOrg[]>): SalesforceOrg[] {
+        const flatOrgs = Object.values(orgs).flat() as SalesforceOrg[];
+        return Array.from(
+            new Map(flatOrgs.map((org) => [org.alias, org])).values()
+        );
+    }
+
+    /**
+     * Render a list of orgs for a category
+     */
+    private _renderOrgList(orgs: SalesforceOrg[], selectedOrg: string | undefined): string {
+        return orgs.map(org => {
+            const isChecked = org.alias === selectedOrg ? "checked" : "";
+            const isConnected = org.connectedStatus === "Connected";
+            const statusClass = isConnected ? "status-connected" : "status-disconnected";
+            const statusIcon = isConnected ? "codicon-check" : "codicon-error";
+            const statusText = isConnected ? "Connected" : "Disconnected";
+            
+            return this._composeOrgHtml(org, isChecked, statusClass, statusIcon, statusText);
+        }).join('');
+    }
+
+    /**
+     * Compose HTML for a single org
+     */
     private _composeOrgHtml(
         org: SalesforceOrg,
         isChecked: string,
