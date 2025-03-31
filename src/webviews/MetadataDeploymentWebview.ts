@@ -30,8 +30,7 @@ export class MetadataDeploymentWebview {
 
     public async reveal(metadataType?: string): Promise<void> {
         try {
-            const webviewTitle = `${metadataType} Deployment`;
-            this._initializePanel(webviewTitle);
+            this._initializePanel(metadataType!);
 
             const sourceOrg = this._orgService.getSourceOrg();
             if (!sourceOrg) {
@@ -67,11 +66,13 @@ export class MetadataDeploymentWebview {
         }
     }
 
-    private _initializePanel(title: string): void {
+    private _initializePanel(metadataType: string): void {
+        const webviewTitle = `${metadataType} Deployment`;
+
         if (!this._panel) {
             this._panel = vscode.window.createWebviewPanel(
                 "salesforce-migrator.metadata-deployment",
-                title,
+                webviewTitle,
                 vscode.ViewColumn.One,
                 {
                     enableScripts: true,
@@ -84,7 +85,7 @@ export class MetadataDeploymentWebview {
             });
         }
 
-        this._panel.title = title;
+        this._panel.title = webviewTitle;
     }
 
     private _composeWebviewHtml(metadata: any): string {
