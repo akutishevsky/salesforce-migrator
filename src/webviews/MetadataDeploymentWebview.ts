@@ -216,15 +216,48 @@ export class MetadataDeploymentWebview {
         metadataTypeName: string,
         sourceOrg: string
     ): Promise<void> {
-        vscode.window.showInformationMessage(
-            `Retrieving metadata of type: ${metadataTypeName}`
-        );
+        const tokenSource = new vscode.CancellationTokenSource();
 
-        const command = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
-        await this._sfCommandService.execute(command);
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Retrieving ${metadataTypeName}...`,
+                cancellable: true,
+            },
+            async (progress, token) => {
+                // Forward the cancellation token
+                token.onCancellationRequested(() => {
+                    tokenSource.cancel();
+                });
 
-        vscode.window.showInformationMessage(
-            `Metadata of type ${metadataTypeName} retrieved successfully.`
+                progress.report({ increment: 0 });
+
+                try {
+                    const command = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
+                    await this._sfCommandService.execute(
+                        command,
+                        tokenSource.token
+                    );
+
+                    if (!tokenSource.token.isCancellationRequested) {
+                        vscode.window.showInformationMessage(
+                            `Metadata of type ${metadataTypeName} retrieved successfully.`
+                        );
+                    }
+                } catch (error: any) {
+                    if (error.message === "Operation cancelled") {
+                        vscode.window.showInformationMessage(
+                            `Retrieval of ${metadataTypeName} was cancelled.`
+                        );
+                    } else {
+                        vscode.window.showErrorMessage(
+                            `Error retrieving ${metadataTypeName}: ${error}`
+                        );
+                    }
+                } finally {
+                    tokenSource.dispose();
+                }
+            }
         );
     }
 
@@ -233,12 +266,20 @@ export class MetadataDeploymentWebview {
         metadataTypeName: string,
         sourceOrg: string
     ): Promise<void> {
-        vscode.window.withProgress(
+        const tokenSource = new vscode.CancellationTokenSource();
+
+        await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
                 title: `Deploying ${metadataTypeName}...`,
+                cancellable: true,
             },
-            async (progress) => {
+            async (progress, token) => {
+                // Forward the cancellation token
+                token.onCancellationRequested(() => {
+                    tokenSource.cancel();
+                });
+
                 const targetOrg = this._orgService.getTargetOrg();
                 if (!targetOrg) {
                     vscode.window.showErrorMessage(
@@ -247,23 +288,47 @@ export class MetadataDeploymentWebview {
                     return;
                 }
 
-                await this._retrieveMetadataWithProgress(
-                    progress,
-                    metadataType,
-                    metadataTypeName,
-                    sourceOrg
-                );
-                const deployResult = await this._deployToTargetOrg(
-                    progress,
-                    metadataType,
-                    metadataTypeName,
-                    targetOrg
-                );
-                await this._showDeploymentResult(
-                    deployResult,
-                    metadataTypeName,
-                    progress
-                );
+                try {
+                    await this._retrieveMetadataWithProgress(
+                        progress,
+                        metadataType,
+                        metadataTypeName,
+                        sourceOrg,
+                        tokenSource.token
+                    );
+
+                    if (tokenSource.token.isCancellationRequested) {
+                        return;
+                    }
+
+                    const deployResult = await this._deployToTargetOrg(
+                        progress,
+                        metadataType,
+                        metadataTypeName,
+                        targetOrg,
+                        tokenSource.token
+                    );
+
+                    if (!tokenSource.token.isCancellationRequested) {
+                        await this._showDeploymentResult(
+                            deployResult,
+                            metadataTypeName,
+                            progress
+                        );
+                    }
+                } catch (error: any) {
+                    if (error.message === "Operation cancelled") {
+                        vscode.window.showInformationMessage(
+                            `Deployment of ${metadataTypeName} was cancelled.`
+                        );
+                    } else {
+                        vscode.window.showErrorMessage(
+                            `Error deploying ${metadataTypeName}: ${error}`
+                        );
+                    }
+                } finally {
+                    tokenSource.dispose();
+                }
             }
         );
     }
@@ -272,25 +337,31 @@ export class MetadataDeploymentWebview {
         progress: vscode.Progress<{ increment?: number }>,
         metadataType: string,
         metadataTypeName: string,
-        sourceOrg: string
+        sourceOrg: string,
+        token?: vscode.CancellationToken
     ): Promise<void> {
         progress.report({ increment: 33 });
         const retrieveCommand = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
-        await this._sfCommandService.execute(retrieveCommand);
+        await this._sfCommandService.execute(retrieveCommand, token);
     }
 
     private async _deployToTargetOrg(
         progress: vscode.Progress<{ increment?: number }>,
         metadataType: string,
         metadataTypeName: string,
-        targetOrg: string
+        targetOrg: string,
+        token?: vscode.CancellationToken
     ): Promise<any> {
         progress.report({ increment: 66 });
         try {
             return await this._sfCommandService.execute(
-                `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`
+                `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`,
+                token
             );
         } catch (error: any) {
+            if (error.message === "Operation cancelled") {
+                throw error;
+            }
             throw Error(`Error while deploying metadata: ${error}`);
         }
     }
