@@ -82,7 +82,7 @@ export class HtmlService {
                         ${this._webviewView?.webview.asWebviewUri(
                             vscode.Uri.joinPath(this._extensionUri, script)
                         )}" 
-                />`;
+                ></script>`;
         }
 
         return scriptsHtml;
