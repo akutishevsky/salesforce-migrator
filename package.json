@@ -40,6 +40,12 @@
                     "name": "Metadata",
                     "icon": "src/common/resources/icon.png",
                     "type": "webview"
+                },
+                {
+                    "id": "salesforce-migrator.records-selector",
+                    "name": "Records",
+                    "icon": "src/common/resources/icon.png",
+                    "type": "webview"
                 }
             ]
         },
