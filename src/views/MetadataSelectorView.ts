@@ -3,7 +3,7 @@ import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { MetadataService, MetadataObject } from "../services/MetadataService";
 
-export class MetadataSelectorWebview implements vscode.WebviewViewProvider {
+export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
     private _webviewView: vscode.WebviewView | undefined;

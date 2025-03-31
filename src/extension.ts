@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { OrgSelectorWebview, OrgSelectorType } from "./views/OrgSelectorView";
-import { MetadataSelectorWebview } from "./views/MetadataSelectorView";
+import { MetadataSelectorView } from "./views/MetadataSelectorView";
 
 export function activate(extensionContext: vscode.ExtensionContext) {
     try {
@@ -12,7 +12,7 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             extensionContext,
             "target"
         );
-        const metadataSelector = new MetadataSelectorWebview(extensionContext);
+        const metadataSelector = new MetadataSelectorView(extensionContext);
 
         // Register commands for refreshing orgs
         const refreshSourceOrgsCommand = vscode.commands.registerCommand(
