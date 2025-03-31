@@ -41,12 +41,18 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 cancellable: false,
             },
             async () => {
-                const metadataObjects: MetadataObject[] =
-                    await this._metadataService.fetchMetadataObjects(sourceOrg);
-                this._composeWebviewHtml(metadataObjects);
-                vscode.window.showInformationMessage(
-                    "Metadata refreshed successfully."
-                );
+                try {
+                    const metadataObjects: MetadataObject[] =
+                        await this._metadataService.fetchMetadataObjects(sourceOrg);
+                    this._composeWebviewHtml(metadataObjects);
+                    vscode.window.showInformationMessage(
+                        "Metadata refreshed successfully."
+                    );
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(
+                        `Failed to refresh metadata: ${error.message || error}`
+                    );
+                }
             }
         );
     }
@@ -80,11 +86,19 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             return;
         }
 
-        const metadataObjects: MetadataObject[] =
-            await this._metadataService.fetchMetadataObjects(sourceOrg);
-
-        this._composeWebviewHtml(metadataObjects);
-        this._setupMessageListener(webviewView);
+        try {
+            const metadataObjects: MetadataObject[] =
+                await this._metadataService.fetchMetadataObjects(sourceOrg);
+            
+            this._composeWebviewHtml(metadataObjects);
+            this._setupMessageListener(webviewView);
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to load metadata: ${error.message || error}`
+            );
+            // Show empty state or error state
+            this._showErrorState();
+        }
     }
 
     private _composeWebviewHtml(metadataObjects: MetadataObject[]): void {
@@ -155,5 +169,30 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 this._deploymentWebview.reveal(message.metadata);
                 break;
         }
+    }
+    
+    /**
+     * Display an error state in the webview
+     */
+    private _showErrorState(): void {
+        if (!this._webviewView) {
+            return;
+        }
+        
+        this._webviewView.webview.html = this._htmlService.composeHtml({
+            body: `
+                <div class="error-container">
+                    <p class="error-message">
+                        Failed to load metadata. Please try clicking the refresh button in the view header
+                        or check your connection to the source org.
+                    </p>
+                    <p class="error-message">
+                        <span class="codicon codicon-refresh"></span> Use the refresh button in the view header to try again.
+                    </p>
+                </div>
+            `,
+            styles: ["/resources/css/metadataSelectorView.css"],
+            scripts: ["/resources/js/metadataSelectorView.js"],
+        });
     }
 }
