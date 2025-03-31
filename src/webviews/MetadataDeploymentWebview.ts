@@ -175,7 +175,11 @@ export class MetadataDeploymentWebview {
                         );
                         break;
                     case "deploy":
-                        // Handle deploy action
+                        this._deployMetadata(
+                            metadataType,
+                            message.metadataTypeName,
+                            sourceOrg
+                        );
                         break;
                 }
             },
@@ -198,6 +202,64 @@ export class MetadataDeploymentWebview {
 
         vscode.window.showInformationMessage(
             `Metadata of type ${metadataTypeName} retrieved successfully.`
+        );
+    }
+
+    public async _deployMetadata(
+        metadataType: string,
+        metadataTypeName: string,
+        sourceOrg: string
+    ): Promise<void> {
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Deploying ${metadataTypeName}...`,
+            },
+            async (progress) => {
+                const targetOrg = this._orgService.getTargetOrg();
+                if (!targetOrg) {
+                    vscode.window.showErrorMessage(
+                        "No target org selected. Please select a target org first."
+                    );
+                    return;
+                }
+                progress.report({
+                    increment: 33,
+                });
+
+                const retrieveCommand = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
+                await this._sfCommandService.execute(retrieveCommand);
+                progress.report({
+                    increment: 66,
+                });
+
+                let deployResult: any;
+                try {
+                    deployResult = await this._sfCommandService.execute(
+                        `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`
+                    );
+
+                    progress.report({
+                        increment: 100,
+                    });
+
+                    vscode.window
+                        .showInformationMessage(
+                            `${metadataTypeName} deployed successfully.`,
+                            "View Deploy URL"
+                        )
+                        .then((selection) => {
+                            if (selection === "View Deploy URL") {
+                                vscode.env.openExternal(
+                                    deployResult?.deployUrl
+                                );
+                            }
+                        });
+                } catch (error: any) {
+                    console.error("error", error);
+                }
+                console.log("deployResult", deployResult);
+            }
         );
     }
 }
