@@ -17,7 +17,7 @@
                 {
                     "id": "salesforce-migrator",
                     "title": "Salesforce Migrator",
-                    "icon": "src/common/resources/icon.png"
+                    "icon": "/images/view.svg"
                 }
             ]
         },
@@ -26,25 +26,25 @@
                 {
                     "id": "salesforce-migrator.source-org-selector",
                     "name": "Source Org",
-                    "icon": "src/common/resources/icon.png",
+                    "icon": "/images/view.svg",
                     "type": "webview"
                 },
                 {
                     "id": "salesforce-migrator.target-org-selector",
                     "name": "Target Org",
-                    "icon": "src/common/resources/icon.png",
+                    "icon": "/images/view.svg",
                     "type": "webview"
                 },
                 {
                     "id": "salesforce-migrator.metadata-selector",
                     "name": "Metadata",
-                    "icon": "src/common/resources/icon.png",
+                    "icon": "/images/view.svg",
                     "type": "webview"
                 },
                 {
                     "id": "salesforce-migrator.records-selector",
                     "name": "Records",
-                    "icon": "src/common/resources/icon.png",
+                    "icon": "/images/view.svg",
                     "type": "webview"
                 }
             ]
