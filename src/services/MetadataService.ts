@@ -49,4 +49,20 @@ export class MetadataService {
         const metadata = await this.listMetadataTypes(targetOrg);
         return metadata.metadataObjects;
     }
+
+    /**
+     * Lists all metadata of a specific type from a specified org
+     * @param targetOrg The org alias to list metadata from
+     * @param metadataType The type of metadata to list
+     * @returns {Promise<any[]>} Array of metadata items of the specified type
+     */
+    public async listMetadataByType(
+        targetOrg: string,
+        metadataType: string
+    ): Promise<any[]> {
+        const metadata = await this._sfCommandService.execute(
+            `sf org list metadata --target-org ${targetOrg} --metadata-type ${metadataType}`
+        );
+        return metadata;
+    }
 }

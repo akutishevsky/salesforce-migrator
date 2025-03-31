@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
+import { MetadataService } from "../services/MetadataService";
 import { OrgService } from "../services/OrgService";
 import { SfCommandService } from "../services/SfCommandService";
 
@@ -10,6 +11,7 @@ export class MetadataDeploymentWebview {
     private _panel: vscode.WebviewPanel | undefined;
     private _orgService!: OrgService;
     private _sfCommandService!: SfCommandService;
+    private _metadataService!: MetadataService;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -23,6 +25,7 @@ export class MetadataDeploymentWebview {
         });
         this._orgService = new OrgService(extensionContext);
         this._sfCommandService = new SfCommandService();
+        this._metadataService = new MetadataService();
     }
 
     public async reveal(metadataType?: string): Promise<void> {
@@ -65,8 +68,9 @@ export class MetadataDeploymentWebview {
                 return;
             }
 
-            const metadata = await this._sfCommandService.execute(
-                `sf org list metadata --target-org ${sourceOrg} --metadata-type ${metadataType}`
+            const metadata = await this._metadataService.listMetadataByType(
+                sourceOrg,
+                metadataType!
             );
 
             this._panel.webview.html = this._htmlService.composeHtml({
