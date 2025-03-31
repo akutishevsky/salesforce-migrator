@@ -29,7 +29,7 @@ export class MetadataService {
     /**
      * Fetches all metadata information from a specified org
      * @param targetOrg The org alias to fetch metadata from
-     * @returns Complete metadata information from the specified org
+     * @returns {Promise<Metadata>} Complete `Metadata` information from the specified org
      */
     public async fetchMetadata(targetOrg: string): Promise<Metadata> {
         const metadata = await this._sfCommandService.execute(
@@ -41,7 +41,7 @@ export class MetadataService {
     /**
      * Fetches only metadata types from a specified org
      * @param targetOrg The org alias to fetch metadata types from
-     * @returns Array of metadata objects from the specified org
+     * @returns {Promise<MetadataObject[]>} Array of `MetadataObject` from the specified org
      */
     public async fetchMetadataTypes(
         targetOrg: string
