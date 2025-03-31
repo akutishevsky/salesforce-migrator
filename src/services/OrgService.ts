@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { OrgSelectorType } from "../webviews/OrgSelectorWebview";
+import { OrgSelectorType } from "../views/OrgSelectorView";
 import { SfCommandService } from "./SfCommandService";
 
 export interface SalesforceOrg {

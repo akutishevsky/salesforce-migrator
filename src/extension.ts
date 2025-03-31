@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
-import {
-    OrgSelectorWebview,
-    OrgSelectorType,
-} from "./webviews/OrgSelectorWebview";
-import { MetadataSelectorWebview } from "./webviews/MetadataSelectorWebview";
+import { OrgSelectorWebview, OrgSelectorType } from "./views/OrgSelectorView";
+import { MetadataSelectorWebview } from "./views/MetadataSelectorView";
 
 export function activate(extensionContext: vscode.ExtensionContext) {
     try {
