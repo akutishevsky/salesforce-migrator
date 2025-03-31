@@ -93,7 +93,7 @@ export class MetadataDeploymentWebview {
             const panelDisposeListener = this._panel.onDidDispose(() => {
                 this._disposePanel();
             });
-            
+
             // Add to disposables
             this._disposables.push(panelDisposeListener);
         }
@@ -412,11 +412,11 @@ export class MetadataDeploymentWebview {
     private _disposePanel(): void {
         // Clear message listener
         this._clearMessageListener();
-        
+
         // Dispose all disposables
-        this._disposables.forEach(d => d.dispose());
+        this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
-        
+
         // Clear panel reference
         this._panel = undefined;
     }
