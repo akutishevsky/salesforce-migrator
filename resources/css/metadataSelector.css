@@ -1,20 +1,34 @@
 .metadata-filter-container {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
-    box-shadow: var(--vscode-listFilterWidget-shadow);
+    background-color: var(--vscode-editor-background);
+    padding: 0.5rem 0;
+    box-shadow: var(--vscode-widget-shadow);
 }
 
 #metadata-filter {
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
     border: var(--vscode-input-border);
+    padding: 0.25rem 0.5rem;
+    width: calc(100% - 1rem);
+    margin: 0 0.5rem;
+    box-sizing: border-box;
+}
+
+.metadata-list {
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    padding-top: 0.5rem;
 }
 
 .metadata-list-item {
     cursor: pointer;
-    padding: 0.125rem 0rem;
+    padding: 0.25rem 0.5rem;
 }
 
 .metadata-list-item.active {
