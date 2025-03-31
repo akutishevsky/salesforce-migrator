@@ -43,7 +43,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             async () => {
                 try {
                     const metadataObjects: MetadataObject[] =
-                        await this._metadataService.fetchMetadataObjects(sourceOrg);
+                        await this._metadataService.fetchMetadataObjects(
+                            sourceOrg
+                        );
                     this._composeWebviewHtml(metadataObjects);
                     vscode.window.showInformationMessage(
                         "Metadata refreshed successfully."
@@ -89,7 +91,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         try {
             const metadataObjects: MetadataObject[] =
                 await this._metadataService.fetchMetadataObjects(sourceOrg);
-            
+
             this._composeWebviewHtml(metadataObjects);
             this._setupMessageListener(webviewView);
         } catch (error: any) {
@@ -170,7 +172,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 break;
         }
     }
-    
+
     /**
      * Display an error state in the webview
      */
@@ -178,16 +180,13 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         if (!this._webviewView) {
             return;
         }
-        
+
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: `
                 <div class="error-container">
                     <p class="error-message">
                         Failed to load metadata. Please try clicking the refresh button in the view header
                         or check your connection to the source org.
-                    </p>
-                    <p class="error-message">
-                        <span class="codicon codicon-refresh"></span> Use the refresh button in the view header to try again.
                     </p>
                 </div>
             `,
