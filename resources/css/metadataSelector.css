@@ -1,0 +1,28 @@
+.metadata-filter-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    box-shadow: var(--vscode-listFilterWidget-shadow);
+}
+
+#metadata-filter {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: var(--vscode-input-border);
+}
+
+.metadata-list-item {
+    cursor: pointer;
+    padding: 0.125rem 0rem;
+}
+
+.metadata-list-item.active {
+    background-color: var(--vscode-list-activeSelectionBackground);
+    color: var(--vscode-list-activeSelectionForeground);
+}
+
+.metadata-list-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
+}
