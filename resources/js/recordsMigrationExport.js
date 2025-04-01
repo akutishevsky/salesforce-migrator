@@ -55,9 +55,36 @@ const filterFields = () => {
     });
 };
 
+const setupFieldSelectionButtons = () => {
+    const addAllButton = document.getElementById("add-all-fields");
+    const clearAllButton = document.getElementById("clear-all-fields");
+    const fieldCheckboxes = document.querySelectorAll(
+        ".sfm-field-item > input[type='checkbox']"
+    );
+
+    addAllButton.addEventListener("click", () => {
+        fieldCheckboxes.forEach((checkbox) => {
+            checkbox.checked = true;
+        });
+        if (fieldCheckboxes.length > 0) {
+            fieldCheckboxes[0].dispatchEvent(new Event("change"));
+        }
+    });
+
+    clearAllButton.addEventListener("click", () => {
+        fieldCheckboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+        });
+        if (fieldCheckboxes.length > 0) {
+            fieldCheckboxes[0].dispatchEvent(new Event("change"));
+        }
+    });
+};
+
 const initPage = () => {
     updateQuery();
     filterFields();
+    setupFieldSelectionButtons();
 };
 
 window.addEventListener("load", initPage);

@@ -87,7 +87,7 @@ body {
 .sfm-panel h3 {
     font-size: 1rem;
     font-weight: 600;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
 }
 
@@ -216,6 +216,24 @@ input[type="checkbox"] {
     );
     box-shadow: 0 0.0625rem 0.125rem
         var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
+}
+
+.sfm-fields-selector-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sfm-fields-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.sfm-button-small {
+    min-width: 4rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.85rem;
 }
 
 .sfm-filter {

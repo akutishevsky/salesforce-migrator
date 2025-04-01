@@ -109,7 +109,13 @@ export class RecordsMigrationExport {
                 </div>
                 <div class="sfm-fields-container">
                     <div class="sfm-fields-selector">
-                        <h3>Select fields</h3>
+                        <div class="sfm-fields-selector-header">
+                            <h3>Select fields</h3>
+                            <div class="sfm-fields-actions">
+                                <button id="add-all-fields" class="sfm-button sfm-button-small">Add All</button>
+                                <button id="clear-all-fields" class="sfm-button sfm-button-small">Clear All</button>
+                            </div>
+                        </div>
                         <div class="sfm-filter">
                             <input type="text" placeholder="Filter fields" />
                         </div>
