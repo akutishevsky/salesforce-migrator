@@ -46,6 +46,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
             await this._objectService.getCustomObjects(sourceOrg);
 
         this._composeWebviewHtml(customObjects);
+        this._setupMessageListener(webviewView);
     }
 
     private _renderLoader(): void {
@@ -64,7 +65,10 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: this._composeObjectsHtml(customObjects),
             styles: ["/resources/css/list.css"],
-            scripts: ["/resources/js/list.js"],
+            scripts: [
+                "/resources/js/list.js",
+                "/resources/js/recordsSelectorView.js",
+            ],
         });
     }
 
@@ -99,5 +103,23 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         html += `</div>`;
 
         return html;
+    }
+
+    private _setupMessageListener(webviewView: vscode.WebviewView): void {
+        webviewView.webview.onDidReceiveMessage(
+            this._processWebviewMessage.bind(this),
+            undefined,
+            this._extensionContext.subscriptions
+        );
+    }
+
+    private _processWebviewMessage(message: any): void {
+        switch (message.command) {
+            case "customObjectSelected":
+                vscode.window.showInformationMessage(
+                    `Object selected: ${message.customObject}`
+                );
+                break;
+        }
     }
 }
