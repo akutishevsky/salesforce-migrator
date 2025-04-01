@@ -153,10 +153,8 @@ export class RecordsMigrationExport {
 
     private _composeDestinationFileSelectionHtml(): string {
         let html = `
-            <div>
-                <div class="section">
-                    <h2>Select a destination file</h2>
-                </div>
+            <div class="section">
+                <h2>Select a destination file</h2>
                 <div>
                     <p>lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                 </div>
