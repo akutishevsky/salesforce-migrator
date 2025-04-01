@@ -26,6 +26,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             return;
         }
 
+        this._renderLoader();
+
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
             vscode.window.showErrorMessage(

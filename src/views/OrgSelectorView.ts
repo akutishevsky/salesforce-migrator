@@ -66,6 +66,12 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
      * Refresh the org list
      */
     public async refresh(): Promise<void> {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._renderLoader();
+
         vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
