@@ -113,14 +113,41 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         );
     }
 
-    private _processWebviewMessage(message: any): void {
+    private async _processWebviewMessage(message: any): Promise<void> {
         switch (message.command) {
             case "customObjectSelected":
-                vscode.window.showInformationMessage(
-                    `Object selected: ${message.customObject}`
+                const customObject = message.customObject;
+                const operations = [
+                    "Export",
+                    "Insert",
+                    "Update",
+                    "Upsert",
+                    "Delete",
+                ];
+
+                const selectedOperation = await vscode.window.showQuickPick(
+                    operations,
+                    {
+                        placeHolder: `Select migration operation for ${customObject}`,
+                        canPickMany: false,
+                    }
                 );
+
+                if (selectedOperation) {
+                    this._openMigrationWebview(customObject, selectedOperation);
+                }
                 break;
         }
+    }
+
+    private _openMigrationWebview(
+        customObject: string,
+        operation: string
+    ): void {
+        vscode.window.showInformationMessage(
+            `Ready to ${operation.toLowerCase()} records for ${customObject}`
+        );
+        // The actual implementation would create and show a migration webview here
     }
 
     /**
@@ -156,7 +183,9 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                     );
                 } catch (error: any) {
                     vscode.window.showErrorMessage(
-                        `Failed to refresh custom objects: ${error.message || error}`
+                        `Failed to refresh custom objects: ${
+                            error.message || error
+                        }`
                     );
                 }
             }
