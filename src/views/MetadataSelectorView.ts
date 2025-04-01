@@ -203,8 +203,6 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     </p>
                 </div>
             `,
-            styles: ["/resources/css/metadataSelectorView.css"],
-            scripts: ["/resources/js/metadataSelectorView.js"],
         });
     }
 }
