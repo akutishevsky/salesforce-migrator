@@ -39,6 +39,8 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
             extensionUri: this._extensionContext.extensionUri,
         });
 
+        this._renderLoader();
+
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [this._extensionContext.extensionUri],
@@ -50,6 +52,14 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this)
         );
+    }
+
+    private _renderLoader(): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.getLoaderHtml();
     }
 
     /**

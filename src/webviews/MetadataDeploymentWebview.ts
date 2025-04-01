@@ -33,6 +33,7 @@ export class MetadataDeploymentWebview {
     public async reveal(metadataType?: string): Promise<void> {
         try {
             this._initializePanel(metadataType!);
+            this._renderLoader();
 
             const sourceOrg = this._orgService.getSourceOrg();
             if (!sourceOrg) {
@@ -99,6 +100,10 @@ export class MetadataDeploymentWebview {
         }
 
         this._panel.title = webviewTitle;
+    }
+
+    private _renderLoader(): void {
+        this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
     private _composeWebviewHtml(metadata: any): string {

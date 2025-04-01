@@ -25,5 +25,15 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
             enableScripts: true,
             localResourceRoots: [this._extensionContext.extensionUri],
         };
+
+        this._renderLoader();
+    }
+
+    private _renderLoader(): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.getLoaderHtml();
     }
 }

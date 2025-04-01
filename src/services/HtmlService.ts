@@ -1,4 +1,7 @@
 import * as vscode from "vscode";
+import fs from "fs";
+
+const LOADING_HTML_PATH = "loading.html";
 
 /**
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
@@ -16,6 +19,20 @@ export class HtmlService {
     }) {
         this._webviewView = view;
         this._extensionUri = extensionUri;
+    }
+
+    /**
+     * @returns {string} The `HTML` string for the specified file.
+     */
+    public getLoaderHtml(): string {
+        const htmlFilePath = vscode.Uri.joinPath(
+            this._extensionUri,
+            "resources",
+            "html",
+            LOADING_HTML_PATH
+        );
+        const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
+        return htmlContent;
     }
 
     /**
