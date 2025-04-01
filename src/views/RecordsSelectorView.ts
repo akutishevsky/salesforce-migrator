@@ -122,4 +122,44 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                 break;
         }
     }
+
+    /**
+     * Refresh the custom objects list from the source org
+     */
+    public async refreshRecords(): Promise<void> {
+        if (!this._webviewView) {
+            return;
+        }
+
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            vscode.window.showErrorMessage(
+                "No source org selected. Please select a source org first."
+            );
+            return;
+        }
+
+        vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: "Refreshing custom objects...",
+                cancellable: false,
+            },
+            async () => {
+                try {
+                    this._renderLoader();
+                    const customObjects: CustomObject[] =
+                        await this._objectService.getCustomObjects(sourceOrg);
+                    this._composeWebviewHtml(customObjects);
+                    vscode.window.showInformationMessage(
+                        "Custom objects refreshed successfully."
+                    );
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(
+                        `Failed to refresh custom objects: ${error.message || error}`
+                    );
+                }
+            }
+        );
+    }
 }

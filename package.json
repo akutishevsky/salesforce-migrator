@@ -64,6 +64,11 @@
                 "command": "salesforce-migrator.refreshMetadata",
                 "title": "Refresh Metadata",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "salesforce-migrator.refreshRecords",
+                "title": "Refresh Records",
+                "icon": "$(refresh)"
             }
         ],
         "menus": {
@@ -81,6 +86,11 @@
                 {
                     "command": "salesforce-migrator.refreshMetadata",
                     "when": "view == salesforce-migrator.metadata-selector",
+                    "group": "navigation"
+                },
+                {
+                    "command": "salesforce-migrator.refreshRecords",
+                    "when": "view == salesforce-migrator.records-selector",
                     "group": "navigation"
                 }
             ]
