@@ -329,12 +329,19 @@ input[type="checkbox"] {
 .sfm-where-field-selector,
 .sfm-where-operation,
 .sfm-where-value {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 
 .sfm-where-clause select {
     width: 100%;
     margin-bottom: 0.5rem;
+}
+
+.sfm-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: var(--vscode-foreground);
 }
 
 .sfm-button-group {

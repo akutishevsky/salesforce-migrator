@@ -154,11 +154,15 @@ export class RecordsMigrationExport {
         let html = `
             <h3>Compose WHERE clause</h3>
             <div class="sfm-where-field-selector">
+                <label for="where-field-selector" class="sfm-label">Field:</label>
                 ${this._composeWhereClauseComposerFieldsHtml()}
             </div>
-            <div class="sfm-where-operation">Operation: EQUALS</div>
+            <div class="sfm-where-operation">
+                ${this._composeWhereClauseOperationSelectorHtml()}
+            </div>
             <div class="sfm-where-value">
-                <input type="text" placeholder="Value" />
+                <label for="where-value" class="sfm-label">Value:</label>
+                <input id="where-value" type="text" placeholder="Enter condition value" />
             </div>
             <div class="sfm-button-group">
                 <button id="add-where-clause" class="sfm-button">Add Condition</button>
@@ -171,7 +175,7 @@ export class RecordsMigrationExport {
     }
 
     private _composeWhereClauseComposerFieldsHtml(): string {
-        let html = "<select class=\"sfm-select\">";
+        let html = '<select id="where-field-selector" class="sfm-select">';
 
         this._fields.forEach((field: any) => {
             html += `
@@ -184,6 +188,19 @@ export class RecordsMigrationExport {
         html += "</select>";
 
         return html;
+    }
+
+    private _composeWhereClauseOperationSelectorHtml(): string {
+        return `
+            <label for="where-operation" class="sfm-label">Operation:</label>
+            <select id="where-operation" class="sfm-select">
+                <option value="equals">Equals</option>
+                <option value="notEquals">Not Equals</option>
+                <option value="contains">Contains</option>
+                <option value="startsWith">Starts With</option>
+                <option value="endsWith">Ends With</option>
+            </select>
+        `;
     }
 
     private _composeDestinationFileSelectionHtml(): string {
