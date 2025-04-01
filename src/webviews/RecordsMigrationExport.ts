@@ -86,11 +86,11 @@ export class RecordsMigrationExport {
         let html = "";
 
         html += `
-            <div data-object-name="${this._customObject}" class="container">
-                <div class="header">
+            <div data-object-name="${this._customObject}" class="sfm-container">
+                <div class="sfm-header">
                     <h1>Export ${this._customObject} Records</h1>
                 </div>
-                <div class="content">
+                <div class="sfm-content">
                     ${this._composeFieldsToQueryHtml()}
                     ${this._composeDestinationFileSelectionHtml()}
                     ${this._composeExportButtonHtml()}
@@ -103,27 +103,27 @@ export class RecordsMigrationExport {
 
     private _composeFieldsToQueryHtml(): string {
         let html = `
-            <div class="section">
-                <div>
+            <div class="sfm-panel">
+                <div class="sfm-panel-header">
                      <h2>Select fields to query</h2>
                 </div>
-                <div class="fields-to-query-container">
-                    <div class="fields-to-query_fields-container">
+                <div class="sfm-fields-container">
+                    <div class="sfm-fields-selector">
                         <h3>Select fields</h3>
-                        <div class="fields-to-query_fields-filter">
+                        <div class="sfm-filter">
                             <input type="text" placeholder="Filter fields" />
                         </div>
-                        <div class="fields-to-query_fields-list">
+                        <div class="sfm-fields-list">
                             ${this._composeFieldsToQueryFieldsListHtml()}
                         </div>
                     </div>
-                    <div class="fields-to-query_fields-compose-where-clause">
+                    <div class="sfm-where-clause">
                         ${this._composeWhereClauseComposerHtml()}
                     </div>
                 </div>
-                <div>
+                <div class="sfm-query-editor">
                     <h3>Result query (editable)</h3>
-                    <textarea id="query"></textarea>
+                    <textarea id="query" class="sfm-query-textarea"></textarea>
                 </div>
             </div>
         `;
@@ -136,12 +136,12 @@ export class RecordsMigrationExport {
 
         this._fields.forEach((field: any) => {
             html += `
-                <div class="fields-to-query_fields-list-item">
+                <div class="sfm-field-item">
                     <input type="checkbox" data-field-name="${field.name}" />
-                    <label class="fields-to-query_label">
-                        <span class="field-label">${field.label}</span>
-                        <span class="field-name"> • ${field.name}</span>
-                        <span class="field-type"> • ${field.type}</span>
+                    <label class="sfm-field-label">
+                        <span class="sfm-field-label-name">${field.label}</span>
+                        <span class="sfm-field-api-name"> • ${field.name}</span>
+                        <span class="sfm-field-type"> • ${field.type}</span>
                     </label>
                 </div>
             `;
@@ -153,17 +153,17 @@ export class RecordsMigrationExport {
     private _composeWhereClauseComposerHtml(): string {
         let html = `
             <h3>Compose WHERE clause</h3>
-            <div>
+            <div class="sfm-where-field-selector">
                 ${this._composeWhereClauseComposerFieldsHtml()}
             </div>
-            <div>Operation: EQUALS</div>
-            <div>
+            <div class="sfm-where-operation">Operation: EQUALS</div>
+            <div class="sfm-where-value">
                 <input type="text" placeholder="Value" />
             </div>
-            <div>
-                <button id="add-where-clause">Add Condition</button>
-                <button id="clear-where-clause">Clear Condition</button>
-                <button id="clear-all-where-clause">Clear All Conditions</button>
+            <div class="sfm-button-group">
+                <button id="add-where-clause" class="sfm-button">Add Condition</button>
+                <button id="clear-where-clause" class="sfm-button">Clear Condition</button>
+                <button id="clear-all-where-clause" class="sfm-button">Clear All Conditions</button>
             </div>
         `;
 
@@ -171,16 +171,12 @@ export class RecordsMigrationExport {
     }
 
     private _composeWhereClauseComposerFieldsHtml(): string {
-        let html = "<select>";
+        let html = "<select class=\"sfm-select\">";
 
         this._fields.forEach((field: any) => {
             html += `
                 <option value="${field.name}">
-                    <label class="fields-to-query_label">
-                        <span class="field-label">${field.label}</span>
-                        <span class="field-name"> • ${field.name}</span>
-                        <span class="field-type"> • ${field.type}</span>
-                    </label>
+                    ${field.label} • ${field.name} • ${field.type}
                 </option>
             `;
         });
@@ -192,9 +188,9 @@ export class RecordsMigrationExport {
 
     private _composeDestinationFileSelectionHtml(): string {
         let html = `
-            <div class="section">
+            <div class="sfm-panel">
                 <h2>Select a destination file</h2>
-                <div>
+                <div class="sfm-panel-content">
                     <p>lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
                 </div>
             </div>
@@ -205,8 +201,8 @@ export class RecordsMigrationExport {
 
     private _composeExportButtonHtml(): string {
         let html = `
-            <div class="section">
-                <button id="export-button">Export</button>
+            <div class="sfm-panel sfm-panel-actions">
+                <button id="export-button" class="sfm-button sfm-button-primary">Export</button>
             </div>
         `;
 

@@ -1,10 +1,10 @@
 const vscode = acquireVsCodeApi();
 
 const updateQuery = () => {
-    const objectName = document.querySelector(".container").dataset.objectName;
+    const objectName = document.querySelector(".sfm-container").dataset.objectName;
     const query = document.querySelector("#query");
     const fieldCheckboxes = document.querySelectorAll(
-        ".fields-to-query_fields-list-item > input[type='checkbox']"
+        ".sfm-field-item > input[type='checkbox']"
     );
 
     const selectedFields = [];
@@ -24,7 +24,7 @@ const updateQuery = () => {
 (() => {
     window.addEventListener("load", (event) => {
         const fieldCheckboxes = document.querySelectorAll(
-            ".fields-to-query_fields-list-item > input[type='checkbox']"
+            ".sfm-field-item > input[type='checkbox']"
         );
 
         for (const checkbox of fieldCheckboxes) {

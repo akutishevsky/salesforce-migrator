@@ -30,7 +30,7 @@ body {
     line-height: var(--vscode-line-height, 1.5);
 }
 
-.container {
+.sfm-container {
     display: flex;
     flex-direction: column;
     padding: var(--container-padding);
@@ -39,26 +39,26 @@ body {
     overflow-y: auto;
 }
 
-.header {
+.sfm-header {
     margin-bottom: var(--section-spacing);
     border-bottom: var(--container-border);
     padding-bottom: 1rem;
 }
 
-.header h1 {
+.sfm-header h1 {
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
     color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
 }
 
-.content {
+.sfm-content {
     display: flex;
     flex-direction: column;
     gap: var(--section-spacing);
 }
 
-.section {
+.sfm-panel {
     margin-bottom: 1.5rem;
     background-color: var(--section-bg);
     border-radius: var(--border-radius);
@@ -67,7 +67,11 @@ body {
         var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
 }
 
-.section h2 {
+.sfm-panel-header {
+    margin-bottom: 1rem;
+}
+
+.sfm-panel h2 {
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0 0 0.75rem 0;
@@ -80,11 +84,21 @@ body {
     padding-left: 0.5rem;
 }
 
-.section h3 {
+.sfm-panel h3 {
     font-size: 1rem;
     font-weight: 600;
     margin: 0 0 0.5rem 0;
     color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
+}
+
+.sfm-panel-content {
+    margin-top: 0.5rem;
+}
+
+.sfm-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem 1rem;
 }
 
 /* Form controls */
@@ -130,7 +144,7 @@ input[type="checkbox"] {
     accent-color: var(--vscode-checkbox-background);
 }
 
-select {
+.sfm-select {
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M6%209L1%204h10z%22%2F%3E%3C%2Fsvg%3E");
     background-repeat: no-repeat;
@@ -139,7 +153,7 @@ select {
     padding-right: 2rem;
 }
 
-button {
+.sfm-button {
     border: none;
     padding: var(--input-padding-vertical) var(--input-padding-horizontal);
     text-align: center;
@@ -153,40 +167,42 @@ button {
     font-weight: 500;
 }
 
-button:hover {
+.sfm-button:hover {
     background: var(--vscode-button-hoverBackground);
 }
 
-button:active {
+.sfm-button:active {
     background: var(--vscode-button-background);
     transform: translateY(0.0625rem);
 }
 
-button:focus {
+.sfm-button:focus {
     outline: 0.0625rem solid var(--vscode-focusBorder);
 }
 
-#export-button {
-    margin-top: 1rem;
+.sfm-button-primary {
     font-weight: 600;
     padding: 0.5rem 1rem;
-    background-color: var(
-        --vscode-statusBarItem-prominentBackground,
-        var(--vscode-button-background)
-    );
+    background-color: var(--vscode-button-background);
+    /* Use a button highlight effect instead of different color */
+    border: 0.0625rem solid var(--vscode-button-background);
+}
+
+#export-button {
+    margin-top: 0.5rem;
     display: inline-block;
 }
 
-/* Fields query section */
-.fields-to-query-container {
+/* Fields section */
+.sfm-fields-container {
     display: flex;
     flex-direction: row;
     gap: 1rem;
     margin-bottom: 1rem;
 }
 
-.fields-to-query_fields-container,
-.fields-to-query_fields-compose-where-clause {
+.sfm-fields-selector,
+.sfm-where-clause {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -202,15 +218,15 @@ button:focus {
         var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
 }
 
-.fields-to-query_fields-filter {
+.sfm-filter {
     margin-bottom: 0.75rem;
 }
 
-.fields-to-query_fields-filter input {
+.sfm-filter input {
     width: 100%;
 }
 
-.fields-to-query_fields-list {
+.sfm-fields-list {
     display: flex;
     flex-direction: column;
     gap: var(--field-gap);
@@ -222,11 +238,11 @@ button:focus {
     padding-top: 0.5rem;
 }
 
-.fields-to-query_fields-list::-webkit-scrollbar {
+.sfm-fields-list::-webkit-scrollbar {
     width: 0.5rem;
 }
 
-.fields-to-query_fields-list::-webkit-scrollbar-track {
+.sfm-fields-list::-webkit-scrollbar-track {
     background-color: var(
         --vscode-scrollbarSlider-activeBackground,
         transparent
@@ -234,16 +250,16 @@ button:focus {
     border-radius: 0.25rem;
 }
 
-.fields-to-query_fields-list::-webkit-scrollbar-thumb {
+.sfm-fields-list::-webkit-scrollbar-thumb {
     background-color: var(--vscode-scrollbarSlider-background);
     border-radius: 0.25rem;
 }
 
-.fields-to-query_fields-list::-webkit-scrollbar-thumb:hover {
+.sfm-fields-list::-webkit-scrollbar-thumb:hover {
     background-color: var(--vscode-scrollbarSlider-hoverBackground);
 }
 
-.fields-to-query_fields-list-item {
+.sfm-field-item {
     display: flex;
     align-items: center;
     padding: 0.25rem 0.5rem;
@@ -251,15 +267,15 @@ button:focus {
     transition: background-color 0.1s ease;
 }
 
-.fields-to-query_fields-list-item:hover {
+.sfm-field-item:hover {
     background-color: var(--vscode-list-hoverBackground);
 }
 
-.fields-to-query_fields-list-item input[type="checkbox"] {
+.sfm-field-item input[type="checkbox"] {
     flex: 0 0 auto;
 }
 
-.fields-to-query_fields-list-item label {
+.sfm-field-label {
     cursor: pointer;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -269,12 +285,12 @@ button:focus {
     gap: 0.25rem;
 }
 
-.fields-to-query_label .field-label {
+.sfm-field-label-name {
     font-weight: 600;
     color: var(--vscode-symbolIcon-fieldForeground, var(--vscode-foreground));
 }
 
-.fields-to-query_label .field-name {
+.sfm-field-api-name {
     font-family: var(--vscode-editor-font-family, monospace);
     color: var(
         --vscode-symbolIcon-propertyForeground,
@@ -283,7 +299,7 @@ button:focus {
     font-size: 0.9em;
 }
 
-.fields-to-query_label .field-type {
+.sfm-field-type {
     font-family: var(--vscode-editor-font-family, monospace);
     color: var(
         --vscode-symbolIcon-typeParameterForeground,
@@ -293,7 +309,11 @@ button:focus {
 }
 
 /* Query textarea */
-#query {
+.sfm-query-editor {
+    margin-top: 1rem;
+}
+
+.sfm-query-textarea {
     font-family: var(--vscode-editor-font-family, monospace);
     font-size: var(--vscode-editor-font-size);
     min-height: 8rem;
@@ -302,19 +322,22 @@ button:focus {
     padding: 0.5rem;
     border: 0.0625rem solid
         var(--vscode-input-border, var(--vscode-panel-border));
+    width: 100%;
 }
 
 /* Where clause section */
-.fields-to-query_fields-compose-where-clause > div {
+.sfm-where-field-selector,
+.sfm-where-operation,
+.sfm-where-value {
     margin-bottom: 0.5rem;
 }
 
-.fields-to-query_fields-compose-where-clause select {
+.sfm-where-clause select {
     width: 100%;
     margin-bottom: 0.5rem;
 }
 
-.fields-to-query_fields-compose-where-clause > div:last-of-type {
+.sfm-button-group {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -328,62 +351,44 @@ p {
     color: var(--vscode-descriptionForeground, var(--vscode-foreground));
 }
 
-/* Destination file section */
-.file-input-container {
-    display: flex;
-    flex-direction: row;
-    gap: 0.5rem;
-    align-items: center;
-    margin-top: 0.5rem;
-}
-
-.file-input-container input {
-    flex: 1;
-}
-
-.file-input-container button {
-    flex: 0 0 auto;
-}
-
 /* Responsive adjustments */
 @media screen and (max-width: 60rem) {
-    .fields-to-query-container {
+    .sfm-fields-container {
         flex-direction: column;
     }
 
-    .fields-to-query_fields-compose-where-clause {
+    .sfm-where-clause {
         margin-top: 0.5rem;
     }
 }
 
 @media screen and (max-width: 40rem) {
-    .container {
+    .sfm-container {
         padding: 0.75rem;
     }
 
-    .header h1 {
+    .sfm-header h1 {
         font-size: 1.25rem;
     }
 
-    .section h2 {
+    .sfm-panel h2 {
         font-size: 1rem;
     }
 
-    .section h3 {
+    .sfm-panel h3 {
         font-size: 0.9rem;
     }
 
-    .fields-to-query_fields-list {
+    .sfm-fields-list {
         height: 15rem;
         max-height: 15rem;
     }
 
-    .file-input-container {
+    .sfm-button-group {
         flex-direction: column;
-        align-items: stretch;
     }
 
-    .file-input-container button {
-        margin-top: 0.5rem;
+    .sfm-button {
+        width: 100%;
     }
 }
