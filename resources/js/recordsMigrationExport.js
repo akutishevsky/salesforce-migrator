@@ -1,15 +1,16 @@
 const vscode = acquireVsCodeApi();
 
 const updateQuery = () => {
-    const fieldCheckboxes = document.querySelectorAll(
+    let fieldCheckboxes = document.querySelectorAll(
         ".sfm-field-item > input[type='checkbox']"
     );
+    const container = document.querySelector(".sfm-container");
+    const objectName = container.dataset.objectName;
+    const queryTextarea = document.querySelector("#query");
+
     fieldCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", () => {
-            const container = document.querySelector(".sfm-container");
-            const objectName = container.dataset.objectName;
-            const queryTextarea = document.querySelector("#query");
-            const fieldCheckboxes = document.querySelectorAll(
+            fieldCheckboxes = document.querySelectorAll(
                 ".sfm-field-item > input[type='checkbox']"
             );
 
