@@ -58,6 +58,7 @@ export class RecordsMigrationExport {
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
             styles: ["/resources/css/recordsMigration.css"],
+            scripts: ["/resources/js/recordsMigrationExport.js"],
         });
 
         this._panel!.reveal();
@@ -85,7 +86,7 @@ export class RecordsMigrationExport {
         let html = "";
 
         html += `
-            <div class="container">
+            <div data-object-name="${this._customObject}" class="container">
                 <div class="header">
                     <h1>Export ${this._customObject} Records</h1>
                 </div>
@@ -122,8 +123,8 @@ export class RecordsMigrationExport {
                     </div>
                 </div>
                 <div>
-                    <h3>Result query</h3>
-                    <textarea></textarea>
+                    <h3>Result query (editable)</h3>
+                    <textarea id="query"></textarea>
                 </div>
             </div>
         `;
@@ -137,7 +138,7 @@ export class RecordsMigrationExport {
         this._fields.forEach((field: any) => {
             html += `
                 <div class="fields-to-query_fields-list-item">
-                    <input type="checkbox" />
+                    <input type="checkbox" data-field-name="${field.name}" />
                     <label>
                         <span class="field-label">${field.label}</span>
                         <span class="field-name"> • ${field.name}</span>
