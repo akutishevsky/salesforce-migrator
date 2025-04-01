@@ -118,8 +118,7 @@ export class RecordsMigrationExport {
                         </div>
                     </div>
                     <div class="fields-to-query_fields-compose-where-clause">
-                        <h3>Compose WHERE clause</h3>
-                        <textarea placeholder="WHERE Id = '001...'"></textarea>
+                        ${this._composeWhereClauseComposerHtml()}
                     </div>
                 </div>
                 <div>
@@ -139,7 +138,7 @@ export class RecordsMigrationExport {
             html += `
                 <div class="fields-to-query_fields-list-item">
                     <input type="checkbox" data-field-name="${field.name}" />
-                    <label>
+                    <label class="fields-to-query_label">
                         <span class="field-label">${field.label}</span>
                         <span class="field-name"> • ${field.name}</span>
                         <span class="field-type"> • ${field.type}</span>
@@ -147,6 +146,46 @@ export class RecordsMigrationExport {
                 </div>
             `;
         });
+
+        return html;
+    }
+
+    private _composeWhereClauseComposerHtml(): string {
+        let html = `
+            <h3>Compose WHERE clause</h3>
+            <div>
+                ${this._composeWhereClauseComposerFieldsHtml()}
+            </div>
+            <div>Operation: EQUALS</div>
+            <div>
+                <input type="text" placeholder="Value" />
+            </div>
+            <div>
+                <button id="add-where-clause">Add Condition</button>
+                <button id="clear-where-clause">Clear Condition</button>
+                <button id="clear-all-where-clause">Clear All Conditions</button>
+            </div>
+        `;
+
+        return html;
+    }
+
+    private _composeWhereClauseComposerFieldsHtml(): string {
+        let html = "<select>";
+
+        this._fields.forEach((field: any) => {
+            html += `
+                <option value="${field.name}">
+                    <label class="fields-to-query_label">
+                        <span class="field-label">${field.label}</span>
+                        <span class="field-name"> • ${field.name}</span>
+                        <span class="field-type"> • ${field.type}</span>
+                    </label>
+                </option>
+            `;
+        });
+
+        html += "</select>";
 
         return html;
     }
