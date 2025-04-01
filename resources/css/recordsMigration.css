@@ -1,6 +1,14 @@
+/* Records Migration Webview Styles using VS Code tokens */
+
 :root {
     --container-padding: 1.25rem;
     --section-spacing: 1.5rem;
+    --input-padding-vertical: 0.375rem;
+    --input-padding-horizontal: 0.6rem;
+    --border-radius: 0.25rem;
+    --field-gap: 0.5rem;
+    --container-border: 0.0625rem solid var(--vscode-panel-border);
+    --container-bg: var(--vscode-editor-lineHighlightBackground);
 }
 
 body {
@@ -21,9 +29,8 @@ body {
 }
 
 .header {
-    text-align: center;
     margin-bottom: var(--section-spacing);
-    border-bottom: 0.0625rem solid var(--vscode-panel-border);
+    border-bottom: var(--container-border);
     padding-bottom: 1rem;
 }
 
@@ -41,7 +48,7 @@ body {
 }
 
 .section {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .section h2 {
@@ -53,7 +60,206 @@ body {
     padding-left: 0.5rem;
 }
 
+.section h3 {
+    font-size: 1rem;
+    font-weight: var(--vscode-font-weight);
+    margin: 0 0 0.5rem 0;
+    color: var(--vscode-editor-foreground);
+}
+
+/* Form controls */
+input[type="text"],
+input[type="checkbox"],
+textarea,
+button {
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+}
+
+input[type="text"],
+textarea {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: var(--container-border);
+    padding: var(--input-padding-vertical) var(--input-padding-horizontal);
+    border-radius: var(--border-radius);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+    outline: 0.0625rem solid var(--vscode-focusBorder);
+}
+
+textarea {
+    min-height: 5rem;
+    resize: vertical;
+    margin: 0.5rem 0;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+}
+
+input[type="checkbox"] {
+    margin-right: 0.5rem;
+    accent-color: var(--vscode-checkbox-background);
+}
+
+button {
+    border: none;
+    padding: var(--input-padding-vertical) var(--input-padding-horizontal);
+    text-align: center;
+    outline: 0.0625rem solid transparent;
+    color: var(--vscode-button-foreground);
+    background: var(--vscode-button-background);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    min-width: 5rem;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+button:active {
+    background: var(--vscode-button-background);
+    transform: translateY(0.0625rem);
+}
+
+#export-button {
+    margin-top: 1rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+}
+
+/* Fields query section */
+.fields-to-query-container {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.fields-to-query_fields-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: var(--container-border);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    background-color: var(--container-bg);
+    box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
+}
+
+.fields-to-query_fields-compose-where-clause {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    border: var(--container-border);
+    border-radius: var(--border-radius);
+    padding: 0.75rem;
+    background-color: var(--container-bg);
+    box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
+}
+
+.fields-to-query_fields-compose-where-clause textarea {
+    flex-grow: 1;
+    height: 20rem;
+    min-height: 20rem;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+}
+
+.fields-to-query_fields-filter {
+    margin-bottom: 0.75rem;
+}
+
+.fields-to-query_fields-filter input {
+    width: 100%;
+}
+
+.fields-to-query_fields-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--field-gap);
+    height: 20rem;
+    max-height: 20rem;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    border-top: 0.0625rem solid var(--vscode-panel-border);
+    padding-top: 0.5rem;
+}
+
+.fields-to-query_fields-list::-webkit-scrollbar {
+    width: 0.5rem;
+}
+
+.fields-to-query_fields-list::-webkit-scrollbar-thumb {
+    background-color: var(--vscode-scrollbarSlider-background);
+    border-radius: 0.25rem;
+}
+
+.fields-to-query_fields-list::-webkit-scrollbar-thumb:hover {
+    background-color: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+.fields-to-query_fields-list-item {
+    display: flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--border-radius);
+    transition: background-color 0.1s ease;
+}
+
+.fields-to-query_fields-list-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.fields-to-query_fields-list-item label {
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+/* Paragraph styling */
+p {
+    line-height: 1.5;
+    margin: 0.5rem 0;
+}
+
+/* Destination file section */
+.file-input-container {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+}
+
+.file-input-container input {
+    flex: 1;
+}
+
+.file-input-container button {
+    flex: 0 0 auto;
+}
+
 /* Responsive adjustments */
+@media screen and (max-width: 60rem) {
+    .fields-to-query-container {
+        flex-direction: column;
+    }
+
+    .fields-to-query_fields-compose-where-clause {
+        margin-top: 0.5rem;
+    }
+}
+
 @media screen and (max-width: 40rem) {
     .container {
         padding: 0.75rem;
@@ -65,5 +271,23 @@ body {
 
     .section h2 {
         font-size: 1rem;
+    }
+
+    .section h3 {
+        font-size: 0.9rem;
+    }
+
+    .fields-to-query_fields-list {
+        height: 15rem;
+        max-height: 15rem;
+    }
+
+    .file-input-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .file-input-container button {
+        margin-top: 0.5rem;
     }
 }

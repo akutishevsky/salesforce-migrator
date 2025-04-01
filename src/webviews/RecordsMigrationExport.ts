@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
+import { SfCommandService } from "../services/SfCommandService";
+import { OrgService } from "../services/OrgService";
 
 export class RecordsMigrationExport {
     private _extensionContext: vscode.ExtensionContext;
@@ -7,6 +9,8 @@ export class RecordsMigrationExport {
     private _htmlService: HtmlService;
     private _panel: vscode.WebviewPanel | undefined;
     private _customObject: string;
+    private _sfCommandService: SfCommandService;
+    private _orgService: OrgService;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -21,11 +25,21 @@ export class RecordsMigrationExport {
             view: this._webviewView,
             extensionUri: this._extensionContext.extensionUri,
         });
+        this._sfCommandService = new SfCommandService();
+        this._orgService = new OrgService(this._extensionContext);
     }
 
     public async reveal() {
         this._initializePanel();
         this._renderLoader();
+
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            vscode.window.showErrorMessage(
+                "No source org selected. Please select a source org first."
+            );
+            return;
+        }
 
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
@@ -78,8 +92,35 @@ export class RecordsMigrationExport {
                 <div>
                      <h2>Select fields to query</h2>
                 </div>
+                <div class="fields-to-query-container">
+                    <div class="fields-to-query_fields-container">
+                        <h3>Select fields</h3>
+                        <div class="fields-to-query_fields-filter">
+                            <input type="text" placeholder="Filter fields" />
+                        </div>
+                        <div class="fields-to-query_fields-list">
+                            <div class="fields-to-query_fields-list-item">
+                                <input type="checkbox" />
+                                <label>Field 1</label>
+                            </div>
+                            <div class="fields-to-query_fields-list-item">
+                                <input type="checkbox" />
+                                <label>Field 2</label>
+                            </div>
+                            <div class="fields-to-query_fields-list-item">
+                                <input type="checkbox" />
+                                <label>Field 3</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fields-to-query_fields-compose-where-clause">
+                        <h3>Compose WHERE clause</h3>
+                        <textarea placeholder="WHERE Id = '001...'"></textarea>
+                    </div>
+                </div>
                 <div>
-                    <p>lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <h3>Result query</h3>
+                    <textarea></textarea>
                 </div>
             </div>
         `;
