@@ -120,8 +120,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
         this._webviewView.webview.html = this._htmlService.composeHtml({
             body: this._composeMetadataHtml(metadataObjects),
-            styles: ["/resources/css/metadataSelectorView.css"],
-            scripts: ["/resources/js/metadataSelectorView.js"],
+            styles: ["/resources/css/list.css"],
+            scripts: [
+                "/resources/js/list.js",
+                "/resources/js/metadataSelectorView.js",
+            ],
         });
     }
 
@@ -142,8 +145,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
     private _composeMetadataFilterHtml(): string {
         return `
-            <div class="metadata-filter-container">
-                <input type="text" id="metadata-filter" placeholder="Filter Metadata" />
+            <div class="filter-container">
+                <input type="text" id="filter" placeholder="Filter Metadata" />
             </div>
         `;
     }
@@ -151,9 +154,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _composeMetadataListHtml(
         metadataObjects: MetadataObject[]
     ): string {
-        let html = `<div class="metadata-list">`;
+        let html = `<div class="list">`;
         for (const metadataObject of metadataObjects) {
-            html += `<div class="metadata-list-item">${metadataObject.xmlName}</div>`;
+            html += `<div class="list-item">${metadataObject.xmlName}</div>`;
         }
         html += `</div>`;
 

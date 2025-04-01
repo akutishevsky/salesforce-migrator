@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
-import { ObjectService } from "../services/ObjectService";
+import { ObjectService, CustomObject } from "../services/ObjectService";
 import { OrgService } from "../services/OrgService";
 import { SfCommandService } from "../services/SfCommandService";
 
@@ -45,11 +45,10 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
             return;
         }
 
-        const customObjects = await this._objectService.getCustomObjects(
-            sourceOrg
-        );
+        const customObjects: CustomObject[] =
+            await this._objectService.getCustomObjects(sourceOrg);
 
-        console.log(customObjects);
+        this._composeWebviewHtml(customObjects);
     }
 
     private _renderLoader(): void {
@@ -58,5 +57,50 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         }
 
         this._webviewView.webview.html = this._htmlService.getLoaderHtml();
+    }
+
+    private _composeWebviewHtml(customObjects: CustomObject[]): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.composeHtml({
+            body: this._composeObjectsHtml(customObjects),
+            styles: ["/resources/css/list.css"],
+            scripts: ["/resources/js/list.js"],
+        });
+    }
+
+    private _composeObjectsHtml(customObjects: CustomObject[]): string {
+        customObjects.sort((a, b) => {
+            return a.fullName.localeCompare(b.fullName);
+        });
+
+        let html = `
+            <div>
+                ${this._composeObjectFilterHtml()}
+                ${this._composeObjectListHtml(customObjects)}
+            </div>
+        `;
+
+        return html;
+    }
+
+    private _composeObjectFilterHtml(): string {
+        return `
+            <div class="filter-container">
+                <input type="text" id="filter" placeholder="Filter Objects" />
+            </div>
+        `;
+    }
+
+    private _composeObjectListHtml(customObjects: CustomObject[]): string {
+        let html = `<div class="list">`;
+        for (const customObject of customObjects) {
+            html += `<div class="list-item">${customObject.fullName}</div>`;
+        }
+        html += `</div>`;
+
+        return html;
     }
 }
