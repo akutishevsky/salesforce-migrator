@@ -8,17 +8,26 @@
     --border-radius: 0.25rem;
     --field-gap: 0.5rem;
     --container-border: 0.0625rem solid var(--vscode-panel-border);
-    --container-bg: var(--vscode-editor-lineHighlightBackground);
+    --container-bg: var(--vscode-editor-background);
+    --panel-bg: var(
+        --vscode-sideBar-background,
+        var(--vscode-editor-background)
+    );
+    --section-bg: var(
+        --vscode-editorWidget-background,
+        var(--vscode-editor-lineHighlightBackground)
+    );
 }
 
 body {
     padding: 0;
     margin: 0;
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-foreground);
     font-family: var(--vscode-font-family);
     font-size: var(--vscode-font-size);
     font-weight: var(--vscode-font-weight);
-    background-color: var(--vscode-editor-background);
+    background-color: var(--panel-bg);
+    line-height: var(--vscode-line-height, 1.5);
 }
 
 .container {
@@ -26,6 +35,8 @@ body {
     flex-direction: column;
     padding: var(--container-padding);
     max-width: 100%;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .header {
@@ -36,9 +47,9 @@ body {
 
 .header h1 {
     font-size: 1.5rem;
-    font-weight: var(--vscode-font-weight);
+    font-weight: 600;
     margin: 0;
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
 }
 
 .content {
@@ -49,38 +60,50 @@ body {
 
 .section {
     margin-bottom: 1.5rem;
+    background-color: var(--section-bg);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: 0 0.125rem 0.25rem
+        var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .section h2 {
     font-size: 1.2rem;
-    font-weight: var(--vscode-font-weight);
+    font-weight: 600;
     margin: 0 0 0.75rem 0;
-    color: var(--vscode-editor-foreground);
-    border-left: 0.25rem solid var(--vscode-button-background);
+    color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
+    border-left: 0.25rem solid
+        var(
+            --vscode-activityBarBadge-background,
+            var(--vscode-button-background)
+        );
     padding-left: 0.5rem;
 }
 
 .section h3 {
     font-size: 1rem;
-    font-weight: var(--vscode-font-weight);
+    font-weight: 600;
     margin: 0 0 0.5rem 0;
-    color: var(--vscode-editor-foreground);
+    color: var(--vscode-titleBar-activeForeground, var(--vscode-foreground));
 }
 
 /* Form controls */
 input[type="text"],
 input[type="checkbox"],
 textarea,
+select,
 button {
     font-family: var(--vscode-font-family);
     font-size: var(--vscode-font-size);
 }
 
 input[type="text"],
-textarea {
+textarea,
+select {
     background-color: var(--vscode-input-background);
     color: var(--vscode-input-foreground);
-    border: var(--container-border);
+    border: 0.0625rem solid
+        var(--vscode-input-border, var(--vscode-panel-border));
     padding: var(--input-padding-vertical) var(--input-padding-horizontal);
     border-radius: var(--border-radius);
     width: 100%;
@@ -88,21 +111,32 @@ textarea {
 }
 
 input[type="text"]:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
     outline: 0.0625rem solid var(--vscode-focusBorder);
+    border-color: var(--vscode-focusBorder);
 }
 
 textarea {
     min-height: 5rem;
     resize: vertical;
     margin: 0.5rem 0;
-    font-family: var(--vscode-editor-font-family);
+    font-family: var(--vscode-editor-font-family, monospace);
     font-size: var(--vscode-editor-font-size);
 }
 
 input[type="checkbox"] {
     margin-right: 0.5rem;
     accent-color: var(--vscode-checkbox-background);
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M6%209L1%204h10z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%;
+    background-size: 0.65em auto;
+    padding-right: 2rem;
 }
 
 button {
@@ -116,6 +150,7 @@ button {
     cursor: pointer;
     min-width: 5rem;
     transition: background-color 0.2s ease;
+    font-weight: 500;
 }
 
 button:hover {
@@ -127,10 +162,19 @@ button:active {
     transform: translateY(0.0625rem);
 }
 
+button:focus {
+    outline: 0.0625rem solid var(--vscode-focusBorder);
+}
+
 #export-button {
     margin-top: 1rem;
-    font-weight: 500;
+    font-weight: 600;
     padding: 0.5rem 1rem;
+    background-color: var(
+        --vscode-statusBarItem-prominentBackground,
+        var(--vscode-button-background)
+    );
+    display: inline-block;
 }
 
 /* Fields query section */
@@ -141,18 +185,7 @@ button:active {
     margin-bottom: 1rem;
 }
 
-.fields-to-query_fields-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    border: var(--container-border);
-    border-radius: var(--border-radius);
-    padding: 0.75rem;
-    background-color: var(--container-bg);
-    box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
-}
-
+.fields-to-query_fields-container,
 .fields-to-query_fields-compose-where-clause {
     flex: 1;
     display: flex;
@@ -161,16 +194,12 @@ button:active {
     border: var(--container-border);
     border-radius: var(--border-radius);
     padding: 0.75rem;
-    background-color: var(--container-bg);
-    box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
-}
-
-.fields-to-query_fields-compose-where-clause textarea {
-    flex-grow: 1;
-    height: 20rem;
-    min-height: 20rem;
-    font-family: var(--vscode-editor-font-family);
-    font-size: var(--vscode-editor-font-size);
+    background-color: var(
+        --vscode-editorWidget-background,
+        var(--vscode-editor-background)
+    );
+    box-shadow: 0 0.0625rem 0.125rem
+        var(--vscode-widget-shadow, rgba(0, 0, 0, 0.1));
 }
 
 .fields-to-query_fields-filter {
@@ -197,6 +226,14 @@ button:active {
     width: 0.5rem;
 }
 
+.fields-to-query_fields-list::-webkit-scrollbar-track {
+    background-color: var(
+        --vscode-scrollbarSlider-activeBackground,
+        transparent
+    );
+    border-radius: 0.25rem;
+}
+
 .fields-to-query_fields-list::-webkit-scrollbar-thumb {
     background-color: var(--vscode-scrollbarSlider-background);
     border-radius: 0.25rem;
@@ -218,27 +255,77 @@ button:active {
     background-color: var(--vscode-list-hoverBackground);
 }
 
+.fields-to-query_fields-list-item input[type="checkbox"] {
+    flex: 0 0 auto;
+}
+
 .fields-to-query_fields-list-item label {
     cursor: pointer;
-    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
 }
 
-.fields-to-query_fields-list-item label .field-label {
-    font-weight: bold;
+.fields-to-query_label .field-label {
+    font-weight: 600;
+    color: var(--vscode-symbolIcon-fieldForeground, var(--vscode-foreground));
 }
 
-.fields-to-query_fields-list-item label .field-name,
-.fields-to-query_fields-list-item label .field-type {
-    font-family: monospace;
+.fields-to-query_label .field-name {
+    font-family: var(--vscode-editor-font-family, monospace);
+    color: var(
+        --vscode-symbolIcon-propertyForeground,
+        var(--vscode-descriptionForeground)
+    );
+    font-size: 0.9em;
+}
+
+.fields-to-query_label .field-type {
+    font-family: var(--vscode-editor-font-family, monospace);
+    color: var(
+        --vscode-symbolIcon-typeParameterForeground,
+        var(--vscode-descriptionForeground)
+    );
+    font-size: 0.9em;
+}
+
+/* Query textarea */
+#query {
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: var(--vscode-editor-font-size);
+    min-height: 8rem;
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    padding: 0.5rem;
+    border: 0.0625rem solid
+        var(--vscode-input-border, var(--vscode-panel-border));
+}
+
+/* Where clause section */
+.fields-to-query_fields-compose-where-clause > div {
+    margin-bottom: 0.5rem;
+}
+
+.fields-to-query_fields-compose-where-clause select {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.fields-to-query_fields-compose-where-clause > div:last-of-type {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
 /* Paragraph styling */
 p {
     line-height: 1.5;
     margin: 0.5rem 0;
+    color: var(--vscode-descriptionForeground, var(--vscode-foreground));
 }
 
 /* Destination file section */
