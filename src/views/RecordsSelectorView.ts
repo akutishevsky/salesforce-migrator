@@ -2,20 +2,17 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { ObjectService, CustomObject } from "../services/ObjectService";
 import { OrgService } from "../services/OrgService";
-import { SfCommandService } from "../services/SfCommandService";
 
 export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
     private _webviewView: vscode.WebviewView | undefined;
     private _htmlService!: HtmlService;
     private _orgService: OrgService;
-    private _sfCommandService: SfCommandService;
     private _objectService: ObjectService;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
         this._orgService = new OrgService(extensionContext);
-        this._sfCommandService = new SfCommandService();
         this._objectService = new ObjectService();
     }
 
