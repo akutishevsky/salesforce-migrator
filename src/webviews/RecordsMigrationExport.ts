@@ -34,7 +34,7 @@ export class RecordsMigrationExport {
         if (!this._panel) {
             this._panel = vscode.window.createWebviewPanel(
                 "salesforce-migrator.records-migration-export",
-                `${this._customObject} Migration`,
+                `Export ${this._customObject} Records`,
                 vscode.ViewColumn.One,
                 {
                     enableScripts: true,
