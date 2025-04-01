@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { ObjectService, CustomObject } from "../services/ObjectService";
 import { OrgService } from "../services/OrgService";
+import { RecordsMigrationExport } from "../webviews/RecordsMigrationExport";
 
 export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
@@ -147,7 +148,22 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         vscode.window.showInformationMessage(
             `Ready to ${operation.toLowerCase()} records for ${customObject}`
         );
-        // The actual implementation would create and show a migration webview here
+        switch (operation) {
+            case "Export":
+                this._openExportWebview(customObject);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private _openExportWebview(customObject: string): void {
+        const exportWebview = new RecordsMigrationExport(
+            this._extensionContext,
+            this._webviewView!,
+            customObject
+        );
+        exportWebview.reveal();
     }
 
     /**
