@@ -101,4 +101,11 @@ export class OrgService {
     public async fetchOrgs(): Promise<Record<string, SalesforceOrg[]>> {
         return await this._sfCommandService.execute("sf org list");
     }
+
+    public async fetchOrgDetails(orgAlias: string): Promise<SalesforceOrg> {
+        const orgDetails = await this._sfCommandService.execute(
+            `sf org display --target-org ${orgAlias}`
+        );
+        return orgDetails;
+    }
 }

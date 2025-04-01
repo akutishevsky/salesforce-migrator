@@ -226,6 +226,15 @@ button:active {
     flex: 1;
 }
 
+.fields-to-query_fields-list-item label .field-label {
+    font-weight: bold;
+}
+
+.fields-to-query_fields-list-item label .field-name,
+.fields-to-query_fields-list-item label .field-type {
+    font-family: monospace;
+}
+
 /* Paragraph styling */
 p {
     line-height: 1.5;

@@ -11,6 +11,7 @@ export class RecordsMigrationExport {
     private _customObject: string;
     private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
+    private _fields: any;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -40,6 +41,19 @@ export class RecordsMigrationExport {
             );
             return;
         }
+
+        const orgDisplay = await this._orgService.fetchOrgDetails(sourceOrg);
+
+        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/sobjects/${this._customObject}/describe/`;
+        const result = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${orgDisplay.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+        const describe: any = await result.json();
+        this._fields = describe.fields;
 
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
@@ -99,18 +113,7 @@ export class RecordsMigrationExport {
                             <input type="text" placeholder="Filter fields" />
                         </div>
                         <div class="fields-to-query_fields-list">
-                            <div class="fields-to-query_fields-list-item">
-                                <input type="checkbox" />
-                                <label>Field 1</label>
-                            </div>
-                            <div class="fields-to-query_fields-list-item">
-                                <input type="checkbox" />
-                                <label>Field 2</label>
-                            </div>
-                            <div class="fields-to-query_fields-list-item">
-                                <input type="checkbox" />
-                                <label>Field 3</label>
-                            </div>
+                            ${this._composeFieldsToQueryFieldsListHtml()}
                         </div>
                     </div>
                     <div class="fields-to-query_fields-compose-where-clause">
@@ -124,6 +127,25 @@ export class RecordsMigrationExport {
                 </div>
             </div>
         `;
+
+        return html;
+    }
+
+    private _composeFieldsToQueryFieldsListHtml(): string {
+        let html = "";
+
+        this._fields.forEach((field: any) => {
+            html += `
+                <div class="fields-to-query_fields-list-item">
+                    <input type="checkbox" />
+                    <label>
+                        <span class="field-label">${field.label}</span>
+                        <span class="field-name"> • ${field.name}</span>
+                        <span class="field-type"> • ${field.type}</span>
+                    </label>
+                </div>
+            `;
+        });
 
         return html;
     }
