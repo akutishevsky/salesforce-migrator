@@ -155,10 +155,13 @@ class WhereClausePopulator {
     _addWhereClause() {
         const addWhereClauseButton =
             document.querySelector("#add-where-clause");
-        
+
         // Remove existing event listener if any
-        addWhereClauseButton.removeEventListener("click", this._handleAddWhereClause);
-        
+        addWhereClauseButton.removeEventListener(
+            "click",
+            this._handleAddWhereClause
+        );
+
         // Create the bound event handler and store it as a property
         this._handleAddWhereClause = () => {
             const whereValueSelect = document.querySelector(
@@ -166,19 +169,21 @@ class WhereClausePopulator {
             );
             const whereValue = document.querySelector("#where-value");
             const whereOperation = document.querySelector("#where-operation");
-            const fieldSelector = document.querySelector("#where-field-selector");
-            
+            const fieldSelector = document.querySelector(
+                "#where-field-selector"
+            );
+
             // Validate inputs
             if (!this._selectedFieldApiName || !fieldSelector.value) {
                 alert("Please select a field first");
                 return;
             }
-            
+
             const selectedWhereValue =
                 whereValueSelect.style.display === "block"
                     ? whereValueSelect.value
                     : whereValue.value;
-                    
+
             // Validate that a value is provided
             if (!selectedWhereValue.trim()) {
                 alert("Please enter a filter value");
@@ -189,16 +194,19 @@ class WhereClausePopulator {
                 fieldApiName: this._selectedFieldApiName,
                 operation: whereOperation.value,
                 value: selectedWhereValue,
-                fieldType: this._selectedFieldType
+                fieldType: this._selectedFieldType,
             };
 
             this.whereClauses.push(whereClause);
 
             query.update();
         };
-        
+
         // Add the event listener
-        addWhereClauseButton.addEventListener("click", this._handleAddWhereClause);
+        addWhereClauseButton.addEventListener(
+            "click",
+            this._handleAddWhereClause
+        );
     }
 
     showPicklistWhereValueSelect(picklistValues) {
@@ -268,28 +276,28 @@ class Query {
 
         const whereClause = whereClauses
             .map((clause) => {
-                // Format value based on field type
                 let formattedValue = clause.value;
-                
-                // Handle different data types
-                if (clause.fieldType === 'string' || 
-                    clause.fieldType === 'picklist' || 
-                    clause.fieldType === 'multipicklist' || 
-                    clause.fieldType === 'textarea' || 
-                    clause.fieldType === 'phone' || 
-                    clause.fieldType === 'email' || 
-                    clause.fieldType === 'url' || 
-                    clause.fieldType === 'id') {
-                    // Add quotes for string types, escape any single quotes inside
+
+                if (
+                    clause.fieldType === "string" ||
+                    clause.fieldType === "picklist" ||
+                    clause.fieldType === "multipicklist" ||
+                    clause.fieldType === "textarea" ||
+                    clause.fieldType === "phone" ||
+                    clause.fieldType === "email" ||
+                    clause.fieldType === "url" ||
+                    clause.fieldType === "id"
+                ) {
                     formattedValue = `'${clause.value.replace(/'/g, "\\'")}'`;
-                } else if (clause.fieldType === 'date' || clause.fieldType === 'datetime') {
-                    // Format date values
+                } else if (
+                    clause.fieldType === "date" ||
+                    clause.fieldType === "datetime"
+                ) {
                     formattedValue = `${clause.value}`;
-                } else if (clause.fieldType === 'boolean') {
-                    // Boolean values are case-sensitive in SOQL
+                } else if (clause.fieldType === "boolean") {
                     formattedValue = clause.value.toLowerCase();
                 }
-                
+
                 return `${clause.fieldApiName} ${clause.operation} ${formattedValue}`;
             })
             .join(" AND ");
