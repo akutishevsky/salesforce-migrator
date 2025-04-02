@@ -1,6 +1,7 @@
 const vscode = acquireVsCodeApi();
 
 let whereClausePopulator;
+let query;
 
 const updateQuery = () => {
     let fieldCheckboxes = document.querySelectorAll(
@@ -12,17 +13,7 @@ const updateQuery = () => {
 
     fieldCheckboxes.forEach((checkbox) => {
         checkbox.addEventListener("change", () => {
-            fieldCheckboxes = document.querySelectorAll(
-                ".sfm-field-item > input[type='checkbox']"
-            );
-
-            const selectedFields = Array.from(fieldCheckboxes)
-                .filter((checkbox) => checkbox.checked)
-                .map((checkbox) => checkbox.dataset.fieldName);
-
-            queryTextarea.value = `SELECT ${selectedFields.join(
-                ", "
-            )}\nFROM ${objectName}`;
+            query.update();
         });
     });
 };
@@ -84,6 +75,8 @@ const setupFieldSelectionButtons = () => {
 };
 
 class WhereClausePopulator {
+    whereClauses = [];
+
     _selectedFieldApiName;
     _selectedFieldType;
     _selectedWhereOperation;
@@ -96,6 +89,7 @@ class WhereClausePopulator {
         try {
             this._selectField();
             this._selectWhereOperarion();
+            this._addWhereClause();
         } catch (error) {
             console.error("Error in WhereClausePopulator: ", error);
         }
@@ -164,6 +158,32 @@ class WhereClausePopulator {
         whereValue.value = "";
     }
 
+    _addWhereClause() {
+        const addWhereClauseButton =
+            document.querySelector("#add-where-clause");
+        addWhereClauseButton.addEventListener("click", () => {
+            const whereValueSelect = document.querySelector(
+                "#where-value-select"
+            );
+            const whereValue = document.querySelector("#where-value");
+            const whereOperation = document.querySelector("#where-operation");
+            const selectedWhereValue =
+                whereValueSelect.style.display === "block"
+                    ? whereValueSelect.value
+                    : whereValue.value;
+
+            const whereClause = {
+                fieldApiName: this._selectedFieldApiName,
+                operation: whereOperation.value,
+                value: selectedWhereValue,
+            };
+
+            this.whereClauses.push(whereClause);
+
+            query.update();
+        });
+    }
+
     showPicklistWhereValueSelect(picklistValues) {
         const whereValueSelect = document.querySelector("#where-value-select");
         const whereValue = document.querySelector("#where-value");
@@ -191,11 +211,64 @@ class WhereClausePopulator {
     }
 }
 
+class Query {
+    _queryElement;
+
+    constructor() {
+        this._queryElement = document.querySelector("#query");
+    }
+
+    update() {
+        const select = this._composeSelectFields();
+        const from = this._composeFrom();
+        const where = this._composeWhereClause();
+
+        const queryTextarea = document.querySelector("#query");
+        let queryValue = `${select}${from}${where}`;
+        queryTextarea.value = queryValue;
+    }
+
+    _composeSelectFields() {
+        const fieldCheckboxes = document.querySelectorAll(
+            ".sfm-field-item > input[type='checkbox']"
+        );
+
+        const selectedFields = Array.from(fieldCheckboxes)
+            .filter((checkbox) => checkbox.checked)
+            .map((checkbox) => checkbox.dataset.fieldName);
+
+        return `SELECT ${selectedFields.join(", ")}`;
+    }
+
+    _composeFrom() {
+        const container = document.querySelector(".sfm-container");
+        const objectName = container.dataset.objectName;
+        return `\nFROM ${objectName}`;
+    }
+
+    _composeWhereClause() {
+        const whereClauses = whereClausePopulator.whereClauses;
+        if (whereClauses.length === 0) {
+            return "";
+        }
+
+        const whereClause = whereClauses
+            .map((clause) => {
+                return `${clause.fieldApiName} ${clause.operation} ${clause.value}`;
+            })
+            .join(" AND ");
+
+        return `\nWHERE ${whereClause}`;
+    }
+}
+
 const initPage = () => {
     updateQuery();
     filterFields();
     setupFieldSelectionButtons();
+
     whereClausePopulator = new WhereClausePopulator();
+    query = new Query();
 
     window.addEventListener("message", (event) => {
         const { command, value } = event.data;
