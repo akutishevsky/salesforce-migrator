@@ -55,11 +55,36 @@ export class RecordsMigrationExport {
         const describe: any = await result.json();
         this._fields = describe.fields;
 
+        this._fields.sort((a: any, b: any) => {
+            return a.label.localeCompare(b.label);
+        });
+
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
             styles: ["/resources/css/recordsMigration.css"],
             scripts: ["/resources/js/recordsMigrationExport.js"],
         });
+
+        this._panel!.webview.onDidReceiveMessage(
+            async (message: any) => {
+                switch (message.command) {
+                    case "getPicklistFieldValues":
+                        const field = this._fields.filter(
+                            (f: any) => f.name === message.fieldApiName
+                        )[0];
+                        const picklistValues = field.picklistValues;
+                        this._panel!.webview.postMessage({
+                            command: "populatePicklistFieldValues",
+                            value: picklistValues,
+                        });
+                        break;
+                    default:
+                        break;
+                }
+            },
+            undefined,
+            this._extensionContext.subscriptions
+        );
 
         this._panel!.reveal();
     }
@@ -169,6 +194,7 @@ export class RecordsMigrationExport {
             <div class="sfm-where-value">
                 <label for="where-value" class="sfm-label">Value:</label>
                 <input id="where-value" type="text" placeholder="Enter condition value" />
+                <select id="where-value-select" style="display:none;"></select>
             </div>
             <div class="sfm-button-group">
                 <button id="add-where-clause" class="sfm-button">Add Condition</button>
@@ -185,7 +211,7 @@ export class RecordsMigrationExport {
 
         this._fields.forEach((field: any) => {
             html += `
-                <option value="${field.name}">
+                <option value="${field.name}" data-field-type="${field.type}">
                     ${field.label} • ${field.name} • ${field.type}
                 </option>
             `;
@@ -200,11 +226,13 @@ export class RecordsMigrationExport {
         return `
             <label for="where-operation" class="sfm-label">Operation:</label>
             <select id="where-operation" class="sfm-select">
-                <option value="equals">Equals</option>
-                <option value="notEquals">Not Equals</option>
-                <option value="contains">Contains</option>
-                <option value="startsWith">Starts With</option>
-                <option value="endsWith">Ends With</option>
+                <option value="=">Equals</option>
+                <option value="!=">Not Equals</option>
+                <option value="LIKE">Like</option>
+                <option value="<">Less than</option>
+                <option value=">">Greater than</option>
+                <option value="<=">Less than or equal</option>
+                <option value=">=">Greater than or equal</option>
             </select>
         `;
     }

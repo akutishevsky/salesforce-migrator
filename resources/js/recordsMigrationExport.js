@@ -1,5 +1,7 @@
 const vscode = acquireVsCodeApi();
 
+let whereClausePopulator;
+
 const updateQuery = () => {
     let fieldCheckboxes = document.querySelectorAll(
         ".sfm-field-item > input[type='checkbox']"
@@ -81,10 +83,127 @@ const setupFieldSelectionButtons = () => {
     });
 };
 
+class WhereClausePopulator {
+    _selectedFieldApiName;
+    _selectedFieldType;
+    _selectedWhereOperation;
+
+    constructor() {
+        this._addEventListeners();
+    }
+
+    _addEventListeners() {
+        try {
+            this._selectField();
+            this._selectWhereOperarion();
+        } catch (error) {
+            console.error("Error in WhereClausePopulator: ", error);
+        }
+    }
+
+    _selectField() {
+        const whereFieldSelector = document.querySelector(
+            "#where-field-selector"
+        );
+        whereFieldSelector.addEventListener("change", (e) => {
+            const whereValueSelect = document.querySelector(
+                "#where-value-select"
+            );
+            whereValueSelect.innerHTML = "";
+
+            const selectedOption =
+                e.currentTarget.options[e.currentTarget.selectedIndex];
+            this._selectedFieldApiName = e.currentTarget.value;
+            this._selectedFieldType = selectedOption.dataset.fieldType;
+
+            if (
+                this._selectedFieldType === "boolean" ||
+                this._selectedFieldType === "picklist"
+            ) {
+                this._showWhereValueSelect();
+            } else {
+                this._showWhereValueInput();
+            }
+        });
+    }
+
+    _showWhereValueSelect() {
+        if (this._selectedFieldType === "boolean") {
+            this._showBooleanWhereValueSelect();
+        } else if (this._selectedFieldType === "picklist") {
+            this._requestPicklistFieldValues();
+        }
+    }
+
+    _showBooleanWhereValueSelect() {
+        const whereValueSelect = document.querySelector("#where-value-select");
+        const whereValue = document.querySelector("#where-value");
+
+        whereValueSelect.innerHTML = `
+            <option value="true">TRUE</option>
+            <option value="false">FALSE</option>
+        `;
+        whereValueSelect.style.display = "block";
+        whereValue.style.display = "none";
+    }
+
+    _requestPicklistFieldValues() {
+        vscode.postMessage({
+            command: "getPicklistFieldValues",
+            fieldApiName: this._selectedFieldApiName,
+        });
+    }
+
+    _showWhereValueInput() {
+        const whereValueSelect = document.querySelector("#where-value-select");
+        const whereValue = document.querySelector("#where-value");
+
+        whereValueSelect.style.display = "none";
+        whereValue.style.display = "block";
+
+        whereValue.value = "";
+    }
+
+    showPicklistWhereValueSelect(picklistValues) {
+        const whereValueSelect = document.querySelector("#where-value-select");
+        const whereValue = document.querySelector("#where-value");
+
+        for (const picklistValue of picklistValues) {
+            if (!picklistValue.active) {
+                continue;
+            }
+
+            const option = document.createElement("option");
+            option.value = picklistValue.value;
+            option.textContent = picklistValue.value;
+            whereValueSelect.appendChild(option);
+        }
+
+        whereValueSelect.style.display = "block";
+        whereValue.style.display = "none";
+    }
+
+    _selectWhereOperarion() {
+        const whereOperation = document.querySelector("#where-operation");
+        whereOperation.addEventListener("change", (e) => {
+            this._selectedWhereOperation = e.currentTarget.value;
+        });
+    }
+}
+
 const initPage = () => {
     updateQuery();
     filterFields();
     setupFieldSelectionButtons();
+    whereClausePopulator = new WhereClausePopulator();
+
+    window.addEventListener("message", (event) => {
+        const { command, value } = event.data;
+
+        if (command === "populatePicklistFieldValues") {
+            whereClausePopulator.showPicklistWhereValueSelect(value);
+        }
+    });
 };
 
 window.addEventListener("load", initPage);
