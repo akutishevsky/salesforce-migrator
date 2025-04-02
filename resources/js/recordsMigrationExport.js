@@ -53,18 +53,16 @@ const setupFieldSelectionButtons = () => {
         fieldCheckboxes.forEach((checkbox) => {
             checkbox.checked = true;
         });
-        if (fieldCheckboxes.length > 0) {
-            fieldCheckboxes[0].dispatchEvent(new Event("change"));
-        }
+        // Directly call query.update() after changing checkboxes
+        query.update();
     });
 
     clearAllButton.addEventListener("click", () => {
         fieldCheckboxes.forEach((checkbox) => {
             checkbox.checked = false;
         });
-        if (fieldCheckboxes.length > 0) {
-            fieldCheckboxes[0].dispatchEvent(new Event("change"));
-        }
+        // Directly call query.update() after changing checkboxes
+        query.update();
     });
 };
 
@@ -348,12 +346,14 @@ class Query {
 }
 
 const initPage = () => {
+    // Initialize objects first
+    whereClausePopulator = new WhereClausePopulator();
+    query = new Query();
+    
+    // Then set up event handlers
     updateQuery();
     filterFields();
     setupFieldSelectionButtons();
-
-    whereClausePopulator = new WhereClausePopulator();
-    query = new Query();
 
     window.addEventListener("message", (event) => {
         const { command, value } = event.data;
