@@ -145,9 +145,6 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         customObject: string,
         operation: string
     ): void {
-        vscode.window.showInformationMessage(
-            `Ready to ${operation.toLowerCase()} records for ${customObject}`
-        );
         switch (operation) {
             case "Export":
                 this._openExportWebview(customObject);
