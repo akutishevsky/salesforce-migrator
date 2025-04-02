@@ -199,7 +199,7 @@ export class RecordsMigrationExport {
             <div class="sfm-button-group">
                 <button id="add-where-clause" class="sfm-button">Add Condition</button>
                 <button id="clear-where-clause" class="sfm-button">Clear Condition</button>
-                <button id="clear-all-where-clause" class="sfm-button">Clear All Conditions</button>
+                <button id="clear-all-where-clauses" class="sfm-button">Clear All Conditions</button>
             </div>
         `;
 

@@ -84,6 +84,8 @@ class WhereClausePopulator {
             this._selectField();
             this._selectWhereOperation();
             this._addWhereClause();
+            this._clearWhereClause();
+            this._clearAllWhereClauses();
         } catch (error) {
             console.error("Error in WhereClausePopulator: ", error);
         }
@@ -209,6 +211,45 @@ class WhereClausePopulator {
         );
     }
 
+    _clearWhereClause() {
+        const clearWhereClauseButton = document.querySelector(
+            "#clear-where-clause"
+        );
+        clearWhereClauseButton.addEventListener("click", () => {
+            const whereFieldSelector = document.querySelector(
+                "#where-field-selector"
+            );
+            const whereOperation = document.querySelector("#where-operation");
+            const whereValue = document.querySelector("#where-value");
+            const whereValueSelect = document.querySelector(
+                "#where-value-select"
+            );
+            const actualWhereValue =
+                whereValueSelect.style.display === "block"
+                    ? whereValueSelect.value
+                    : whereValue.value;
+
+            this.whereClauses = this.whereClauses.filter(
+                (clause) =>
+                    clause.fieldApiName !== whereFieldSelector.value ||
+                    clause.operation !== whereOperation.value ||
+                    clause.value !== actualWhereValue
+            );
+
+            query.update();
+        });
+    }
+
+    _clearAllWhereClauses() {
+        const clearAllWhereClausesButton = document.querySelector(
+            "#clear-all-where-clauses"
+        );
+        clearAllWhereClausesButton.addEventListener("click", () => {
+            this.whereClauses = [];
+            query.update();
+        });
+    }
+
     showPicklistWhereValueSelect(picklistValues) {
         const whereValueSelect = document.querySelector("#where-value-select");
         const whereValue = document.querySelector("#where-value");
@@ -323,4 +364,8 @@ const initPage = () => {
     });
 };
 
-window.addEventListener("load", initPage);
+try {
+    window.addEventListener("load", initPage);
+} catch (error) {
+    console.error(error);
+}
