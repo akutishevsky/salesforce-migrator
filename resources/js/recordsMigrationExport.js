@@ -4,17 +4,11 @@ let whereClausePopulator;
 let query;
 
 const updateQuery = () => {
-    let fieldCheckboxes = document.querySelectorAll(
-        ".sfm-field-item > input[type='checkbox']"
-    );
-    const container = document.querySelector(".sfm-container");
-    const objectName = container.dataset.objectName;
-    const queryTextarea = document.querySelector("#query");
-
-    fieldCheckboxes.forEach((checkbox) => {
-        checkbox.addEventListener("change", () => {
+    const fieldsContainer = document.querySelector(".sfm-fields-container");
+    fieldsContainer.addEventListener("change", (event) => {
+        if (event.target.matches(".sfm-field-item > input[type='checkbox']")) {
             query.update();
-        });
+        }
     });
 };
 
@@ -88,7 +82,7 @@ class WhereClausePopulator {
     _addEventListeners() {
         try {
             this._selectField();
-            this._selectWhereOperarion();
+            this._selectWhereOperation();
             this._addWhereClause();
         } catch (error) {
             console.error("Error in WhereClausePopulator: ", error);
@@ -161,27 +155,50 @@ class WhereClausePopulator {
     _addWhereClause() {
         const addWhereClauseButton =
             document.querySelector("#add-where-clause");
-        addWhereClauseButton.addEventListener("click", () => {
+        
+        // Remove existing event listener if any
+        addWhereClauseButton.removeEventListener("click", this._handleAddWhereClause);
+        
+        // Create the bound event handler and store it as a property
+        this._handleAddWhereClause = () => {
             const whereValueSelect = document.querySelector(
                 "#where-value-select"
             );
             const whereValue = document.querySelector("#where-value");
             const whereOperation = document.querySelector("#where-operation");
+            const fieldSelector = document.querySelector("#where-field-selector");
+            
+            // Validate inputs
+            if (!this._selectedFieldApiName || !fieldSelector.value) {
+                alert("Please select a field first");
+                return;
+            }
+            
             const selectedWhereValue =
                 whereValueSelect.style.display === "block"
                     ? whereValueSelect.value
                     : whereValue.value;
+                    
+            // Validate that a value is provided
+            if (!selectedWhereValue.trim()) {
+                alert("Please enter a filter value");
+                return;
+            }
 
             const whereClause = {
                 fieldApiName: this._selectedFieldApiName,
                 operation: whereOperation.value,
                 value: selectedWhereValue,
+                fieldType: this._selectedFieldType
             };
 
             this.whereClauses.push(whereClause);
 
             query.update();
-        });
+        };
+        
+        // Add the event listener
+        addWhereClauseButton.addEventListener("click", this._handleAddWhereClause);
     }
 
     showPicklistWhereValueSelect(picklistValues) {
@@ -203,7 +220,7 @@ class WhereClausePopulator {
         whereValue.style.display = "none";
     }
 
-    _selectWhereOperarion() {
+    _selectWhereOperation() {
         const whereOperation = document.querySelector("#where-operation");
         whereOperation.addEventListener("change", (e) => {
             this._selectedWhereOperation = e.currentTarget.value;
@@ -212,8 +229,6 @@ class WhereClausePopulator {
 }
 
 class Query {
-    _queryElement;
-
     constructor() {
         this._queryElement = document.querySelector("#query");
     }
@@ -223,9 +238,8 @@ class Query {
         const from = this._composeFrom();
         const where = this._composeWhereClause();
 
-        const queryTextarea = document.querySelector("#query");
         let queryValue = `${select}${from}${where}`;
-        queryTextarea.value = queryValue;
+        this._queryElement.value = queryValue;
     }
 
     _composeSelectFields() {
@@ -254,7 +268,29 @@ class Query {
 
         const whereClause = whereClauses
             .map((clause) => {
-                return `${clause.fieldApiName} ${clause.operation} ${clause.value}`;
+                // Format value based on field type
+                let formattedValue = clause.value;
+                
+                // Handle different data types
+                if (clause.fieldType === 'string' || 
+                    clause.fieldType === 'picklist' || 
+                    clause.fieldType === 'multipicklist' || 
+                    clause.fieldType === 'textarea' || 
+                    clause.fieldType === 'phone' || 
+                    clause.fieldType === 'email' || 
+                    clause.fieldType === 'url' || 
+                    clause.fieldType === 'id') {
+                    // Add quotes for string types, escape any single quotes inside
+                    formattedValue = `'${clause.value.replace(/'/g, "\\'")}'`;
+                } else if (clause.fieldType === 'date' || clause.fieldType === 'datetime') {
+                    // Format date values
+                    formattedValue = `${clause.value}`;
+                } else if (clause.fieldType === 'boolean') {
+                    // Boolean values are case-sensitive in SOQL
+                    formattedValue = clause.value.toLowerCase();
+                }
+                
+                return `${clause.fieldApiName} ${clause.operation} ${formattedValue}`;
             })
             .join(" AND ");
 
