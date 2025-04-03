@@ -1,6 +1,5 @@
 const vscode = acquireVsCodeApi();
 
-let errorMessage;
 let whereClausePopulator;
 let query;
 
@@ -346,13 +345,13 @@ class Query {
 }
 
 class ErrorMessage {
-    show(message) {
+    static show(message) {
         const errorMessageElement = document.querySelector("#error-message");
         errorMessageElement.innerText = message;
         errorMessageElement.classList.add("visible");
     }
 
-    hide() {
+    static hide() {
         const errorMessageElement = document.querySelector("#error-message");
         errorMessageElement.classList.remove("visible");
         errorMessageElement.innerText = "";
