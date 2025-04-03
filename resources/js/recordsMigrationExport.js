@@ -174,7 +174,7 @@ class WhereClausePopulator {
         const addWhereClauseButton =
             document.querySelector("#add-where-clause");
 
-        this._handleAddWhereClause = () => {
+        addWhereClauseButton.addEventListener("click", () => {
             const whereValueSelect = document.querySelector(
                 "#where-value-select"
             );
@@ -212,13 +212,7 @@ class WhereClausePopulator {
                 this.whereClauses.push(whereClause);
                 query.update();
             }
-        };
-
-        // Add the event listener
-        addWhereClauseButton.addEventListener(
-            "click",
-            this._handleAddWhereClause
-        );
+        });
     }
 
     _clearWhereClause() {
