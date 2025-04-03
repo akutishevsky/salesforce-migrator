@@ -6,9 +6,7 @@ const initialize = () => {
         btn.addEventListener("click", (e) => {
             const command = e.currentTarget.id;
             const metadataTypeName = e.currentTarget.value;
-            console.log(
-                `Command: ${command}, Metadata Type Name: ${metadataTypeName}`
-            );
+
             vscode.postMessage({
                 command: command,
                 metadataTypeName: metadataTypeName,
