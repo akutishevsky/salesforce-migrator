@@ -346,20 +346,16 @@ class Query {
 }
 
 class ErrorMessage {
-    _errorMessageElement;
-
-    constructor() {
-        this._errorMessageElement = document.querySelector("#error-message");
-    }
-
     show(message) {
-        this._errorMessageElement.innerText = message;
-        this._errorMessageElement.classList.add("visible");
+        const errorMessageElement = document.querySelector("#error-message");
+        errorMessageElement.innerText = message;
+        errorMessageElement.classList.add("visible");
     }
 
     hide() {
-        this._errorMessageElement.classList.remove("visible");
-        this._errorMessageElement.innerText = "";
+        const errorMessageElement = document.querySelector("#error-message");
+        errorMessageElement.classList.remove("visible");
+        errorMessageElement.innerText = "";
     }
 }
 
@@ -433,8 +429,7 @@ const initPage = () => {
 };
 
 try {
-    errorMessage = new ErrorMessage();
     window.addEventListener("load", initPage);
 } catch (error) {
-    errorMessage?.show(error.message);
+    ErrorMessage.show(error.message);
 }
