@@ -190,9 +190,17 @@ class WhereClausePopulator {
                 fieldType: this._selectedFieldType,
             };
 
-            this.whereClauses.push(whereClause);
+            const clauseExists = this.whereClauses.some(
+                (existingClause) =>
+                    existingClause.fieldApiName === whereClause.fieldApiName &&
+                    existingClause.operation === whereClause.operation &&
+                    existingClause.value === whereClause.value
+            );
 
-            query.update();
+            if (!clauseExists) {
+                this.whereClauses.push(whereClause);
+                query.update();
+            }
         };
 
         // Add the event listener
