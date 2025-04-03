@@ -44,47 +44,28 @@ export class RecordsMigrationExport {
         }
 
         await this._retrieveFields(sourceOrg);
+        this._renderWebview();
+        this._setupMessageHandlers();
+        this._panel!.reveal();
+    }
 
+    private _renderWebview(): void {
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
             styles: ["/resources/css/recordsMigration.css"],
             scripts: ["/resources/js/recordsMigrationExport.js"],
         });
+    }
 
+    private _setupMessageHandlers(): void {
         this._panel!.webview.onDidReceiveMessage(
             async (message: any) => {
                 switch (message.command) {
                     case "getPicklistFieldValues":
-                        const field = this._fields.filter(
-                            (f: any) => f.name === message.fieldApiName
-                        )[0];
-                        const picklistValues = field.picklistValues;
-                        this._panel!.webview.postMessage({
-                            command: "populatePicklistFieldValues",
-                            value: picklistValues,
-                        });
+                        this._handlePicklistFieldValues(message);
                         break;
                     case "openFileDialog":
-                        // Handle file dialog opening
-                        const currentPath = message.currentPath || "";
-
-                        // Use VS Code API to show a save file dialog
-                        const fileUri = await vscode.window.showSaveDialog({
-                            defaultUri: vscode.Uri.file(currentPath),
-                            filters: {
-                                "CSV files": ["csv"],
-                                "JSON files": ["json"],
-                            },
-                            saveLabel: "Select Destination File",
-                        });
-
-                        if (fileUri) {
-                            // Send the selected file path back to the webview
-                            this._panel!.webview.postMessage({
-                                command: "setDestinationFile",
-                                value: fileUri.fsPath,
-                            });
-                        }
+                        await this._handleFileDialog(message);
                         break;
                     default:
                         break;
@@ -93,8 +74,37 @@ export class RecordsMigrationExport {
             undefined,
             this._extensionContext.subscriptions
         );
+    }
 
-        this._panel!.reveal();
+    private _handlePicklistFieldValues(message: any): void {
+        const field = this._fields.filter(
+            (f: any) => f.name === message.fieldApiName
+        )[0];
+        const picklistValues = field.picklistValues;
+        this._panel!.webview.postMessage({
+            command: "populatePicklistFieldValues",
+            value: picklistValues,
+        });
+    }
+
+    private async _handleFileDialog(message: any): Promise<void> {
+        const currentPath = message.currentPath || "";
+
+        const fileUri = await vscode.window.showSaveDialog({
+            defaultUri: vscode.Uri.file(currentPath),
+            filters: {
+                "CSV files": ["csv"],
+                "JSON files": ["json"],
+            },
+            saveLabel: "Select Destination File",
+        });
+
+        if (fileUri) {
+            this._panel!.webview.postMessage({
+                command: "setDestinationFile",
+                value: fileUri.fsPath,
+            });
+        }
     }
 
     private _initializePanel(): void {
