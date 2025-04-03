@@ -36,7 +36,6 @@ body {
     padding: var(--container-padding);
     max-width: 100%;
     height: 100vh;
-    overflow-y: auto;
 }
 
 .sfm-header {
@@ -411,7 +410,10 @@ p {
 .sfm-error-message {
     color: var(--vscode-errorForeground, #f14c4c);
     font-size: 0.9rem;
-    background-color: var(--vscode-inputValidation-errorBackground, rgba(241, 76, 76, 0.1));
+    background-color: var(
+        --vscode-inputValidation-errorBackground,
+        rgba(241, 76, 76, 0.1)
+    );
     border-left: 0.25rem solid var(--vscode-errorForeground, #f14c4c);
     padding: 0.5rem;
     border-radius: var(--border-radius);
