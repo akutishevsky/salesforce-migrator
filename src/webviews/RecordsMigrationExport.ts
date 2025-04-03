@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
 import { OrgService } from "../services/OrgService";
+import path from "path";
 
 export class RecordsMigrationExport {
     private _extensionContext: vscode.ExtensionContext;
@@ -284,7 +285,7 @@ export class RecordsMigrationExport {
                                 type="text" 
                                 id="destination-file" 
                                 class="sfm-file-input" 
-                                value="${defaultPath}" 
+                                value="${path.normalize(defaultPath)}" 
                                 placeholder="Enter file path or click Browse" 
                             />
                             <button id="browse-file-button" class="sfm-button">Browse</button>
