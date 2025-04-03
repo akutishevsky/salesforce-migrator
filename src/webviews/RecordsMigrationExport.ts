@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
-import { OrgService } from "../services/OrgService";
+import { OrgService, SalesforceOrg } from "../services/OrgService";
 import path from "path";
 
 export class RecordsMigrationExport {
@@ -43,22 +43,7 @@ export class RecordsMigrationExport {
             return;
         }
 
-        const orgDisplay = await this._orgService.fetchOrgDetails(sourceOrg);
-
-        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/sobjects/${this._customObject}/describe/`;
-        const result = await fetch(url, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${orgDisplay.accessToken}`,
-                "Content-Type": "application/json",
-            },
-        });
-        const describe: any = await result.json();
-        this._fields = describe.fields;
-
-        this._fields.sort((a: any, b: any) => {
-            return a.label.localeCompare(b.label);
-        });
+        this._retrieveFields(sourceOrg);
 
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
@@ -128,6 +113,25 @@ export class RecordsMigrationExport {
 
     private _renderLoader(): void {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
+    }
+
+    private async _retrieveFields(sourceOrg: string): Promise<any> {
+        const orgDisplay = await this._orgService.fetchOrgDetails(sourceOrg);
+
+        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/sobjects/${this._customObject}/describe/`;
+        const result = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${orgDisplay.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+        const describe: any = await result.json();
+        this._fields = describe.fields;
+
+        this._fields.sort((a: any, b: any) => {
+            return a.label.localeCompare(b.label);
+        });
     }
 
     private _composeWebviewHtml(): string {
