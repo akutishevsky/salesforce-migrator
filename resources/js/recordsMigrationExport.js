@@ -2,6 +2,7 @@ const vscode = acquireVsCodeApi();
 
 let whereClausePopulator;
 let query;
+let fieldSelector;
 
 const updateQuery = () => {
     const fieldsContainer = document.querySelector(".sfm-fields-container");
@@ -12,59 +13,76 @@ const updateQuery = () => {
     });
 };
 
-const filterFields = () => {
-    const filterInput = document.querySelector(".sfm-filter > input");
-    filterInput.addEventListener("input", (e) => {
-        const filterValue = e.target.value.toLowerCase();
-        const fieldItems = document.querySelectorAll(".sfm-field-item");
-        fieldItems.forEach((item) => {
-            const fieldName = item
-                .querySelector(".sfm-field-label-name")
-                .textContent.toLowerCase();
-            const fieldApiName = item
-                .querySelector(".sfm-field-api-name")
-                .textContent.toLowerCase();
-            const fieldType = item
-                .querySelector(".sfm-field-type")
-                .textContent.toLowerCase();
+class FieldSelector {
+    fieldElements = [];
+    addAllButton;
+    clearAllButton;
+    filterInput;
 
-            const isMatching =
-                fieldName.includes(filterValue) ||
-                fieldApiName.includes(filterValue) ||
-                fieldType.includes(filterValue);
+    constructor() {
+        this.fieldElements = document.querySelectorAll(
+            ".sfm-field-item > input[type='checkbox']"
+        );
+        this.addAllButton = document.querySelector("#add-all-fields");
+        this.clearAllButton = document.querySelector("#clear-all-fields");
+        this.filterInput = document.querySelector(".sfm-filter > input");
 
-            if (isMatching) {
-                item.style.display = "block";
-            } else {
-                item.style.display = "none";
-            }
+        this._addEventListeners();
+    }
+
+    _addEventListeners() {
+        this._addAll();
+        this._clearAll();
+        this._filterFields();
+    }
+
+    _addAll() {
+        this.addAllButton.addEventListener("click", () => {
+            this.fieldElements.forEach((checkbox) => {
+                checkbox.checked = true;
+            });
+            query.update();
         });
-    });
-};
+    }
 
-const setupFieldSelectionButtons = () => {
-    const addAllButton = document.getElementById("add-all-fields");
-    const clearAllButton = document.getElementById("clear-all-fields");
-    const fieldCheckboxes = document.querySelectorAll(
-        ".sfm-field-item > input[type='checkbox']"
-    );
-
-    addAllButton.addEventListener("click", () => {
-        fieldCheckboxes.forEach((checkbox) => {
-            checkbox.checked = true;
+    _clearAll() {
+        this.clearAllButton.addEventListener("click", () => {
+            this.fieldElements.forEach((checkbox) => {
+                checkbox.checked = false;
+            });
+            query.update();
         });
-        // Directly call query.update() after changing checkboxes
-        query.update();
-    });
+    }
 
-    clearAllButton.addEventListener("click", () => {
-        fieldCheckboxes.forEach((checkbox) => {
-            checkbox.checked = false;
+    _filterFields() {
+        this.filterInput.addEventListener("input", (e) => {
+            const filterValue = e.target.value.toLowerCase();
+            const fieldItems = document.querySelectorAll(".sfm-field-item");
+            fieldItems.forEach((item) => {
+                const fieldName = item
+                    .querySelector(".sfm-field-label-name")
+                    .textContent.toLowerCase();
+                const fieldApiName = item
+                    .querySelector(".sfm-field-api-name")
+                    .textContent.toLowerCase();
+                const fieldType = item
+                    .querySelector(".sfm-field-type")
+                    .textContent.toLowerCase();
+
+                const isMatching =
+                    fieldName.includes(filterValue) ||
+                    fieldApiName.includes(filterValue) ||
+                    fieldType.includes(filterValue);
+
+                if (isMatching) {
+                    item.style.display = "block";
+                } else {
+                    item.style.display = "none";
+                }
+            });
         });
-        // Directly call query.update() after changing checkboxes
-        query.update();
-    });
-};
+    }
+}
 
 class WhereClausePopulator {
     whereClauses = [];
@@ -399,11 +417,10 @@ const setupFileSelector = () => {
 const initPage = () => {
     whereClausePopulator = new WhereClausePopulator();
     query = new Query();
+    fieldSelector = new FieldSelector();
 
     // Then set up event handlers
     updateQuery();
-    filterFields();
-    setupFieldSelectionButtons();
     setupFileSelector();
 
     window.addEventListener("message", (event) => {
