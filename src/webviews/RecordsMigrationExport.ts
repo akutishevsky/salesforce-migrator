@@ -43,7 +43,7 @@ export class RecordsMigrationExport {
             return;
         }
 
-        this._retrieveFields(sourceOrg);
+        await this._retrieveFields(sourceOrg);
 
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
