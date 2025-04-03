@@ -374,6 +374,10 @@ class FileSelector {
             });
         });
     }
+
+    setDestinationFilePath(path) {
+        this._destinationFileInput.value = path;
+    }
 }
 
 class ErrorMessage {
@@ -404,10 +408,7 @@ class ErrorMessage {
                 if (command === "populatePicklistFieldValues") {
                     whereClausePopulator.showPicklistWhereValueSelect(value);
                 } else if (command === "setDestinationFile") {
-                    // Update the file input with the selected path
-                    const destinationFileInput =
-                        document.getElementById("destination-file");
-                    destinationFileInput.value = value;
+                    fileSelector.setDestinationFilePath(value);
                 }
             });
         });
