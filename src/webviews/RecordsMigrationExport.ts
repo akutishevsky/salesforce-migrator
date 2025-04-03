@@ -146,7 +146,7 @@ export class RecordsMigrationExport {
                             </div>
                         </div>
                         <div class="sfm-filter">
-                            <input type="text" placeholder="Filter fields" />
+                            <input type="text" placeholder="Filter fields (by Label, API Name, or Type)" />
                         </div>
                         <div class="sfm-fields-list">
                             ${this._composeFieldsToQueryFieldsListHtml()}
