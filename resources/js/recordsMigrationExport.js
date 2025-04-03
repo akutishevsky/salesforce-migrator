@@ -4,20 +4,12 @@ let whereClausePopulator;
 let query;
 let fieldSelector;
 
-const updateQuery = () => {
-    const fieldsContainer = document.querySelector(".sfm-fields-container");
-    fieldsContainer.addEventListener("change", (event) => {
-        if (event.target.matches(".sfm-field-item > input[type='checkbox']")) {
-            query.update();
-        }
-    });
-};
-
 class FieldSelector {
     fieldElements = [];
     addAllButton;
     clearAllButton;
     filterInput;
+    fieldsContainer;
 
     constructor() {
         this.fieldElements = document.querySelectorAll(
@@ -26,14 +18,26 @@ class FieldSelector {
         this.addAllButton = document.querySelector("#add-all-fields");
         this.clearAllButton = document.querySelector("#clear-all-fields");
         this.filterInput = document.querySelector(".sfm-filter > input");
+        this.fieldsContainer = document.querySelector(".sfm-fields-container");
 
         this._addEventListeners();
     }
 
     _addEventListeners() {
+        this._setupFieldCheckboxListener();
         this._addAll();
         this._clearAll();
         this._filterFields();
+    }
+
+    _setupFieldCheckboxListener() {
+        this.fieldsContainer.addEventListener("change", (event) => {
+            if (
+                event.target.matches(".sfm-field-item > input[type='checkbox']")
+            ) {
+                query.update();
+            }
+        });
     }
 
     _addAll() {
@@ -420,7 +424,6 @@ const initPage = () => {
     fieldSelector = new FieldSelector();
 
     // Then set up event handlers
-    updateQuery();
     setupFileSelector();
 
     window.addEventListener("message", (event) => {
