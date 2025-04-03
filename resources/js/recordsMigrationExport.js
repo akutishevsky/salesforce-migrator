@@ -359,15 +359,18 @@ class FileSelector {
     _destinationFileInput;
 
     constructor() {
-        _browseFileButton = document.querySelector("#browse-file-button");
-        _destinationFileInput = document.querySelector("#destination-file");
+        this._browseFileButton = document.querySelector("#browse-file-button");
+        this._destinationFileInput =
+            document.querySelector("#destination-file");
+
+        this._openFileDialog();
     }
 
     _openFileDialog() {
-        _browseFileButton.addEventListener("click", () => {
+        this._browseFileButton.addEventListener("click", () => {
             vscode.postMessage({
                 command: "openFileDialog",
-                currentPath: destinationFileInput.value,
+                currentPath: this._destinationFileInput.value,
             });
         });
     }

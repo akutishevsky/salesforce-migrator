@@ -100,50 +100,6 @@ export class RecordsMigrationExport {
                             });
                         }
                         break;
-
-                    case "showErrorMessage":
-                        // Show error message in VS Code
-                        vscode.window.showErrorMessage(message.message);
-                        break;
-
-                    case "exportRecords":
-                        // Handle the export records command
-                        try {
-                            const destinationFile = message.destinationFile;
-                            const query = message.query;
-
-                            // Show information message
-                            vscode.window.showInformationMessage(
-                                `Exporting records to ${destinationFile}`
-                            );
-
-                            // Here we would implement the actual export functionality
-                            // This would involve executing the SOQL query against Salesforce
-                            // and writing the results to the specified file
-
-                            // For now, let's just log what we would do
-                            console.log(
-                                `Exporting query: ${query} to file: ${destinationFile}`
-                            );
-
-                            // TODO: Implement the actual export functionality
-                            // This could involve using the SF CLI or Salesforce API
-
-                            // Show success message when complete
-                            vscode.window.showInformationMessage(
-                                `Records successfully exported to ${destinationFile}`
-                            );
-                        } catch (error) {
-                            console.error("Export failed:", error);
-                            vscode.window.showErrorMessage(
-                                `Export failed: ${
-                                    error instanceof Error
-                                        ? error.message
-                                        : String(error)
-                                }`
-                            );
-                        }
-                        break;
                     default:
                         break;
                 }
@@ -345,9 +301,6 @@ export class RecordsMigrationExport {
     private _composeExportButtonHtml(): string {
         let html = `
             <div class="sfm-panel sfm-panel-actions">
-                <div class="sfm-error-message-container" id="error-message-container">
-                    <div class="sfm-error-message" id="error-message"></div>
-                </div>
                 <button id="export-button" class="sfm-button sfm-button-primary">Export</button>
             </div>
         `;
