@@ -418,30 +418,30 @@ const setupFileSelector = () => {
     });
 };
 
-const initPage = () => {
-    whereClausePopulator = new WhereClausePopulator();
-    query = new Query();
-    fieldSelector = new FieldSelector();
+(() => {
+    try {
+        window.addEventListener("load", () => {
+            whereClausePopulator = new WhereClausePopulator();
+            query = new Query();
+            fieldSelector = new FieldSelector();
 
-    // Then set up event handlers
-    setupFileSelector();
+            // Then set up event handlers
+            setupFileSelector();
 
-    window.addEventListener("message", (event) => {
-        const { command, value } = event.data;
+            window.addEventListener("message", (event) => {
+                const { command, value } = event.data;
 
-        if (command === "populatePicklistFieldValues") {
-            whereClausePopulator.showPicklistWhereValueSelect(value);
-        } else if (command === "setDestinationFile") {
-            // Update the file input with the selected path
-            const destinationFileInput =
-                document.getElementById("destination-file");
-            destinationFileInput.value = value;
-        }
-    });
-};
-
-try {
-    window.addEventListener("load", initPage);
-} catch (error) {
-    ErrorMessage.show(error.message);
-}
+                if (command === "populatePicklistFieldValues") {
+                    whereClausePopulator.showPicklistWhereValueSelect(value);
+                } else if (command === "setDestinationFile") {
+                    // Update the file input with the selected path
+                    const destinationFileInput =
+                        document.getElementById("destination-file");
+                    destinationFileInput.value = value;
+                }
+            });
+        });
+    } catch (error) {
+        ErrorMessage.show(error.message);
+    }
+})();
