@@ -348,6 +348,51 @@ class Query {
     }
 }
 
+const setupFileSelector = () => {
+    const browseFileButton = document.getElementById("browse-file-button");
+    const destinationFileInput = document.getElementById("destination-file");
+
+    browseFileButton.addEventListener("click", () => {
+        // Request the VS Code extension to open a file dialog
+        vscode.postMessage({
+            command: "openFileDialog",
+            currentPath: destinationFileInput.value,
+        });
+    });
+
+    // Setup export button
+    const exportButton = document.getElementById("export-button");
+    exportButton.addEventListener("click", () => {
+        const destinationFile = destinationFileInput.value;
+        const queryText = document.getElementById("query").value;
+
+        if (!destinationFile) {
+            console.log("No destination file selected");
+            vscode.postMessage({
+                command: "showErrorMessage",
+                message: "Please select a destination file first.",
+            });
+            return;
+        }
+
+        if (!queryText || queryText.trim() === "") {
+            console.log("Empty query");
+            vscode.postMessage({
+                command: "showErrorMessage",
+                message: "Please build a valid query first.",
+            });
+            return;
+        }
+
+        // Send the export command to the extension
+        vscode.postMessage({
+            command: "exportRecords",
+            destinationFile: destinationFile,
+            query: queryText,
+        });
+    });
+};
+
 const initPage = () => {
     // Initialize objects first
     whereClausePopulator = new WhereClausePopulator();
@@ -357,12 +402,18 @@ const initPage = () => {
     updateQuery();
     filterFields();
     setupFieldSelectionButtons();
+    setupFileSelector();
 
     window.addEventListener("message", (event) => {
         const { command, value } = event.data;
 
         if (command === "populatePicklistFieldValues") {
             whereClausePopulator.showPicklistWhereValueSelect(value);
+        } else if (command === "setDestinationFile") {
+            // Update the file input with the selected path
+            const destinationFileInput =
+                document.getElementById("destination-file");
+            destinationFileInput.value = value;
         }
     });
 };

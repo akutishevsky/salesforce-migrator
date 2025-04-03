@@ -377,6 +377,29 @@ p {
     color: var(--vscode-descriptionForeground, var(--vscode-foreground));
 }
 
+/* File selector styles */
+.sfm-file-selector {
+    margin: 0.5rem 0;
+}
+
+.sfm-file-input-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.sfm-file-input {
+    flex: 1;
+    font-family: var(--vscode-editor-font-family, monospace);
+    font-size: 0.95em;
+}
+
+.sfm-file-hint {
+    font-size: 0.9em;
+    color: var(--vscode-descriptionForeground);
+    margin-top: 0.25rem;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 60rem) {
     .sfm-fields-container {

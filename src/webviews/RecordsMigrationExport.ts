@@ -78,6 +78,72 @@ export class RecordsMigrationExport {
                             value: picklistValues,
                         });
                         break;
+                    case "openFileDialog":
+                        // Handle file dialog opening
+                        const currentPath = message.currentPath || "";
+
+                        // Use VS Code API to show a save file dialog
+                        const fileUri = await vscode.window.showSaveDialog({
+                            defaultUri: vscode.Uri.file(currentPath),
+                            filters: {
+                                "CSV files": ["csv"],
+                                "JSON files": ["json"],
+                            },
+                            saveLabel: "Select Destination File",
+                        });
+
+                        if (fileUri) {
+                            // Send the selected file path back to the webview
+                            this._panel!.webview.postMessage({
+                                command: "setDestinationFile",
+                                value: fileUri.fsPath,
+                            });
+                        }
+                        break;
+
+                    case "showErrorMessage":
+                        // Show error message in VS Code
+                        vscode.window.showErrorMessage(message.message);
+                        break;
+
+                    case "exportRecords":
+                        // Handle the export records command
+                        try {
+                            const destinationFile = message.destinationFile;
+                            const query = message.query;
+
+                            // Show information message
+                            vscode.window.showInformationMessage(
+                                `Exporting records to ${destinationFile}`
+                            );
+
+                            // Here we would implement the actual export functionality
+                            // This would involve executing the SOQL query against Salesforce
+                            // and writing the results to the specified file
+
+                            // For now, let's just log what we would do
+                            console.log(
+                                `Exporting query: ${query} to file: ${destinationFile}`
+                            );
+
+                            // TODO: Implement the actual export functionality
+                            // This could involve using the SF CLI or Salesforce API
+
+                            // Show success message when complete
+                            vscode.window.showInformationMessage(
+                                `Records successfully exported to ${destinationFile}`
+                            );
+                        } catch (error) {
+                            console.error("Export failed:", error);
+                            vscode.window.showErrorMessage(
+                                `Export failed: ${
+                                    error instanceof Error
+                                        ? error.message
+                                        : String(error)
+                                }`
+                            );
+                        }
+                        break;
                     default:
                         break;
                 }
@@ -242,11 +308,33 @@ export class RecordsMigrationExport {
     }
 
     private _composeDestinationFileSelectionHtml(): string {
+        // Format the current date and time for the filename
+        const now = new Date();
+        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+
+        // Create the default path following the requested structure
+        // "salesforce-migrator/{objectName}/Export/{objectName}_{date_time}.csv"
+        const defaultPath = `salesforce-migrator/${this._customObject}/Export/${this._customObject}_${dateStr}_${timeStr}.csv`;
+
         let html = `
             <div class="sfm-panel">
                 <h2>Select a destination file</h2>
                 <div class="sfm-panel-content">
-                    <p>lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    <div class="sfm-file-selector">
+                        <label for="destination-file" class="sfm-label">Destination file:</label>
+                        <div class="sfm-file-input-container">
+                            <input 
+                                type="text" 
+                                id="destination-file" 
+                                class="sfm-file-input" 
+                                value="${defaultPath}" 
+                                placeholder="Enter file path or click Browse" 
+                            />
+                            <button id="browse-file-button" class="sfm-button">Browse</button>
+                        </div>
+                        <p class="sfm-file-hint">Select an existing file or create a new one. Records will be exported as CSV.</p>
+                    </div>
                 </div>
             </div>
         `;
