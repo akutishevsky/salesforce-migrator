@@ -3,6 +3,7 @@ const vscode = acquireVsCodeApi();
 let whereClausePopulator;
 let query;
 let fieldSelector;
+let fileSelector;
 
 class FieldSelector {
     fieldElements = [];
@@ -353,6 +354,25 @@ class Query {
     }
 }
 
+class FileSelector {
+    _browseFileButton;
+    _destinationFileInput;
+
+    constructor() {
+        _browseFileButton = document.querySelector("#browse-file-button");
+        _destinationFileInput = document.querySelector("#destination-file");
+    }
+
+    _openFileDialog() {
+        _browseFileButton.addEventListener("click", () => {
+            vscode.postMessage({
+                command: "openFileDialog",
+                currentPath: destinationFileInput.value,
+            });
+        });
+    }
+}
+
 class ErrorMessage {
     static show(message) {
         const errorMessageElement = document.querySelector("#error-message");
@@ -367,60 +387,13 @@ class ErrorMessage {
     }
 }
 
-const setupFileSelector = () => {
-    const browseFileButton = document.getElementById("browse-file-button");
-    const destinationFileInput = document.getElementById("destination-file");
-
-    browseFileButton.addEventListener("click", () => {
-        // Request the VS Code extension to open a file dialog
-        vscode.postMessage({
-            command: "openFileDialog",
-            currentPath: destinationFileInput.value,
-        });
-    });
-
-    // Setup export button
-    const exportButton = document.getElementById("export-button");
-    exportButton.addEventListener("click", () => {
-        const destinationFile = destinationFileInput.value;
-        const queryText = document.getElementById("query").value;
-
-        if (!destinationFile) {
-            console.log("No destination file selected");
-            vscode.postMessage({
-                command: "showErrorMessage",
-                message: "Please select a destination file first.",
-            });
-            return;
-        }
-
-        if (!queryText || queryText.trim() === "") {
-            console.log("Empty query");
-            vscode.postMessage({
-                command: "showErrorMessage",
-                message: "Please build a valid query first.",
-            });
-            return;
-        }
-
-        // Send the export command to the extension
-        vscode.postMessage({
-            command: "exportRecords",
-            destinationFile: destinationFile,
-            query: queryText,
-        });
-    });
-};
-
 (() => {
     try {
         window.addEventListener("load", () => {
             whereClausePopulator = new WhereClausePopulator();
             query = new Query();
             fieldSelector = new FieldSelector();
-
-            // Then set up event handlers
-            setupFileSelector();
+            fileSelector = new FileSelector();
 
             window.addEventListener("message", (event) => {
                 const { command, value } = event.data;
