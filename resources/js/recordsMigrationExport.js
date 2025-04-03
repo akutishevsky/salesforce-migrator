@@ -173,22 +173,15 @@ class WhereClausePopulator {
                 "#where-field-selector"
             );
 
-            // Validate inputs
             if (!this._selectedFieldApiName || !fieldSelector.value) {
-                alert("Please select a field first");
-                return;
+                const fieldOptions = fieldSelector.querySelectorAll("option");
+                this._selectedFieldApiName = fieldOptions[0].value;
             }
 
             const selectedWhereValue =
                 whereValueSelect.style.display === "block"
                     ? whereValueSelect.value
                     : whereValue.value;
-
-            // Validate that a value is provided
-            if (!selectedWhereValue.trim()) {
-                alert("Please enter a filter value");
-                return;
-            }
 
             const whereClause = {
                 fieldApiName: this._selectedFieldApiName,
@@ -335,6 +328,8 @@ class Query {
                     formattedValue = `${clause.value}`;
                 } else if (clause.fieldType === "boolean") {
                     formattedValue = clause.value.toLowerCase();
+                } else {
+                    formattedValue = `''`;
                 }
 
                 return `${clause.fieldApiName} ${clause.operation} ${formattedValue}`;
@@ -349,7 +344,7 @@ const initPage = () => {
     // Initialize objects first
     whereClausePopulator = new WhereClausePopulator();
     query = new Query();
-    
+
     // Then set up event handlers
     updateQuery();
     filterFields();
