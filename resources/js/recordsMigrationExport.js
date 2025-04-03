@@ -1,5 +1,6 @@
 const vscode = acquireVsCodeApi();
 
+let errorMessage;
 let whereClausePopulator;
 let query;
 
@@ -78,15 +79,11 @@ class WhereClausePopulator {
     }
 
     _addEventListeners() {
-        try {
-            this._selectField();
-            this._selectWhereOperation();
-            this._addWhereClause();
-            this._clearWhereClause();
-            this._clearAllWhereClauses();
-        } catch (error) {
-            console.error("Error in WhereClausePopulator: ", error);
-        }
+        this._selectField();
+        this._selectWhereOperation();
+        this._addWhereClause();
+        this._clearWhereClause();
+        this._clearAllWhereClauses();
     }
 
     _selectField() {
@@ -348,6 +345,24 @@ class Query {
     }
 }
 
+class ErrorMessage {
+    _errorMessageElement;
+
+    constructor() {
+        this._errorMessageElement = document.querySelector("#error-message");
+    }
+
+    show(message) {
+        this._errorMessageElement.innerText = message;
+        this._errorMessageElement.classList.add("visible");
+    }
+
+    hide() {
+        this._errorMessageElement.classList.remove("visible");
+        this._errorMessageElement.innerText = "";
+    }
+}
+
 const setupFileSelector = () => {
     const browseFileButton = document.getElementById("browse-file-button");
     const destinationFileInput = document.getElementById("destination-file");
@@ -394,7 +409,6 @@ const setupFileSelector = () => {
 };
 
 const initPage = () => {
-    // Initialize objects first
     whereClausePopulator = new WhereClausePopulator();
     query = new Query();
 
@@ -419,7 +433,8 @@ const initPage = () => {
 };
 
 try {
+    errorMessage = new ErrorMessage();
     window.addEventListener("load", initPage);
 } catch (error) {
-    console.error(error);
+    errorMessage?.show(error.message);
 }

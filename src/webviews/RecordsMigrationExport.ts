@@ -345,6 +345,9 @@ export class RecordsMigrationExport {
     private _composeExportButtonHtml(): string {
         let html = `
             <div class="sfm-panel sfm-panel-actions">
+                <div class="sfm-error-message-container" id="error-message-container">
+                    <div class="sfm-error-message" id="error-message"></div>
+                </div>
                 <button id="export-button" class="sfm-button sfm-button-primary">Export</button>
             </div>
         `;

@@ -97,7 +97,8 @@ body {
 
 .sfm-panel-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     padding: 0.75rem 1rem;
 }
 
@@ -400,6 +401,31 @@ p {
     margin-top: 0.25rem;
 }
 
+/* Error message styling */
+.sfm-error-message-container {
+    flex: 1;
+    margin-right: 1rem;
+    overflow: hidden;
+}
+
+.sfm-error-message {
+    color: var(--vscode-errorForeground, #f14c4c);
+    font-size: 0.9rem;
+    background-color: var(--vscode-inputValidation-errorBackground, rgba(241, 76, 76, 0.1));
+    border-left: 0.25rem solid var(--vscode-errorForeground, #f14c4c);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+    min-height: 1.5rem;
+    display: none; /* Hidden by default, shown via JavaScript when needed */
+}
+
+.sfm-error-message.visible {
+    display: block;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 60rem) {
     .sfm-fields-container {
@@ -439,5 +465,15 @@ p {
 
     .sfm-button {
         width: 100%;
+    }
+
+    .sfm-panel-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sfm-error-message-container {
+        margin-right: 0;
+        margin-bottom: 1rem;
     }
 }
