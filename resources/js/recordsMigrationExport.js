@@ -152,13 +152,6 @@ class WhereClausePopulator {
         const addWhereClauseButton =
             document.querySelector("#add-where-clause");
 
-        // Remove existing event listener if any
-        addWhereClauseButton.removeEventListener(
-            "click",
-            this._handleAddWhereClause
-        );
-
-        // Create the bound event handler and store it as a property
         this._handleAddWhereClause = () => {
             const whereValueSelect = document.querySelector(
                 "#where-value-select"
