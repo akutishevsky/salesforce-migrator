@@ -180,6 +180,17 @@ input[type="checkbox"] {
     outline: 0.0625rem solid var(--vscode-focusBorder);
 }
 
+.sfm-button.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--vscode-disabledForeground, #888);
+    color: var(--vscode-foreground);
+}
+
+.sfm-button.disabled:hover {
+    background: var(--vscode-disabledForeground, #888);
+}
+
 .sfm-button-primary {
     font-weight: 600;
     padding: 0.5rem 1rem;
