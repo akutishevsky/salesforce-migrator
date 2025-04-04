@@ -13,6 +13,7 @@ export class RecordsMigrationExport {
     private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
     private _fields: any;
+    private _fileUri: vscode.Uri | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -90,7 +91,7 @@ export class RecordsMigrationExport {
     private async _handleFileDialog(message: any): Promise<void> {
         const currentPath = message.currentPath || "";
 
-        const fileUri = await vscode.window.showSaveDialog({
+        this._fileUri = await vscode.window.showSaveDialog({
             defaultUri: vscode.Uri.file(currentPath),
             filters: {
                 "CSV files": ["csv"],
@@ -100,10 +101,13 @@ export class RecordsMigrationExport {
             title: "Select Destination File",
         });
 
-        if (fileUri) {
+        if (this._fileUri) {
             // create the file if it doesn't exist
             try {
-                await vscode.workspace.fs.writeFile(fileUri, Buffer.from(""));
+                await vscode.workspace.fs.writeFile(
+                    this._fileUri,
+                    Buffer.from("")
+                );
             } catch (error) {
                 vscode.window.showErrorMessage(
                     `Failed to create file: ${error}`
@@ -113,7 +117,7 @@ export class RecordsMigrationExport {
 
             this._panel!.webview.postMessage({
                 command: "setDestinationFile",
-                value: fileUri.fsPath,
+                value: this._fileUri.fsPath,
             });
         }
     }
