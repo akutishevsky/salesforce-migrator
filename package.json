@@ -20,7 +20,7 @@
                     "id": "salesforce-migrator",
                     "title": "Salesforce Migrator",
                     "icon": "/images/view.svg",
-                    "when": "workspaceFolderCount > 0 && resourceExtname == .json && resourceFilename == sfdx-project.json"
+                    "when": "salesforce-migrator.isSfdxProject"
                 }
             ]
         },
@@ -31,28 +31,28 @@
                     "name": "Source Org",
                     "icon": "/images/view.svg",
                     "type": "webview",
-                    "when": "workspaceFolderCount > 0 && workspaceContains:sfdx-project.json"
+                    "when": "salesforce-migrator.isSfdxProject"
                 },
                 {
                     "id": "salesforce-migrator.target-org-selector",
                     "name": "Target Org",
                     "icon": "/images/view.svg",
                     "type": "webview",
-                    "when": "workspaceFolderCount > 0 && workspaceContains:sfdx-project.json"
+                    "when": "salesforce-migrator.isSfdxProject"
                 },
                 {
                     "id": "salesforce-migrator.metadata-selector",
                     "name": "Metadata",
                     "icon": "/images/view.svg",
                     "type": "webview",
-                    "when": "workspaceFolderCount > 0 && workspaceContains:sfdx-project.json"
+                    "when": "salesforce-migrator.isSfdxProject"
                 },
                 {
                     "id": "salesforce-migrator.records-selector",
                     "name": "Records",
                     "icon": "/images/view.svg",
                     "type": "webview",
-                    "when": "workspaceFolderCount > 0 && workspaceContains:sfdx-project.json"
+                    "when": "salesforce-migrator.isSfdxProject"
                 }
             ]
         },
@@ -82,22 +82,22 @@
             "view/title": [
                 {
                     "command": "salesforce-migrator.refreshSourceOrgs",
-                    "when": "view == salesforce-migrator.source-org-selector && workspaceContains:sfdx-project.json",
+                    "when": "view == salesforce-migrator.source-org-selector && salesforce-migrator.isSfdxProject",
                     "group": "navigation"
                 },
                 {
                     "command": "salesforce-migrator.refreshTargetOrgs",
-                    "when": "view == salesforce-migrator.target-org-selector && workspaceContains:sfdx-project.json",
+                    "when": "view == salesforce-migrator.target-org-selector && salesforce-migrator.isSfdxProject",
                     "group": "navigation"
                 },
                 {
                     "command": "salesforce-migrator.refreshMetadata",
-                    "when": "view == salesforce-migrator.metadata-selector && workspaceContains:sfdx-project.json",
+                    "when": "view == salesforce-migrator.metadata-selector && salesforce-migrator.isSfdxProject",
                     "group": "navigation"
                 },
                 {
                     "command": "salesforce-migrator.refreshRecords",
-                    "when": "view == salesforce-migrator.records-selector && workspaceContains:sfdx-project.json",
+                    "when": "view == salesforce-migrator.records-selector && salesforce-migrator.isSfdxProject",
                     "group": "navigation"
                 }
             ]
