@@ -397,9 +397,17 @@ class RecordsExporter {
                 return;
             }
 
+            const destinationFile =
+                document.querySelector("#destination-file").value;
+            if (!destinationFile) {
+                ErrorMessage.show("Please provide a destination file.");
+                return;
+            }
+
             vscode.postMessage({
                 command: "exportRecords",
                 query: queryValue,
+                destinationFilePath: destinationFile,
             });
         });
     }

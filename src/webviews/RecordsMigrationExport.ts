@@ -70,7 +70,10 @@ export class RecordsMigrationExport {
                         await this._handleFileDialog(message);
                         break;
                     case "exportRecords":
-                        await this._exportRecords(message.query);
+                        await this._exportRecords(
+                            message.query,
+                            message.destinationFilePath
+                        );
                         break;
                     default:
                         break;
@@ -106,19 +109,6 @@ export class RecordsMigrationExport {
         });
 
         if (this._fileUri) {
-            // create the file if it doesn't exist
-            try {
-                await vscode.workspace.fs.writeFile(
-                    this._fileUri,
-                    Buffer.from("")
-                );
-            } catch (error) {
-                vscode.window.showErrorMessage(
-                    `Failed to create file: ${error}`
-                );
-                return;
-            }
-
             this._panel!.webview.postMessage({
                 command: "setDestinationFile",
                 value: this._fileUri.fsPath,
@@ -126,7 +116,12 @@ export class RecordsMigrationExport {
         }
     }
 
-    private async _exportRecords(query: string) {
+    private async _exportRecords(
+        query: string,
+        destinationFilePath: string
+    ): Promise<void> {
+        this._createFile(destinationFilePath);
+
         if (!this._sourceOrg) {
             throw new Error("Source org is not defined");
         }
@@ -171,9 +166,34 @@ export class RecordsMigrationExport {
 
             if (jobResult.ok) {
                 const csvData = await jobResult.text();
+                const fileUri = this._fileUri!;
+                await vscode.workspace.fs.writeFile(
+                    fileUri,
+                    Buffer.from(csvData)
+                );
+                vscode.window.showInformationMessage(
+                    `Records exported successfully to ${fileUri.fsPath}`
+                );
+                this._panel!.dispose();
                 clearInterval(interval);
             }
         }, 1000);
+    }
+
+    private async _createFile(destinationFilePath: string): Promise<void> {
+        if (!this._fileUri && !destinationFilePath) {
+            vscode.window.showErrorMessage("Please select a destination file.");
+            return;
+        }
+
+        this._fileUri = vscode.Uri.file(destinationFilePath);
+
+        try {
+            await vscode.workspace.fs.writeFile(this._fileUri, Buffer.from(""));
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to create file: ${error}`);
+            return;
+        }
     }
 
     private _initializePanel(): void {
