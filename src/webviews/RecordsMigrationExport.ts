@@ -97,6 +97,7 @@ export class RecordsMigrationExport {
                 "JSON files": ["json"],
             },
             saveLabel: "Select Destination File",
+            title: "Select Destination File",
         });
 
         if (fileUri) {
