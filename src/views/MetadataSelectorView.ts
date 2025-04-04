@@ -30,6 +30,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
+            this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
                 "No source org selected. Please select a source org first."
             );
@@ -86,6 +87,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
+            this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
                 "No source org selected. Please select a source org first."
             );
@@ -113,6 +115,14 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         }
 
         this._webviewView.webview.html = this._htmlService.getLoaderHtml();
+    }
+
+    private _renderNoSourceOrg(): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.getNoSourceOrgHtml();
     }
 
     private _composeWebviewHtml(metadataObjects: MetadataObject[]): void {

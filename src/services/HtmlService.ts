@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import fs from "fs";
 
 const LOADING_HTML_PATH = "loading.html";
+const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
 
 /**
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
@@ -30,6 +31,21 @@ export class HtmlService {
             "resources",
             "html",
             LOADING_HTML_PATH
+        );
+        const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
+        return htmlContent;
+    }
+
+    
+    /**
+     * @returns {string} The `HTML` string for the specified file.
+     */
+    public getNoSourceOrgHtml(): string {
+        const htmlFilePath = vscode.Uri.joinPath(
+            this._extensionUri,
+            "resources",
+            "html",
+            NO_SOURCE_ORG_HTML_PATH
         );
         const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
         return htmlContent;

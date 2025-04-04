@@ -37,6 +37,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
 
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
+            this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
                 "No source org selected. Please select a source org first."
             );
@@ -56,6 +57,14 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         }
 
         this._webviewView.webview.html = this._htmlService.getLoaderHtml();
+    }
+
+    private _renderNoSourceOrg(): void {
+        if (!this._webviewView) {
+            return;
+        }
+
+        this._webviewView.webview.html = this._htmlService.getNoSourceOrgHtml();
     }
 
     private _composeWebviewHtml(customObjects: CustomObject[]): void {
@@ -173,6 +182,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
 
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
+            this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
                 "No source org selected. Please select a source org first."
             );
