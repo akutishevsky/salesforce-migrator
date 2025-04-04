@@ -101,6 +101,16 @@ export class RecordsMigrationExport {
         });
 
         if (fileUri) {
+            // create the file if it doesn't exist
+            try {
+                await vscode.workspace.fs.writeFile(fileUri, Buffer.from(""));
+            } catch (error) {
+                vscode.window.showErrorMessage(
+                    `Failed to create file: ${error}`
+                );
+                return;
+            }
+
             this._panel!.webview.postMessage({
                 command: "setDestinationFile",
                 value: fileUri.fsPath,
