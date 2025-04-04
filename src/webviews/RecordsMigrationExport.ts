@@ -156,7 +156,24 @@ export class RecordsMigrationExport {
             return;
         }
 
-        const jobInfo = await result.json();
+        const jobInfo: any = await result.json();
+
+        const interval = setInterval(async () => {
+            const jobResultUrl = `${orgDisplay.instanceUrl}/services/data/v63.0/jobs/query/${jobInfo.id}/results?maxRecords=1000000`;
+            const jobResult = await fetch(jobResultUrl, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${orgDisplay.accessToken}`,
+                    "Content-Type": "application/json",
+                    Accept: "text/csv",
+                },
+            });
+
+            if (jobResult.ok) {
+                const csvData = await jobResult.text();
+                clearInterval(interval);
+            }
+        }, 1000);
     }
 
     private _initializePanel(): void {
