@@ -280,14 +280,20 @@ export class RecordsMigrationExport {
     }
 
     private _composeDestinationFileSelectionHtml(): string {
-        // Format the current date and time for the filename
         const now = new Date();
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
         const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
 
-        // Create the default path following the requested structure
-        // "salesforce-migrator/{objectName}/Export/{objectName}_{date_time}.csv"
-        const defaultPath = `salesforce-migrator/${this._customObject}/Export/${this._customObject}_${dateStr}_${timeStr}.csv`;
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const workspacePath =
+            workspaceFolders && workspaceFolders.length > 0
+                ? workspaceFolders[0].uri.fsPath
+                : "";
+
+        const defaultPath = path.join(
+            workspacePath,
+            `salesforce-migrator/${this._customObject}/Export/${this._customObject}_${dateStr}_${timeStr}.csv`
+        );
 
         let html = `
             <div class="sfm-panel">
