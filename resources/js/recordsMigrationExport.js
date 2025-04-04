@@ -4,6 +4,7 @@ let whereClausePopulator;
 let query;
 let fieldSelector;
 let fileSelector;
+let recordsExporter;
 
 class FieldSelector {
     fieldElements = [];
@@ -380,6 +381,30 @@ class FileSelector {
     }
 }
 
+class RecordsExporter {
+    _exportButton;
+
+    constructor() {
+        this._exportButton = document.querySelector("#export-button");
+        this._addEventListeners();
+    }
+
+    _addEventListeners() {
+        this._exportButton.addEventListener("click", () => {
+            const queryValue = document.querySelector("#query").value;
+            if (!queryValue) {
+                ErrorMessage.show("Please provide a valid query.");
+                return;
+            }
+
+            vscode.postMessage({
+                command: "exportRecords",
+                query: queryValue,
+            });
+        });
+    }
+}
+
 class ErrorMessage {
     static show(message) {
         const errorMessageElement = document.querySelector("#error-message");
@@ -401,6 +426,7 @@ class ErrorMessage {
             query = new Query();
             fieldSelector = new FieldSelector();
             fileSelector = new FileSelector();
+            recordsExporter = new RecordsExporter();
 
             window.addEventListener("message", (event) => {
                 const { command, value } = event.data;

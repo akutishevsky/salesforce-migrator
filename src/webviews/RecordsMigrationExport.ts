@@ -14,6 +14,7 @@ export class RecordsMigrationExport {
     private _orgService: OrgService;
     private _fields: any;
     private _fileUri: vscode.Uri | undefined;
+    private _sourceOrg: string | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -36,15 +37,15 @@ export class RecordsMigrationExport {
         this._initializePanel();
         this._renderLoader();
 
-        const sourceOrg = this._orgService.getSourceOrg();
-        if (!sourceOrg) {
+        this._sourceOrg = this._orgService.getSourceOrg();
+        if (!this._sourceOrg) {
             vscode.window.showErrorMessage(
                 "No source org selected. Please select a source org first."
             );
             return;
         }
 
-        await this._retrieveFields(sourceOrg);
+        await this._retrieveFields();
         this._renderWebview();
         this._setupMessageHandlers();
         this._panel!.reveal();
@@ -67,6 +68,9 @@ export class RecordsMigrationExport {
                         break;
                     case "openFileDialog":
                         await this._handleFileDialog(message);
+                        break;
+                    case "exportRecords":
+                        await this._exportRecords(message.query);
                         break;
                     default:
                         break;
@@ -122,6 +126,39 @@ export class RecordsMigrationExport {
         }
     }
 
+    private async _exportRecords(query: string) {
+        if (!this._sourceOrg) {
+            throw new Error("Source org is not defined");
+        }
+
+        const orgDisplay = await this._orgService.fetchOrgDetails(
+            this._sourceOrg
+        );
+
+        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/jobs/query`;
+        const result = await fetch(url, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${orgDisplay.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                operation: "query",
+                query: query,
+            }),
+        });
+
+        if (!result.ok) {
+            const error: any = await result.json();
+            vscode.window.showErrorMessage(
+                `Failed to export records: ${error[0].message}`
+            );
+            return;
+        }
+
+        const jobInfo = await result.json();
+    }
+
     private _initializePanel(): void {
         if (!this._panel) {
             this._panel = vscode.window.createWebviewPanel(
@@ -140,8 +177,14 @@ export class RecordsMigrationExport {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
-    private async _retrieveFields(sourceOrg: string): Promise<any> {
-        const orgDisplay = await this._orgService.fetchOrgDetails(sourceOrg);
+    private async _retrieveFields(): Promise<any> {
+        if (!this._sourceOrg) {
+            throw new Error("Source org is not defined");
+        }
+
+        const orgDisplay = await this._orgService.fetchOrgDetails(
+            this._sourceOrg
+        );
 
         const url = `${orgDisplay.instanceUrl}/services/data/v63.0/sobjects/${this._customObject}/describe/`;
         const result = await fetch(url, {
