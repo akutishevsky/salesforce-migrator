@@ -404,6 +404,8 @@ class RecordsExporter {
                 return;
             }
 
+            this._disableButtons();
+
             vscode.postMessage({
                 command: "exportRecords",
                 query: queryValue,
@@ -411,6 +413,14 @@ class RecordsExporter {
             });
         });
     }
+
+    _disableButtons = () => {
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach((button) => {
+            button.setAttribute("disabled", "true");
+            button.classList.add("disabled");
+        });
+    };
 }
 
 class ErrorMessage {
