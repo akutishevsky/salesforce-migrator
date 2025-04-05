@@ -127,39 +127,33 @@ export class RecordsMigrationExport {
         destinationFilePath: string
     ): Promise<void> {
         try {
-            // Create the destination file
             await this._createFile(destinationFilePath);
 
             if (!this._sourceOrg) {
                 throw new Error("Source org is not defined");
             }
 
-            // Get org details
             const orgDetails = await this._orgService.fetchOrgDetails(
                 this._sourceOrg
             );
 
-            // Start the Bulk API query job
             const jobInfo = await this._sfBulkApi.createQueryJob(
                 orgDetails,
                 query
             );
 
-            // Poll for results
             try {
                 const csvData = await this._sfBulkApi.pollJobUntilComplete(
                     orgDetails,
                     jobInfo.id
                 );
 
-                // Write results to file
                 const fileUri = this._fileUri!;
                 await vscode.workspace.fs.writeFile(
                     fileUri,
                     Buffer.from(csvData)
                 );
 
-                // Show success message and close panel
                 vscode.window.showInformationMessage(
                     `Records exported successfully to ${fileUri.fsPath}`
                 );
