@@ -391,6 +391,9 @@ class RecordsExporter {
 
     _addEventListeners() {
         this._exportButton.addEventListener("click", () => {
+            // Clear any previous error messages
+            ErrorMessage.hide();
+
             const queryValue = document.querySelector("#query").value;
             if (!queryValue) {
                 ErrorMessage.show("Please provide a valid query.");
@@ -436,6 +439,7 @@ class ErrorMessage {
         const errorMessageElement = document.querySelector("#error-message");
         errorMessageElement.innerText = message;
         errorMessageElement.classList.add("visible");
+        window.scrollTo({ behavior: "smooth" }, 1000);
     }
 
     static hide() {
@@ -457,12 +461,18 @@ class ErrorMessage {
             window.addEventListener("message", (event) => {
                 const { command, value } = event.data;
 
-                if (command === "populatePicklistFieldValues") {
-                    whereClausePopulator.showPicklistWhereValueSelect(value);
-                } else if (command === "setDestinationFile") {
-                    fileSelector.setDestinationFilePath(value);
-                } else if (command === "exportComplete") {
-                    recordsExporter.enableButtons();
+                switch (command) {
+                    case "populatePicklistFieldValues":
+                        whereClausePopulator.showPicklistWhereValueSelect(
+                            value
+                        );
+                        break;
+                    case "setDestinationFile":
+                        fileSelector.setDestinationFilePath(value);
+                        break;
+                    case "exportComplete":
+                        recordsExporter.enableButtons();
+                        break;
                 }
             });
         });
