@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
-import { SfBulkApi } from "../api/SfBulkApi";
+import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
 import path from "path";
 
@@ -151,13 +151,22 @@ export class RecordsMigrationExport {
                         message: `Retrieved the org details.`,
                     });
 
-                    const jobInfo = await this._sfBulkApi.createQueryJob(
-                        orgDetails,
-                        query
-                    );
-                    progress.report({
-                        message: `Created the job with ID: ${jobInfo.id}`,
-                    });
+                    let jobInfo;
+                    try {
+                        jobInfo = await this._sfBulkApi.createQueryJob(
+                            orgDetails,
+                            query
+                        );
+                        progress.report({
+                            message: `Created the job with ID: ${jobInfo.id}`,
+                        });
+                    } catch (error: any) {
+                        vscode.window.showErrorMessage(error.message);
+                        this._panel!.webview.postMessage({
+                            command: "exportComplete",
+                        });
+                        return;
+                    }
 
                     try {
                         progress.report({
