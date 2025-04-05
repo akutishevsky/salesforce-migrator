@@ -76,6 +76,10 @@
                 "command": "salesforce-migrator.refreshRecords",
                 "title": "Refresh Records",
                 "icon": "$(refresh)"
+            },
+            {
+                "command": "salesforce-migrator.clearWorkspaceStorage",
+                "title": "Salesforce Migrator: Clear Workspace Storage"
             }
         ],
         "menus": {

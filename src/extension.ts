@@ -58,6 +58,14 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             () => recordsSelectorView.refreshRecords()
         );
 
+        const clearWorkspaceStorageCommand = vscode.commands.registerCommand(
+            "salesforce-migrator.clearWorkspaceStorage",
+            () => {
+                const orgService = sourceOrgSelector.getOrgService();
+                orgService.clearOrgSelections();
+            }
+        );
+
         extensionContext.subscriptions.push(
             vscode.window.registerWebviewViewProvider(
                 "salesforce-migrator.source-org-selector",
@@ -79,7 +87,8 @@ export function activate(extensionContext: vscode.ExtensionContext) {
             refreshSourceOrgsCommand,
             refreshTargetOrgsCommand,
             refreshMetadataCommand,
-            refreshRecordsCommand
+            refreshRecordsCommand,
+            clearWorkspaceStorageCommand
         );
     } catch (error) {
         vscode.window.showErrorMessage(

@@ -250,4 +250,11 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 break;
         }
     }
+    
+    /**
+     * Get the OrgService instance
+     */
+    public getOrgService(): OrgService {
+        return this._orgService;
+    }
 }
