@@ -138,6 +138,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 "/resources/js/metadataSelectorView.js",
             ],
         });
+        
+        // Ensure message listener is setup after HTML is updated
+        this._setupMessageListener(this._webviewView);
     }
 
     private _composeMetadataHtml(metadataObjects: MetadataObject[]): string {

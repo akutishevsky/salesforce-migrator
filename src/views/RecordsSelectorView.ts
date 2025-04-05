@@ -80,6 +80,9 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                 "/resources/js/recordsSelectorView.js",
             ],
         });
+        
+        // Ensure message listener is setup after HTML is updated
+        this._setupMessageListener(this._webviewView);
     }
 
     private _composeObjectsHtml(customObjects: CustomObject[]): string {
