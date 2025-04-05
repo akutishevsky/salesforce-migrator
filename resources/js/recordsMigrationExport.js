@@ -421,6 +421,14 @@ class RecordsExporter {
             button.classList.add("disabled");
         });
     };
+
+    enableButtons = () => {
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach((button) => {
+            button.setAttribute("disabled", "false");
+            button.classList.remove("disabled");
+        });
+    };
 }
 
 class ErrorMessage {
@@ -453,6 +461,8 @@ class ErrorMessage {
                     whereClausePopulator.showPicklistWhereValueSelect(value);
                 } else if (command === "setDestinationFile") {
                     fileSelector.setDestinationFilePath(value);
+                } else if (command === "exportComplete") {
+                    recordsExporter.enableButtons();
                 }
             });
         });

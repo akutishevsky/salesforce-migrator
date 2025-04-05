@@ -181,11 +181,14 @@ export class RecordsMigrationExport {
                         vscode.window.showInformationMessage(
                             `Records exported successfully to ${fileUri.fsPath}`
                         );
-                        this._panel!.dispose();
                     } catch (error: any) {
                         vscode.window.showErrorMessage(
                             `Failed to retrieve job results: ${error.message}`
                         );
+                    } finally {
+                        this._panel!.webview.postMessage({
+                            command: "exportComplete",
+                        });
                     }
                 }
             );
