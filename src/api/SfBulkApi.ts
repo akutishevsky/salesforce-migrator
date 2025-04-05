@@ -63,10 +63,9 @@ export class SfBulkApi {
      */
     public async getQueryJobResults(
         org: SalesforceOrg,
-        jobId: string,
-        maxRecords: number = 1000000
+        jobId: string
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}/results?maxRecords=${maxRecords}`;
+        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}/results`;
 
         const response = await fetch(url, {
             method: "GET",
