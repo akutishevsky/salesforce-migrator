@@ -304,6 +304,7 @@ input[type="checkbox"] {
 
 .sfm-field-item {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     padding: 0.25rem 0.5rem;
     border-radius: var(--border-radius);
@@ -323,7 +324,9 @@ input[type="checkbox"] {
     overflow: hidden;
     text-overflow: ellipsis;
     flex: 1;
+    min-width: 0; /* Allows flex item to shrink below content size */
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: 0.25rem;
 }
@@ -331,6 +334,9 @@ input[type="checkbox"] {
 .sfm-field-label-name {
     font-weight: 600;
     color: var(--vscode-symbolIcon-fieldForeground, var(--vscode-foreground));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sfm-field-api-name {
@@ -340,6 +346,9 @@ input[type="checkbox"] {
         var(--vscode-descriptionForeground)
     );
     font-size: 0.9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .sfm-field-type {
@@ -349,6 +358,9 @@ input[type="checkbox"] {
         var(--vscode-descriptionForeground)
     );
     font-size: 0.9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Query textarea */
