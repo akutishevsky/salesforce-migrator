@@ -1,71 +1,31 @@
-# salesforce-migrator README
+# Salesforce Migrator
 
-This is the README for your extension "salesforce-migrator". After writing up a brief description, we recommend including the following sections.
+A VS Code Extension for deploying metadata and migrating records between Salesforce orgs.
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+### Salesforce Org Selection
 
-For example if there is an image subfolder under your extension project workspace:
+-   **Org Selection:** Provides separate interfaces for selecting source and target Salesforce orgs from already authorized via Salesforce CLI orgs.
+-   **Org Categorization:** Organizes available orgs into **DevHub**, **Sandbox**, **Scratch**, and **Other** categories.
+-   **Connection Status:** Visual indicators showing connection status (Connected/Disconnected) for each org.
 
-\!\[feature X\]\(images/feature-x.png\)
+### Metadata Migration
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+-   **Metadata Type Browser:** Lists all available metadata types from source org with filtering capabilities.
+-   **Metadata Component Viewer:** For each type, shows all components available for migration.
+-   **Retrieval and Deployment Interface:** Dedicated webview for orchestrating metadata deployment operations.
+-   **Deployment Status Tracking:** Shows progress during retrieval and deployment operations with ability to open a Deployment URL in a browser.
 
-## Requirements
+### Records Migration
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+-   **Object Selection:** Browse and select Salesforce objects for data migration.
+-   **Field Selection:** Choose which fields to include in export operations.
+-   **Query Builder:** User interface for building SOQL queries.
+-   **Export Progress Tracking:** Real-time progress reporting during export operations.
+-   **Cancellation Support:** Ability to cancel long-running export operations.
+-   **Job Status Monitoring:** Polls job status until completion with informative updates.
 
-## Extension Settings
+### UI
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+-   **Dynamic Theming:** The extension uses VS Code's built-in theme tokens and CSS variables to maintain a consistent native look across all color themes. UI components automatically adapt to your preferred VS Code theme, ensuring proper contrast and seamless integration with the rest of your development environment.
