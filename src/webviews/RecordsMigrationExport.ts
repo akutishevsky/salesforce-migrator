@@ -3,6 +3,7 @@ import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi } from "../services/SfBulkApi";
+import { SfRestApi } from "../services/SfRestApi";
 import path from "path";
 
 export class RecordsMigrationExport {
@@ -14,6 +15,7 @@ export class RecordsMigrationExport {
     private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
     private _sfBulkApi: SfBulkApi;
+    private _sfRestApi: SfRestApi;
     private _fields: any;
     private _fileUri: vscode.Uri | undefined;
     private _sourceOrg: string | undefined;
@@ -34,6 +36,7 @@ export class RecordsMigrationExport {
         this._sfCommandService = new SfCommandService();
         this._orgService = new OrgService(this._extensionContext);
         this._sfBulkApi = new SfBulkApi();
+        this._sfRestApi = new SfRestApi();
     }
 
     public async reveal() {
@@ -214,7 +217,7 @@ export class RecordsMigrationExport {
             const orgDetails = await this._orgService.fetchOrgDetails(
                 this._sourceOrg
             );
-            const objectDescription = await this._sfBulkApi.describeObject(
+            const objectDescription = await this._sfRestApi.describeObject(
                 orgDetails,
                 this._customObject
             );
