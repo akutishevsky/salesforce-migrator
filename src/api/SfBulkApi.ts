@@ -23,8 +23,6 @@ const INTERVAL = 1000;
  * Service for interacting with Salesforce Bulk API
  */
 export class SfBulkApi {
-    private readonly _apiVersion = "v63.0";
-
     /**
      * Creates a new Bulk API query job
      */
@@ -32,7 +30,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         query: string
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query`;
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query`;
 
         const response = await fetch(url, {
             method: "POST",
@@ -65,7 +63,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}/results`;
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
 
         const response = await fetch(url, {
             method: "GET",
@@ -95,7 +93,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}`;
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
         const response = await fetch(url, {
             method: "GET",
@@ -121,7 +119,7 @@ export class SfBulkApi {
      * Aborts a Bulk API query job
      */
     public async abortJob(org: SalesforceOrg, jobId: string): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}`;
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
         const response = await fetch(url, {
             method: "PATCH",

@@ -10,7 +10,7 @@ export interface SalesforceOrg {
     loginUrl: string;
     clientId: string;
     isDevHub: boolean;
-    instanceApiVersion: string;
+    apiVersion: string;
     instanceApiVersionLastRetrieved: string;
     name: string;
     instanceName: string;
@@ -113,10 +113,18 @@ export class OrgService {
      * Clear source and target org selections from workspace storage
      */
     public clearOrgSelections(): Thenable<void> {
-        vscode.window.showInformationMessage("Cleared Salesforce Migrator workspace storage");
+        vscode.window.showInformationMessage(
+            "Cleared Salesforce Migrator workspace storage"
+        );
         return Promise.all([
-            this._extensionContext.workspaceState.update(this._sourceOrgKey, undefined),
-            this._extensionContext.workspaceState.update(this._targetOrgKey, undefined)
+            this._extensionContext.workspaceState.update(
+                this._sourceOrgKey,
+                undefined
+            ),
+            this._extensionContext.workspaceState.update(
+                this._targetOrgKey,
+                undefined
+            ),
         ]).then(() => {});
     }
 }
