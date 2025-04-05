@@ -166,7 +166,8 @@ export class RecordsMigrationExport {
                         const csvData =
                             await this._sfBulkApi.pollJobUntilComplete(
                                 orgDetails,
-                                jobInfo.id
+                                jobInfo.id,
+                                progress
                             );
 
                         const fileUri = this._fileUri!;
