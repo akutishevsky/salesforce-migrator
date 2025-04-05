@@ -127,42 +127,67 @@ export class RecordsMigrationExport {
         destinationFilePath: string
     ): Promise<void> {
         try {
-            await this._createFile(destinationFilePath);
+            vscode.window.withProgress(
+                {
+                    location: vscode.ProgressLocation.Notification,
+                    title: "Exporting records...",
+                    cancellable: true,
+                },
+                async (progress) => {
+                    await this._createFile(destinationFilePath);
+                    progress.report({
+                        message: `Created the ${destinationFilePath} file.`,
+                    });
 
-            if (!this._sourceOrg) {
-                throw new Error("Source org is not defined");
-            }
+                    if (!this._sourceOrg) {
+                        throw new Error("Source org is not defined");
+                    }
 
-            const orgDetails = await this._orgService.fetchOrgDetails(
-                this._sourceOrg
+                    const orgDetails = await this._orgService.fetchOrgDetails(
+                        this._sourceOrg
+                    );
+                    await this._createFile(destinationFilePath);
+                    progress.report({
+                        message: `Retrieved the org details.`,
+                    });
+
+                    const jobInfo = await this._sfBulkApi.createQueryJob(
+                        orgDetails,
+                        query
+                    );
+                    progress.report({
+                        message: `Created the job with ID: ${jobInfo.id}`,
+                    });
+
+                    try {
+                        progress.report({
+                            message: `Polling for the results...`,
+                        });
+                        const csvData =
+                            await this._sfBulkApi.pollJobUntilComplete(
+                                orgDetails,
+                                jobInfo.id
+                            );
+
+                        const fileUri = this._fileUri!;
+                        await vscode.workspace.fs.writeFile(
+                            fileUri,
+                            Buffer.from(csvData)
+                        );
+                        progress.report({
+                            message: `Saved the result to the ${fileUri.fsPath} file.`,
+                        });
+                        vscode.window.showInformationMessage(
+                            `Records exported successfully to ${fileUri.fsPath}`
+                        );
+                        this._panel!.dispose();
+                    } catch (error: any) {
+                        vscode.window.showErrorMessage(
+                            `Failed to retrieve job results: ${error.message}`
+                        );
+                    }
+                }
             );
-
-            const jobInfo = await this._sfBulkApi.createQueryJob(
-                orgDetails,
-                query
-            );
-
-            try {
-                const csvData = await this._sfBulkApi.pollJobUntilComplete(
-                    orgDetails,
-                    jobInfo.id
-                );
-
-                const fileUri = this._fileUri!;
-                await vscode.workspace.fs.writeFile(
-                    fileUri,
-                    Buffer.from(csvData)
-                );
-
-                vscode.window.showInformationMessage(
-                    `Records exported successfully to ${fileUri.fsPath}`
-                );
-                this._panel!.dispose();
-            } catch (error: any) {
-                vscode.window.showErrorMessage(
-                    `Failed to retrieve job results: ${error.message}`
-                );
-            }
         } catch (error: any) {
             vscode.window.showErrorMessage(
                 `Failed to export records: ${error.message}`
