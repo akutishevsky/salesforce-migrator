@@ -122,15 +122,11 @@ export class SfBulkApi {
     public async pollJobUntilComplete(
         org: SalesforceOrg,
         jobId: string,
-        interval: number = 1000,
-        maxAttempts: number = 60
+        interval: number = 1000
     ): Promise<string> {
         return new Promise<string>((resolve, reject) => {
-            let attempts = 0;
-
             const checkJobStatus = async () => {
                 try {
-                    attempts++;
                     const jobStatus = await this.getJobStatus(org, jobId);
 
                     if (jobStatus.state === "JobComplete") {
@@ -144,11 +140,6 @@ export class SfBulkApi {
 
                     if (jobStatus.state === "Failed") {
                         reject(new Error(`Job failed: ${jobId}`));
-                        return;
-                    }
-
-                    if (attempts >= maxAttempts) {
-                        reject(new Error("Job polling timed out"));
                         return;
                     }
 
