@@ -9,6 +9,20 @@
     "categories": [
         "Other"
     ],
+    "author": {
+        "name": "Anton Kutishevsky"
+    },
+    "readme": "README.md",
+    "repository": {
+        "url": "https://github.com/akutishevsky/salesforce-migrator"
+    },
+    "keywords": [
+        "salesforce",
+        "migration",
+        "metadata",
+        "records",
+        "deployment"
+    ],
     "activationEvents": [
         "workspaceContains:sfdx-project.json"
     ],
