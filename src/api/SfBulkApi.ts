@@ -17,6 +17,8 @@ export interface BulkQueryJobInfo {
     columnDelimiter: string;
 }
 
+const INTERVAL = 1000;
+
 /**
  * Service for interacting with Salesforce Bulk API
  */
@@ -122,14 +124,20 @@ export class SfBulkApi {
     public async pollJobUntilComplete(
         org: SalesforceOrg,
         jobId: string,
-        interval: number = 1000
+        progress: vscode.Progress<{ message: string }>
     ): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             const checkJobStatus = async () => {
                 try {
                     const jobStatus = await this.getJobStatus(org, jobId);
+                    progress.report({
+                        message: `Current job state: ${jobStatus.state}`,
+                    });
 
                     if (jobStatus.state === "JobComplete") {
+                        progress.report({
+                            message: `Job ${jobId} completed successfully.`,
+                        });
                         const results = await this.getQueryJobResults(
                             org,
                             jobId
@@ -139,11 +147,14 @@ export class SfBulkApi {
                     }
 
                     if (jobStatus.state === "Failed") {
+                        progress.report({
+                            message: `Job ${jobId} failed.`,
+                        });
                         reject(new Error(`Job failed: ${jobId}`));
                         return;
                     }
 
-                    setTimeout(checkJobStatus, interval);
+                    setTimeout(checkJobStatus, INTERVAL);
                 } catch (error: unknown) {
                     reject(
                         error instanceof Error
