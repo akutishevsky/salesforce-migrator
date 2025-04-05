@@ -133,7 +133,7 @@ export class RecordsMigrationExport {
                     title: "Exporting records...",
                     cancellable: true,
                 },
-                async (progress) => {
+                async (progress, token) => {
                     await this._createFile(destinationFilePath);
                     progress.report({
                         message: `Created the ${destinationFilePath} file.`,
@@ -167,7 +167,8 @@ export class RecordsMigrationExport {
                             await this._sfBulkApi.pollJobUntilComplete(
                                 orgDetails,
                                 jobInfo.id,
-                                progress
+                                progress,
+                                token // Pass the cancellation token
                             );
 
                         const fileUri = this._fileUri!;
@@ -182,9 +183,25 @@ export class RecordsMigrationExport {
                             `Records exported successfully to ${fileUri.fsPath}`
                         );
                     } catch (error: any) {
-                        vscode.window.showErrorMessage(
-                            `Failed to retrieve job results: ${error.message}`
-                        );
+                        // If operation was cancelled by user, show a different message
+                        if (error.message === "Operation cancelled by user") {
+                            try {
+                                await vscode.workspace.fs.delete(
+                                    vscode.Uri.file(destinationFilePath)
+                                );
+                                vscode.window.showInformationMessage(
+                                    `Record export operation cancelled. Deleted the ${destinationFilePath} file.`
+                                );
+                            } catch (error: any) {
+                                console.error(
+                                    `Failed to delete the file: ${error.message}`
+                                );
+                            }
+                        } else {
+                            vscode.window.showErrorMessage(
+                                `Failed to retrieve job results: ${error.message}`
+                            );
+                        }
                     } finally {
                         this._panel!.webview.postMessage({
                             command: "exportComplete",

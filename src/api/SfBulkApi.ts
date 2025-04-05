@@ -119,15 +119,69 @@ export class SfBulkApi {
     }
 
     /**
+     * Aborts a Bulk API query job
+     */
+    public async abortJob(org: SalesforceOrg, jobId: string): Promise<void> {
+        const url = `${org.instanceUrl}/services/data/${this._apiVersion}/jobs/query/${jobId}`;
+
+        const response = await fetch(url, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                state: "Aborted",
+            }),
+        });
+
+        if (!response.ok) {
+            const error = (await response.json()) as { message?: string }[];
+            throw new Error(
+                `Failed to abort job: ${
+                    error[0]?.message || JSON.stringify(error)
+                }`
+            );
+        }
+    }
+
+    /**
      * Polls a job until it's complete and returns the results
      */
     public async pollJobUntilComplete(
         org: SalesforceOrg,
         jobId: string,
-        progress: vscode.Progress<{ message: string }>
+        progress: vscode.Progress<{ message: string }>,
+        token?: vscode.CancellationToken
     ): Promise<string> {
         return new Promise<string>((resolve, reject) => {
+            // Set up cancellation handling
+            let isCancelled = false;
+            if (token) {
+                token.onCancellationRequested(async () => {
+                    isCancelled = true;
+                    try {
+                        progress.report({
+                            message: `Cancelling job ${jobId}...`,
+                        });
+                        await this.abortJob(org, jobId);
+                        reject(new Error("Operation cancelled by user"));
+                    } catch (error: unknown) {
+                        reject(
+                            error instanceof Error
+                                ? error
+                                : new Error(String(error))
+                        );
+                    }
+                });
+            }
+
             const checkJobStatus = async () => {
+                // If already cancelled, don't continue checking
+                if (isCancelled) {
+                    return;
+                }
+
                 try {
                     const jobStatus = await this.getJobStatus(org, jobId);
                     progress.report({
@@ -146,11 +200,18 @@ export class SfBulkApi {
                         return;
                     }
 
-                    if (jobStatus.state === "Failed") {
+                    if (
+                        jobStatus.state === "Failed" ||
+                        jobStatus.state === "Aborted"
+                    ) {
                         progress.report({
-                            message: `Job ${jobId} failed.`,
+                            message: `Job ${jobId} ${jobStatus.state.toLowerCase()}.`,
                         });
-                        reject(new Error(`Job failed: ${jobId}`));
+                        reject(
+                            new Error(
+                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`
+                            )
+                        );
                         return;
                     }
 
