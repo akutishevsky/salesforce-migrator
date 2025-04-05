@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
+import { SfBulkApi } from "../services/SfBulkApi";
 import path from "path";
 
 export class RecordsMigrationExport {
@@ -12,6 +13,7 @@ export class RecordsMigrationExport {
     private _customObject: string;
     private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
+    private _sfBulkApi: SfBulkApi;
     private _fields: any;
     private _fileUri: vscode.Uri | undefined;
     private _sourceOrg: string | undefined;
@@ -31,6 +33,7 @@ export class RecordsMigrationExport {
         });
         this._sfCommandService = new SfCommandService();
         this._orgService = new OrgService(this._extensionContext);
+        this._sfBulkApi = new SfBulkApi();
     }
 
     public async reveal() {
@@ -120,79 +123,67 @@ export class RecordsMigrationExport {
         query: string,
         destinationFilePath: string
     ): Promise<void> {
-        this._createFile(destinationFilePath);
+        try {
+            // Create the destination file
+            await this._createFile(destinationFilePath);
 
-        if (!this._sourceOrg) {
-            throw new Error("Source org is not defined");
-        }
+            if (!this._sourceOrg) {
+                throw new Error("Source org is not defined");
+            }
 
-        const orgDisplay = await this._orgService.fetchOrgDetails(
-            this._sourceOrg
-        );
-
-        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/jobs/query`;
-        const result = await fetch(url, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${orgDisplay.accessToken}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                operation: "query",
-                query: query,
-            }),
-        });
-
-        if (!result.ok) {
-            const error: any = await result.json();
-            vscode.window.showErrorMessage(
-                `Failed to export records: ${error[0].message}`
+            // Get org details
+            const orgDetails = await this._orgService.fetchOrgDetails(
+                this._sourceOrg
             );
-            return;
-        }
 
-        const jobInfo: any = await result.json();
+            // Start the Bulk API query job
+            const jobInfo = await this._sfBulkApi.createQueryJob(
+                orgDetails,
+                query
+            );
 
-        const interval = setInterval(async () => {
-            const jobResultUrl = `${orgDisplay.instanceUrl}/services/data/v63.0/jobs/query/${jobInfo.id}/results?maxRecords=1000000`;
-            const jobResult = await fetch(jobResultUrl, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${orgDisplay.accessToken}`,
-                    "Content-Type": "application/json",
-                    Accept: "text/csv",
-                },
-            });
+            // Poll for results
+            try {
+                const csvData = await this._sfBulkApi.pollJobUntilComplete(
+                    orgDetails,
+                    jobInfo.id
+                );
 
-            if (jobResult.ok) {
-                const csvData = await jobResult.text();
+                // Write results to file
                 const fileUri = this._fileUri!;
                 await vscode.workspace.fs.writeFile(
                     fileUri,
                     Buffer.from(csvData)
                 );
+
+                // Show success message and close panel
                 vscode.window.showInformationMessage(
                     `Records exported successfully to ${fileUri.fsPath}`
                 );
                 this._panel!.dispose();
-                clearInterval(interval);
+            } catch (error: any) {
+                vscode.window.showErrorMessage(
+                    `Failed to retrieve job results: ${error.message}`
+                );
             }
-        }, 1000);
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to export records: ${error.message}`
+            );
+        }
     }
 
     private async _createFile(destinationFilePath: string): Promise<void> {
         if (!this._fileUri && !destinationFilePath) {
-            vscode.window.showErrorMessage("Please select a destination file.");
-            return;
+            throw new Error("Please select a destination file.");
         }
 
         this._fileUri = vscode.Uri.file(destinationFilePath);
 
         try {
             await vscode.workspace.fs.writeFile(this._fileUri, Buffer.from(""));
-        } catch (error) {
-            vscode.window.showErrorMessage(`Failed to create file: ${error}`);
-            return;
+        } catch (error: any) {
+            throw new Error(`Failed to create file: ${error.message}`);
         }
     }
 
@@ -214,29 +205,32 @@ export class RecordsMigrationExport {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
-    private async _retrieveFields(): Promise<any> {
+    private async _retrieveFields(): Promise<void> {
         if (!this._sourceOrg) {
             throw new Error("Source org is not defined");
         }
 
-        const orgDisplay = await this._orgService.fetchOrgDetails(
-            this._sourceOrg
-        );
+        try {
+            const orgDetails = await this._orgService.fetchOrgDetails(
+                this._sourceOrg
+            );
+            const objectDescription = await this._sfBulkApi.describeObject(
+                orgDetails,
+                this._customObject
+            );
 
-        const url = `${orgDisplay.instanceUrl}/services/data/v63.0/sobjects/${this._customObject}/describe/`;
-        const result = await fetch(url, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${orgDisplay.accessToken}`,
-                "Content-Type": "application/json",
-            },
-        });
-        const describe: any = await result.json();
-        this._fields = describe.fields;
+            this._fields = objectDescription.fields;
 
-        this._fields.sort((a: any, b: any) => {
-            return a.label.localeCompare(b.label);
-        });
+            // Sort fields by label for better UX
+            this._fields.sort((a: any, b: any) => {
+                return a.label.localeCompare(b.label);
+            });
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to retrieve object fields: ${error.message}`
+            );
+            throw error;
+        }
     }
 
     private _composeWebviewHtml(): string {
