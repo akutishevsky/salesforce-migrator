@@ -2,8 +2,8 @@ import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
 import { SfCommandService } from "../services/SfCommandService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
-import { SfBulkApi } from "../services/SfBulkApi";
-import { SfRestApi } from "../services/SfRestApi";
+import { SfBulkApi } from "../api/SfBulkApi";
+import { SfRestApi } from "../api/SfRestApi";
 import path from "path";
 
 export class RecordsMigrationExport {

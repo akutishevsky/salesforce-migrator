@@ -1,4 +1,4 @@
-import { SalesforceOrg } from "./OrgService";
+import { SalesforceOrg } from "../services/OrgService";
 
 export interface FieldDescription {
     name: string;

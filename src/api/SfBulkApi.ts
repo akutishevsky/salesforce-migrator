@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { SalesforceOrg } from "./OrgService";
+import { SalesforceOrg } from "../services/OrgService";
 import { FieldDescription } from "./SfRestApi";
 
 export interface BulkQueryJobInfo {
