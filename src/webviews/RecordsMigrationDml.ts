@@ -164,7 +164,7 @@ export class RecordsMigrationDml {
             this._selectedSourceFile = selectedSourceFile[0];
             this._panel!.webview.postMessage({
                 command: "setSourceFile",
-                value: this._selectedSourceFile.fsPath,
+                filePath: this._selectedSourceFile.fsPath,
             });
         }
     }

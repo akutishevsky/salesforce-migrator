@@ -19,7 +19,7 @@ let dmlOperation;
         const message = event.data;
         switch (message.command) {
             case "setSourceFile":
-                document.querySelector("#source-file").value = message.value;
+                document.querySelector("#source-file").value = message.filePath;
 
                 if (dmlOperation !== "Delete") {
                     return;
