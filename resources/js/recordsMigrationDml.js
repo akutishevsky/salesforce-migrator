@@ -77,7 +77,7 @@ function renderMappingTable(csvHeaders, fields) {
         const actionButton = document.querySelector("#action-button");
         if (actionButton) {
             actionButton.addEventListener("click", () => {
-                const mappings = [];
+                const mapping = [];
                 const fieldSelects =
                     document.querySelectorAll(".sfm-field-mapping");
 
@@ -86,11 +86,14 @@ function renderMappingTable(csvHeaders, fields) {
                     const salesforceField = select.value;
 
                     if (salesforceField) {
-                        mappings.push({
-                            csvHeader,
-                            salesforceField,
-                        });
+                        // Push as a tuple array [header, field] to match TypeScript interface
+                        mapping.push([csvHeader, salesforceField]);
                     }
+                });
+
+                vscode.postMessage({
+                    command: "performDmlAction",
+                    mapping: mapping,
                 });
             });
         }

@@ -16,6 +16,7 @@ export class RecordsMigrationDml {
     private _fields: any[] = [];
     private _sfRestApi: SfRestApi;
     private _selectedSourceFile: vscode.Uri | undefined;
+    private _mappedCsv!: string;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -127,6 +128,9 @@ export class RecordsMigrationDml {
                     case "selectSourceFile":
                         await this._selectSourceFile();
                         break;
+                    case "performDmlAction":
+                        await this._performDmlAction(message.mapping);
+                        break;
                     default:
                         break;
                 }
@@ -189,6 +193,74 @@ export class RecordsMigrationDml {
                 fields: fields,
             });
         }
+    }
+
+    private async _performDmlAction(
+        mapping: [string, string][]
+    ): Promise<void> {
+        await this._applyCsvHeadersMapping(mapping);
+
+        try {
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to process CSV file: ${error.message}`
+            );
+        }
+    }
+
+    private async _applyCsvHeadersMapping(
+        mapping: [string, string][]
+    ): Promise<void> {
+        if (!this._selectedSourceFile) {
+            vscode.window.showErrorMessage("No source file selected");
+            return;
+        }
+
+        const fileContent = await vscode.workspace.fs.readFile(
+            this._selectedSourceFile
+        );
+        let fileContentString = fileContent.toString();
+
+        const csvLines = fileContentString.split("\n");
+        const csvHeaders = csvLines[0]
+            .split(",")
+            .map((header: string) => header.trim().replace(/^"|"$/g, ""));
+
+        const headerToFieldMap = new Map<string, string>();
+        const mappedHeaders = new Set<string>();
+
+        mapping.forEach(([header, field]) => {
+            headerToFieldMap.set(header, field);
+            mappedHeaders.add(header);
+        });
+
+        // Get indices of headers that have mappings
+        const headerIndicesToKeep: number[] = [];
+        csvHeaders.forEach((header, index) => {
+            if (mappedHeaders.has(header)) {
+                headerIndicesToKeep.push(index);
+            }
+        });
+
+        // Process each line to keep only mapped columns
+        const processedLines = csvLines.map((line) => {
+            const values = line.split(",");
+            const newValues = headerIndicesToKeep.map((index) => values[index]);
+            return newValues.join(",");
+        });
+
+        // Replace headers with field names in the first line
+        const newHeadersLine = processedLines[0]
+            .split(",")
+            .map((header) => {
+                const trimmedHeader = header.trim().replace(/^"|"$/g, "");
+                return headerToFieldMap.get(trimmedHeader) || trimmedHeader;
+            })
+            .join(",");
+
+        processedLines[0] = newHeadersLine;
+
+        this._mappedCsv = processedLines.join("\n");
     }
 
     private _composeWebviewHtml(): string {
