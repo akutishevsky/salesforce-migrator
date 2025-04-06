@@ -136,7 +136,7 @@ export class SfBulkApi {
     /**
      * Checks the status of a Bulk API query job
      */
-    public async getJobStatus(
+    public async getQueryJobStatus(
         org: SalesforceOrg,
         jobId: string
     ): Promise<BulkQueryJobInfo> {
@@ -163,9 +163,44 @@ export class SfBulkApi {
     }
 
     /**
+     * Checks the status of a Bulk API DML job
+     */
+    public async getDmlJobStatus(
+        org: SalesforceOrg,
+        jobId: string
+    ): Promise<BulkDmlJobInfo> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to check job status: ${errorMessage}`);
+        }
+
+        return (await response.json()) as BulkDmlJobInfo;
+    }
+
+    /**
      * Aborts a Bulk API query job
      */
-    public async abortJob(org: SalesforceOrg, jobId: string): Promise<void> {
+    public async abortQueryJob(
+        org: SalesforceOrg,
+        jobId: string
+    ): Promise<void> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
         const response = await fetch(url, {
@@ -186,6 +221,36 @@ export class SfBulkApi {
                     error[0]?.message || JSON.stringify(error)
                 }`
             );
+        }
+    }
+
+    /**
+     * Aborts a Bulk API DML job
+     */
+    public async abortDmlJob(org: SalesforceOrg, jobId: string): Promise<void> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+
+        const response = await fetch(url, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                state: "Aborted",
+            }),
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to abort job: ${errorMessage}`);
         }
     }
 
@@ -224,14 +289,54 @@ export class SfBulkApi {
             }
             throw new Error(`Failed to upload job data: ${errorMessage}`);
         } else {
-            console.log("response", await response.json());
+            console.log("response", await response.text());
         }
     }
 
     /**
-     * Polls a job until it's complete and returns the results
+     * Completes a Bulk API DML job upload
+     * This closes the job and changes the state to UploadComplete
+     *
+     * @param org The Salesforce org where the job exists
+     * @param jobId The ID of the job to complete
+     * @returns Promise that resolves with the job info
      */
-    public async pollJobUntilComplete(
+    public async completeJobUpload(
+        org: SalesforceOrg,
+        jobId: string
+    ): Promise<BulkDmlJobInfo> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+
+        const response = await fetch(url, {
+            method: "PATCH",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                state: "UploadComplete",
+            }),
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to complete job upload: ${errorMessage}`);
+        }
+
+        return (await response.json()) as BulkDmlJobInfo;
+    }
+
+    /**
+     * Polls a query job until it's complete and returns the results
+     */
+    public async pollQueryJobUntilComplete(
         org: SalesforceOrg,
         jobId: string,
         progress: vscode.Progress<{ message: string }>,
@@ -247,7 +352,7 @@ export class SfBulkApi {
                         progress.report({
                             message: `Cancelling job ${jobId}...`,
                         });
-                        await this.abortJob(org, jobId);
+                        await this.abortQueryJob(org, jobId);
                         reject(new Error("Operation cancelled by user"));
                     } catch (error: unknown) {
                         reject(
@@ -266,7 +371,7 @@ export class SfBulkApi {
                 }
 
                 try {
-                    const jobStatus = await this.getJobStatus(org, jobId);
+                    const jobStatus = await this.getQueryJobStatus(org, jobId);
                     progress.report({
                         message: `Current job state: ${jobStatus.state}`,
                     });
@@ -280,6 +385,86 @@ export class SfBulkApi {
                             jobId
                         );
                         resolve(results);
+                        return;
+                    }
+
+                    if (
+                        jobStatus.state === "Failed" ||
+                        jobStatus.state === "Aborted"
+                    ) {
+                        progress.report({
+                            message: `Job ${jobId} ${jobStatus.state.toLowerCase()}.`,
+                        });
+                        reject(
+                            new Error(
+                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`
+                            )
+                        );
+                        return;
+                    }
+
+                    setTimeout(checkJobStatus, INTERVAL);
+                } catch (error: unknown) {
+                    reject(
+                        error instanceof Error
+                            ? error
+                            : new Error(String(error))
+                    );
+                }
+            };
+
+            checkJobStatus();
+        });
+    }
+
+    /**
+     * Polls a DML job until it's complete
+     */
+    public async pollDmlJobUntilComplete(
+        org: SalesforceOrg,
+        jobId: string,
+        progress: vscode.Progress<{ message: string }>,
+        token?: vscode.CancellationToken
+    ): Promise<BulkDmlJobInfo> {
+        return new Promise<BulkDmlJobInfo>((resolve, reject) => {
+            // Set up cancellation handling
+            let isCancelled = false;
+            if (token) {
+                token.onCancellationRequested(async () => {
+                    isCancelled = true;
+                    try {
+                        progress.report({
+                            message: `Cancelling job ${jobId}...`,
+                        });
+                        await this.abortDmlJob(org, jobId);
+                        reject(new Error("Operation cancelled by user"));
+                    } catch (error: unknown) {
+                        reject(
+                            error instanceof Error
+                                ? error
+                                : new Error(String(error))
+                        );
+                    }
+                });
+            }
+
+            const checkJobStatus = async () => {
+                // If already cancelled, don't continue checking
+                if (isCancelled) {
+                    return;
+                }
+
+                try {
+                    const jobStatus = await this.getDmlJobStatus(org, jobId);
+                    progress.report({
+                        message: `Current job state: ${jobStatus.state}`,
+                    });
+
+                    if (jobStatus.state === "JobComplete") {
+                        progress.report({
+                            message: `Job ${jobId} completed successfully.`,
+                        });
+                        resolve(jobStatus);
                         return;
                     }
 

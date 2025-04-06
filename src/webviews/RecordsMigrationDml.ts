@@ -232,6 +232,23 @@ export class RecordsMigrationDml {
                         jobInfo.id,
                         this._mappedCsv
                     );
+
+                    const completionResult =
+                        await this._sfBulkApi.completeJobUpload(
+                            targetOrg,
+                            jobInfo.id
+                        );
+
+                    console.log("Completion Result:", completionResult);
+
+                    const jobResult =
+                        await this._sfBulkApi.pollDmlJobUntilComplete(
+                            targetOrg,
+                            jobInfo.id,
+                            progress
+                        );
+
+                    console.log("Job Result:", jobResult);
                 } catch (error: any) {
                     console.error("Error during DML operation:", error);
                     vscode.window.showErrorMessage(error.message);

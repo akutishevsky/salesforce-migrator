@@ -173,7 +173,7 @@ export class RecordsMigrationExport {
                             message: `Polling for the results...`,
                         });
                         const csvData =
-                            await this._sfBulkApi.pollJobUntilComplete(
+                            await this._sfBulkApi.pollQueryJobUntilComplete(
                                 orgDetails,
                                 jobInfo.id,
                                 progress,
