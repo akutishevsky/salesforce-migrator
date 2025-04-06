@@ -290,7 +290,7 @@ export class RecordsMigrationDml {
     private _composeMappingHtml(): string {
         return `
             <div id="sfm-mapping" class="sfm-panel sfm-hidden">
-                <h2>Mapping</h2>
+                <h2>CSV Headers to Salesforce Fields mapping</h2>
                 <div class="sfm-panel-content">
                     <div class="sfm-mapping-container">
                         <!-- 
