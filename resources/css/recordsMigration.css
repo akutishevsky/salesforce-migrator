@@ -465,6 +465,11 @@ p {
     display: block;
 }
 
+/* Utils */
+.sfm-hidden {
+    display: none;
+}
+
 /* Responsive adjustments */
 @media screen and (max-width: 60rem) {
     .sfm-fields-container {

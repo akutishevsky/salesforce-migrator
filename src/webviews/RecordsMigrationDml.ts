@@ -129,7 +129,7 @@ export class RecordsMigrationDml {
                 <div class="sfm-content">
                         ${this._composeFileSelectorsHtml()}
                         ${this._composeMatchingFieldSelectorHtml()}
-                        // mapping file
+                        ${this._composeMappingHtml()}
                 </div>
             </div>
         `;
@@ -216,5 +216,21 @@ export class RecordsMigrationDml {
         }
 
         return optionsHtml;
+    }
+
+    private _composeMappingHtml(): string {
+        return `
+            <div class="sfm-panel sfm-hidden">
+                <h2>Mapping</h2>
+                <div class="sfm-panel-content">
+                    <div class="sfm-mapping-container">
+                        <!-- 
+                            Mapping table will be dynamically rendered 
+                            in the recordsMigrationDml.js when the import file is provied    
+                        -->
+                    </div>
+                </div>
+            </div>
+        `;
     }
 }
