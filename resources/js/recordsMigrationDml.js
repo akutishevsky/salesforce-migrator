@@ -22,9 +22,11 @@ let dmlOperation;
                 document.querySelector("#source-file").value = message.value;
 
                 if (dmlOperation !== "Delete") {
-                    const sfmMapping = document.querySelector("#sfm-mapping");
-                    sfmMapping.classList.remove("sfm-hidden");
+                    return;
                 }
+
+                const sfmMapping = document.querySelector("#sfm-mapping");
+                sfmMapping.classList.remove("sfm-hidden");
 
                 break;
             default:
