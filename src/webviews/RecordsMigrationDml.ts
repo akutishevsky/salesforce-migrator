@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import * as path from "path";
 import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
@@ -14,6 +15,7 @@ export class RecordsMigrationDml {
     private _orgService: OrgService;
     private _fields: any[] = [];
     private _sfRestApi: SfRestApi;
+    private _selectedSourceFile: vscode.Uri | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -47,7 +49,7 @@ export class RecordsMigrationDml {
             await this._retrieveFields();
 
             this._renderWebview();
-
+            this._setupMessageHandlers();
             this._panel!.reveal();
         } catch (error: any) {
             vscode.window.showErrorMessage(
@@ -118,11 +120,62 @@ export class RecordsMigrationDml {
         });
     }
 
+    private _setupMessageHandlers(): void {
+        this._panel!.webview.onDidReceiveMessage(
+            async (message: any) => {
+                switch (message.command) {
+                    case "selectSourceFile":
+                        await this._selectSourceFile();
+                        break;
+                    default:
+                        break;
+                }
+            },
+            undefined,
+            this._extensionContext.subscriptions
+        );
+    }
+
+    private async _selectSourceFile(): Promise<void> {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const workspacePath =
+            workspaceFolders && workspaceFolders.length > 0
+                ? workspaceFolders[0].uri.fsPath
+                : "";
+
+        const defaultPath = path.join(
+            workspacePath,
+            `salesforce-migrator/${this._customObject}`
+        );
+
+        const selectedSourceFile = await vscode.window.showOpenDialog({
+            canSelectFiles: true,
+            canSelectFolders: false,
+            canSelectMany: false,
+            filters: {
+                CSV: ["csv"],
+            },
+            openLabel: "Select",
+            title: "Select Source CSV File",
+            defaultUri: vscode.Uri.file(defaultPath),
+        });
+
+        if (selectedSourceFile) {
+            this._selectedSourceFile = selectedSourceFile[0];
+            this._panel!.webview.postMessage({
+                command: "setSourceFile",
+                value: this._selectedSourceFile.fsPath,
+            });
+        }
+    }
+
     private _composeWebviewHtml(): string {
         let html = "";
 
         html += `
-            <div data-object-name="${this._customObject}" class="sfm-container">
+            <div data-object-name="${this._customObject}" data-dml-operation="${
+            this._operation
+        }" class="sfm-container">
                 <div class="sfm-header">
                     <h1>${this._operation} ${this._customObject} Records</h1>
                 </div>
@@ -220,7 +273,7 @@ export class RecordsMigrationDml {
 
     private _composeMappingHtml(): string {
         return `
-            <div class="sfm-panel sfm-hidden">
+            <div id="sfm-mapping" class="sfm-panel sfm-hidden">
                 <h2>Mapping</h2>
                 <div class="sfm-panel-content">
                     <div class="sfm-mapping-container">
