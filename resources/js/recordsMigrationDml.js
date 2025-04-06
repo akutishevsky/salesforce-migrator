@@ -21,11 +21,7 @@ let dmlOperation;
             case "setSourceFile":
                 document.querySelector("#source-file").value = message.value;
 
-                if (
-                    dmlOperation === "Insert" ||
-                    dmlOperation === "Update" ||
-                    dmlOperation === "Upsert"
-                ) {
+                if (dmlOperation !== "Delete") {
                     const sfmMapping = document.querySelector("#sfm-mapping");
                     sfmMapping.classList.remove("sfm-hidden");
                 }
