@@ -385,7 +385,7 @@ class RecordsExporter {
     _exportButton;
 
     constructor() {
-        this._exportButton = document.querySelector("#export-button");
+        this._exportButton = document.querySelector("#action-button");
         this._addEventListeners();
     }
 

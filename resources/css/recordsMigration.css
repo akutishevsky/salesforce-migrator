@@ -199,7 +199,7 @@ input[type="checkbox"] {
     border: 0.0625rem solid var(--vscode-button-background);
 }
 
-.sfm-export-container {
+.sfm-action-container {
     display: flex;
     align-items: center;
     margin-top: 0.5rem;
@@ -214,7 +214,7 @@ input[type="checkbox"] {
     min-height: 1.5rem;
 }
 
-#export-button {
+#action-button {
     display: inline-block;
 }
 
@@ -483,7 +483,8 @@ p {
 
 .sfm-mapping-cell {
     padding: 0.75rem 1rem;
-    border-bottom: 0.0625rem solid var(--vscode-panel-border, rgba(0, 0, 0, 0.1));
+    border-bottom: 0.0625rem solid
+        var(--vscode-panel-border, rgba(0, 0, 0, 0.1));
     vertical-align: middle;
 }
 

@@ -205,6 +205,7 @@ export class RecordsMigrationDml {
                         ${this._composeFileSelectorsHtml()}
                         ${this._composeMatchingFieldSelectorHtml()}
                         ${this._composeMappingHtml()}
+                        ${this._composeDmlActionButtonHtml()}
                 </div>
             </div>
         `;
@@ -301,5 +302,20 @@ export class RecordsMigrationDml {
                 </div>
             </div>
         `;
+    }
+
+    private _composeDmlActionButtonHtml(): string {
+        let html = `
+            <div class="sfm-panel sfm-panel-actions">
+                <div class="sfm-action-container">
+                    <div id="error-message" class="sfm-error-message"></div>
+                    <button id="action-button" class="sfm-button sfm-button-primary">
+                        ${this._operation}
+                    </button>
+                </div>
+            </div>
+        `;
+
+        return html;
     }
 }
