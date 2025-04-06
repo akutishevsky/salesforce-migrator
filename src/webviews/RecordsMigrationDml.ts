@@ -162,9 +162,31 @@ export class RecordsMigrationDml {
 
         if (selectedSourceFile) {
             this._selectedSourceFile = selectedSourceFile[0];
+
+            // read the file content and extract csv headers
+            const fileContent = await vscode.workspace.fs.readFile(
+                this._selectedSourceFile
+            );
+            const fileContentString = fileContent.toString();
+            const csvHeaders = fileContentString
+                .split("\n")[0]
+                .split(",")
+                .map((header: string) => header.trim().replace(/^"|"$/g, ""));
+
+            const fieldLabels = this._fields.map((field: any) => field.label);
+            const fieldNames = this._fields.map((field: any) => field.name);
+            const fields = fieldLabels.map((label: string, index: number) => {
+                return {
+                    label: label,
+                    name: fieldNames[index],
+                };
+            });
+
             this._panel!.webview.postMessage({
                 command: "setSourceFile",
                 filePath: this._selectedSourceFile.fsPath,
+                csvHeaders: csvHeaders,
+                fields: fields,
             });
         }
     }
