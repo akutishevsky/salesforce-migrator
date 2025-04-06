@@ -191,12 +191,6 @@ export class RecordsMigrationDml {
     }
 
     private _composeFileSelectorsHtml(): string {
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        const workspacePath =
-            workspaceFolders && workspaceFolders.length > 0
-                ? workspaceFolders[0].uri.fsPath
-                : "";
-
         return `
             <div class="sfm-panel">
                 <div class="sfm-panel-header">
