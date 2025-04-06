@@ -3,6 +3,7 @@ import { HtmlService } from "../services/HtmlService";
 import { ObjectService, CustomObject } from "../services/ObjectService";
 import { OrgService } from "../services/OrgService";
 import { RecordsMigrationExport } from "../webviews/RecordsMigrationExport";
+import { RecordsMigrationDml } from "../webviews/RecordsMigrationDml";
 
 export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
@@ -80,7 +81,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                 "/resources/js/recordsSelectorView.js",
             ],
         });
-        
+
         // Ensure message listener is setup after HTML is updated
         this._setupMessageListener(this._webviewView);
     }
@@ -157,12 +158,15 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         customObject: string,
         operation: string
     ): void {
-        switch (operation) {
-            case "Export":
-                this._openExportWebview(customObject);
-                break;
-            default:
-                break;
+        if (operation === "Export") {
+            this._openExportWebview(customObject);
+        } else if (
+            operation === "Insert" ||
+            operation === "Update" ||
+            operation === "Upsert" ||
+            operation === "Delete"
+        ) {
+            this._openDmlWebview(customObject, operation);
         }
     }
 
@@ -173,6 +177,16 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
             customObject
         );
         exportWebview.reveal();
+    }
+
+    private _openDmlWebview(customObject: string, operation: string): void {
+        const dmlWebview = new RecordsMigrationDml(
+            this._extensionContext,
+            this._webviewView!,
+            customObject,
+            operation
+        );
+        dmlWebview.reveal();
     }
 
     /**
