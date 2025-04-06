@@ -1,5 +1,7 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
+import { OrgService } from "../services/OrgService";
+import { SfRestApi } from "../api/SfRestApi";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
@@ -8,6 +10,10 @@ export class RecordsMigrationDml {
     private _operation: string;
     private _htmlService: HtmlService;
     private _panel: vscode.WebviewPanel | undefined;
+    private _targetOrg: string | undefined;
+    private _orgService: OrgService;
+    private _fields: any[] = [];
+    private _sfRestApi: SfRestApi;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -23,15 +29,32 @@ export class RecordsMigrationDml {
             view: webviewView,
             extensionUri: extensionContext.extensionUri,
         });
+        this._orgService = new OrgService(extensionContext);
+        this._sfRestApi = new SfRestApi();
     }
 
     public async reveal(): Promise<void> {
-        this._initializePanel();
-        this._renderLoader();
+        try {
+            this._initializePanel();
+            this._renderLoader();
 
-        this._renderWebview();
+            this._targetOrg = this._orgService.getTargetOrg();
+            if (!this._targetOrg) {
+                this._panel!.dispose();
+                throw new Error("Target org is not defined");
+            }
 
-        this._panel!.reveal();
+            await this._retrieveFields();
+
+            this._renderWebview();
+
+            this._panel!.reveal();
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to compose webview panel: ${error.message}`
+            );
+            return;
+        }
     }
 
     private _initializePanel(): void {
@@ -58,6 +81,34 @@ export class RecordsMigrationDml {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
+    private async _retrieveFields(): Promise<void> {
+        if (!this._targetOrg) {
+            throw new Error("Target org is not defined");
+        }
+
+        try {
+            const orgDetails = await this._orgService.fetchOrgDetails(
+                this._targetOrg
+            );
+            const objectDescription = await this._sfRestApi.describeObject(
+                orgDetails,
+                this._customObject
+            );
+
+            this._fields = objectDescription.fields;
+
+            // Sort fields by label for better UX
+            this._fields.sort((a: any, b: any) => {
+                return a.label.localeCompare(b.label);
+            });
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to retrieve object fields: ${error.message}`
+            );
+            throw error;
+        }
+    }
+
     private _renderWebview(): void {
         this._panel!.webview.html = this._htmlService.composeHtml({
             body: this._composeWebviewHtml(),
@@ -76,9 +127,8 @@ export class RecordsMigrationDml {
                     <h1>${this._operation} ${this._customObject} Records</h1>
                 </div>
                 <div class="sfm-content">
-                        // select a file |  results file
                         ${this._composeFileSelectorsHtml()}
-                        // (for uspert) select a matching field
+                        ${this._composeMatchingFieldSelectorHtml()}
                         // mapping file
                 </div>
             </div>
@@ -118,5 +168,53 @@ export class RecordsMigrationDml {
                 </div>
             </div>
         `;
+    }
+
+    private _composeMatchingFieldSelectorHtml(): string {
+        if (this._operation !== "Upsert") {
+            return "";
+        }
+
+        return `
+            <div class="sfm-panel">
+                <h2>Select matching field</h2>
+                <div class="sfm-panel-content">
+                    <div class="sfm-matching-field-selector">
+                        <label for="matching-field" class="sfm-label">Matching field:</label>
+                        <select id="matching-field" class="sfm-select">
+                            ${this._composeMatchingFieldSelectorOptionsHtml()}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    private _composeMatchingFieldSelectorOptionsHtml(): string {
+        let optionsHtml = "";
+
+        const idLookupFields = this._fields.filter(
+            (field: any) => field.idLookup === true && field.name !== "Id"
+        );
+
+        idLookupFields.forEach((field: any) => {
+            optionsHtml += `
+                <option value="${field.name}">
+                    ${field.label} (${field.name})
+                </option>
+            `;
+        });
+
+        const idField = this._fields.find((field: any) => field.name === "Id");
+        if (idField) {
+            const selected = idLookupFields.length === 0 ? "selected" : "";
+            optionsHtml += `
+                <option value="${idField.name}" ${selected}>
+                    ${idField.label} (${idField.name})
+                </option>
+            `;
+        }
+
+        return optionsHtml;
     }
 }
