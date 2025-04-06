@@ -73,6 +73,27 @@ function renderMappingTable(csvHeaders, fields) {
                 command: "selectSourceFile",
             });
         });
+
+        const actionButton = document.querySelector("#action-button");
+        if (actionButton) {
+            actionButton.addEventListener("click", () => {
+                const mappings = [];
+                const fieldSelects =
+                    document.querySelectorAll(".sfm-field-mapping");
+
+                fieldSelects.forEach((select) => {
+                    const csvHeader = select.dataset.csvHeader;
+                    const salesforceField = select.value;
+
+                    if (salesforceField) {
+                        mappings.push({
+                            csvHeader,
+                            salesforceField,
+                        });
+                    }
+                });
+            });
+        }
     });
 
     window.addEventListener("message", (event) => {
