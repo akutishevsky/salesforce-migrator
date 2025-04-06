@@ -226,7 +226,14 @@ export class RecordsMigrationDml {
                         this._operation,
                         this._customObject
                     );
+
+                    await this._sfBulkApi.uploadJobData(
+                        targetOrg,
+                        jobInfo.id,
+                        this._mappedCsv
+                    );
                 } catch (error: any) {
+                    console.error("Error during DML operation:", error);
                     vscode.window.showErrorMessage(error.message);
                 }
             }

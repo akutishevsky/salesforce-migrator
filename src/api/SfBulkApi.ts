@@ -190,6 +190,45 @@ export class SfBulkApi {
     }
 
     /**
+     * Uploads data to a Bulk API DML job
+     *
+     * @param org The Salesforce org where the job exists
+     * @param jobId The ID of the job to upload data to
+     * @param csvData The CSV formatted data to upload
+     * @returns Promise that resolves when the upload is complete
+     */
+    public async uploadJobData(
+        org: SalesforceOrg,
+        jobId: string,
+        csvData: string
+    ): Promise<void> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/batches`;
+
+        const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "text/csv",
+            },
+            body: csvData,
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to upload job data: ${errorMessage}`);
+        } else {
+            console.log("response", await response.json());
+        }
+    }
+
+    /**
      * Polls a job until it's complete and returns the results
      */
     public async pollJobUntilComplete(
