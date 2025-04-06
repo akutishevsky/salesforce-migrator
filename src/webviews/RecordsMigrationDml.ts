@@ -3,6 +3,7 @@ import * as path from "path";
 import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
+import { SfBulkApi } from "../api/SfBulkApi";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
@@ -15,6 +16,7 @@ export class RecordsMigrationDml {
     private _orgService: OrgService;
     private _fields: any[] = [];
     private _sfRestApi: SfRestApi;
+    private _sfBulkApi: SfBulkApi;
     private _selectedSourceFile: vscode.Uri | undefined;
     private _mappedCsv!: string;
 
@@ -34,6 +36,7 @@ export class RecordsMigrationDml {
         });
         this._orgService = new OrgService(extensionContext);
         this._sfRestApi = new SfRestApi();
+        this._sfBulkApi = new SfBulkApi();
     }
 
     public async reveal(): Promise<void> {
@@ -198,14 +201,36 @@ export class RecordsMigrationDml {
     private async _performDmlAction(
         mapping: [string, string][]
     ): Promise<void> {
-        await this._applyCsvHeadersMapping(mapping);
+        await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Performing ${this._operation} on ${this._customObject} Records`,
+                cancellable: true,
+            },
+            async (progress, token) => {
+                try {
+                    await this._applyCsvHeadersMapping(mapping);
 
-        try {
-        } catch (error: any) {
-            vscode.window.showErrorMessage(
-                `Failed to process CSV file: ${error.message}`
-            );
-        }
+                    const targetOrg = await this._orgService.fetchOrgDetails(
+                        this._targetOrg!
+                    );
+                    if (!targetOrg) {
+                        vscode.window.showErrorMessage(
+                            "Target org is not defined"
+                        );
+                        return;
+                    }
+
+                    const jobInfo = await this._sfBulkApi.createDmlJob(
+                        targetOrg,
+                        this._operation,
+                        this._customObject
+                    );
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(error.message);
+                }
+            }
+        );
     }
 
     private async _applyCsvHeadersMapping(

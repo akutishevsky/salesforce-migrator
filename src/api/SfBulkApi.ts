@@ -17,12 +17,59 @@ export interface BulkQueryJobInfo {
     columnDelimiter: string;
 }
 
+export interface BulkDmlJobInfo {
+    id: string;
+    operation: string;
+    object: string;
+    createdById: string;
+    createdDate: string;
+    systemModstamp: string;
+    state: string;
+    concurrencyMode: string;
+    contentType: string;
+    apiVersion: string;
+}
+
 const INTERVAL = 1000;
 
 /**
  * Service for interacting with Salesforce Bulk API
  */
 export class SfBulkApi {
+    /**
+     * Creates a new Bulk API DML job
+     */
+    public async createDmlJob(
+        org: SalesforceOrg,
+        operation: string,
+        objectName: string
+    ): Promise<BulkDmlJobInfo> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                operation: operation.toLowerCase(),
+                object: objectName,
+            }),
+        });
+
+        if (!response.ok) {
+            const error = (await response.json()) as { message?: string }[];
+            throw new Error(
+                `Failed to create DML job: ${
+                    error[0]?.message || JSON.stringify(error)
+                }`
+            );
+        }
+
+        return (await response.json()) as BulkDmlJobInfo;
+    }
+
     /**
      * Creates a new Bulk API query job
      */
