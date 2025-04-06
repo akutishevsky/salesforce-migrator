@@ -28,6 +28,8 @@ export interface BulkDmlJobInfo {
     concurrencyMode: string;
     contentType: string;
     apiVersion: string;
+    numberRecordsProcessed: number;
+    numberRecordsFailed: number;
 }
 
 const INTERVAL = 1000;

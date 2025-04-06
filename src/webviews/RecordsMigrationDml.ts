@@ -209,7 +209,17 @@ export class RecordsMigrationDml {
             },
             async (progress, token) => {
                 try {
+                    if (token.isCancellationRequested) {
+                        throw new Error("Operation cancelled by user");
+                    }
+
                     await this._applyCsvHeadersMapping(mapping);
+                    progress.report({
+                        message: "Formatted the CSV file",
+                    });
+                    if (token.isCancellationRequested) {
+                        throw new Error("Operation cancelled by user");
+                    }
 
                     const targetOrg = await this._orgService.fetchOrgDetails(
                         this._targetOrg!
@@ -221,34 +231,63 @@ export class RecordsMigrationDml {
                         return;
                     }
 
+                    if (token.isCancellationRequested) {
+                        throw new Error("Operation cancelled by user");
+                    }
+
                     const jobInfo = await this._sfBulkApi.createDmlJob(
                         targetOrg,
                         this._operation,
                         this._customObject
                     );
+                    progress.report({
+                        message: `Created the ${this._operation} job with Id: ${jobInfo.id}`,
+                    });
+
+                    if (token.isCancellationRequested) {
+                        await this._sfBulkApi.abortDmlJob(
+                            targetOrg,
+                            jobInfo.id
+                        );
+                        throw new Error("Operation cancelled by user");
+                    }
 
                     await this._sfBulkApi.uploadJobData(
                         targetOrg,
                         jobInfo.id,
                         this._mappedCsv
                     );
+                    progress.report({
+                        message: `Started uploading ${this._operation} job data`,
+                    });
+                    if (token.isCancellationRequested) {
+                        await this._sfBulkApi.abortDmlJob(
+                            targetOrg,
+                            jobInfo.id
+                        );
+                        throw new Error("Operation cancelled by user");
+                    }
 
                     const completionResult =
                         await this._sfBulkApi.completeJobUpload(
                             targetOrg,
                             jobInfo.id
                         );
-
-                    console.log("Completion Result:", completionResult);
+                    progress.report({
+                        message: `Completed uploading ${this._operation} job data`,
+                    });
 
                     const jobResult =
                         await this._sfBulkApi.pollDmlJobUntilComplete(
                             targetOrg,
                             jobInfo.id,
-                            progress
+                            progress,
+                            token
                         );
 
-                    console.log("Job Result:", jobResult);
+                    vscode.window.showInformationMessage(
+                        `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
+                    );
                 } catch (error: any) {
                     console.error("Error during DML operation:", error);
                     vscode.window.showErrorMessage(error.message);
