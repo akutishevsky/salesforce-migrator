@@ -289,7 +289,6 @@ export class RecordsMigrationDml {
                         `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
                     );
                 } catch (error: any) {
-                    console.error("Error during DML operation:", error);
                     vscode.window.showErrorMessage(error.message);
                 }
             }
