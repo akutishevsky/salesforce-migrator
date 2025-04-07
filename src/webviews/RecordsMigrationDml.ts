@@ -285,9 +285,65 @@ export class RecordsMigrationDml {
                             token
                         );
 
-                    vscode.window.showInformationMessage(
-                        `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
-                    );
+                    // If there are failed records, save them to a CSV file
+                    if (jobResult.numberRecordsFailed > 0) {
+                        progress.report({
+                            message: `Getting failed results for job ${jobInfo.id}...`,
+                        });
+                        
+                        try {
+                            const failedResults = await this._sfBulkApi.getFailedResults(
+                                targetOrg,
+                                jobInfo.id
+                            );
+
+                            // Create the directory structure if it doesn't exist
+                            const workspaceFolders = vscode.workspace.workspaceFolders;
+                            const workspacePath =
+                                workspaceFolders && workspaceFolders.length > 0
+                                    ? workspaceFolders[0].uri.fsPath
+                                    : "";
+                            
+                            const now = new Date();
+                            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+                            const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+                            
+                            const failedDirPath = path.join(
+                                workspacePath,
+                                `salesforce-migrator/${this._customObject}/${this._operation}/Failed`
+                            );
+                            
+                            // Create directory if it doesn't exist
+                            await vscode.workspace.fs.createDirectory(vscode.Uri.file(failedDirPath));
+                            
+                            // Save failed results to file
+                            const failedFilePath = path.join(
+                                failedDirPath,
+                                `${this._customObject}_${dateStr}_${timeStr}.csv`
+                            );
+                            
+                            await vscode.workspace.fs.writeFile(
+                                vscode.Uri.file(failedFilePath),
+                                Buffer.from(failedResults)
+                            );
+                            
+                            progress.report({
+                                message: `Saved failed records to ${failedFilePath}`,
+                            });
+                            
+                            vscode.window.showInformationMessage(
+                                `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}. Failed records saved to ${failedFilePath}`
+                            );
+                        } catch (error: any) {
+                            vscode.window.showErrorMessage(
+                                `Job completed but failed to retrieve failed records: ${error.message}`
+                            );
+                        }
+                    } else {
+                        vscode.window.showInformationMessage(
+                            `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
+                        );
+                    }
                 } catch (error: any) {
                     vscode.window.showErrorMessage(error.message);
                 }
