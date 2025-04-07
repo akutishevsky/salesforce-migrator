@@ -74,6 +74,49 @@ export class SfBulkApi {
     }
 
     /**
+     * Creates a new Bulk API upsert job
+     *
+     * @param org The Salesforce org where the job will be created
+     * @param objectName The API name of the sObject to upsert
+     * @param externalIdFieldName The external ID field to use for matching records
+     * @returns Promise that resolves with the job info
+     */
+    public async createUpsertJob(
+        org: SalesforceOrg,
+        objectName: string,
+        externalIdFieldName: string
+    ): Promise<BulkDmlJobInfo> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                operation: "upsert",
+                object: objectName,
+                externalIdFieldName: externalIdFieldName,
+            }),
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to create upsert job: ${errorMessage}`);
+        }
+
+        return (await response.json()) as BulkDmlJobInfo;
+    }
+
+    /**
      * Creates a new Bulk API query job
      */
     public async createQueryJob(
