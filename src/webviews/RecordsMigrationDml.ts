@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
 import * as path from "path";
 import { HtmlService } from "../services/HtmlService";
-import { OrgService } from "../services/OrgService";
+import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
-import { SfBulkApi } from "../api/SfBulkApi";
+import { SfBulkApi, BulkDmlJobInfo } from "../api/SfBulkApi";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
@@ -285,137 +285,19 @@ export class RecordsMigrationDml {
                             token
                         );
 
-                    // If there are failed records, save them to a CSV file
-                    if (jobResult.numberRecordsFailed > 0) {
-                        progress.report({
-                            message: `Getting failed results for job ${jobInfo.id}...`,
-                        });
+                    await this._saveFailedRecords(
+                        jobResult,
+                        jobInfo,
+                        targetOrg,
+                        progress
+                    );
 
-                        try {
-                            const failedResults =
-                                await this._sfBulkApi.getFailedResults(
-                                    targetOrg,
-                                    jobInfo.id
-                                );
-
-                            // Create the directory structure if it doesn't exist
-                            const workspaceFolders =
-                                vscode.workspace.workspaceFolders;
-                            const workspacePath =
-                                workspaceFolders && workspaceFolders.length > 0
-                                    ? workspaceFolders[0].uri.fsPath
-                                    : "";
-
-                            const now = new Date();
-                            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-                            const timeStr = now
-                                .toTimeString()
-                                .split(" ")[0]
-                                .replace(/:/g, "-"); // HH-MM-SS
-
-                            const failedDirPath = path.join(
-                                workspacePath,
-                                `salesforce-migrator/${this._customObject}/${this._operation}/Failed`
-                            );
-
-                            // Create directory if it doesn't exist
-                            await vscode.workspace.fs.createDirectory(
-                                vscode.Uri.file(failedDirPath)
-                            );
-
-                            // Save failed results to file
-                            const failedFilePath = path.join(
-                                failedDirPath,
-                                `${this._customObject}_${dateStr}_${timeStr}.csv`
-                            );
-
-                            await vscode.workspace.fs.writeFile(
-                                vscode.Uri.file(failedFilePath),
-                                Buffer.from(failedResults)
-                            );
-
-                            progress.report({
-                                message: `Saved failed records to ${failedFilePath}`,
-                            });
-
-                            vscode.window.showInformationMessage(
-                                `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}. Failed records saved to ${failedFilePath}`
-                            );
-                        } catch (error: any) {
-                            vscode.window.showErrorMessage(
-                                `Job completed but failed to retrieve failed records: ${error.message}`
-                            );
-                        }
-                    } else {
-                        vscode.window.showInformationMessage(
-                            `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
-                        );
-                    }
-
-                    // Save successful results
-                    try {
-                        progress.report({
-                            message: `Getting successful results for job ${jobInfo.id}...`,
-                        });
-
-                        const successfulResults =
-                            await this._sfBulkApi.getSuccessfulResults(
-                                targetOrg,
-                                jobInfo.id
-                            );
-
-                        // Create the directory structure if it doesn't exist
-                        const workspaceFolders =
-                            vscode.workspace.workspaceFolders;
-                        const workspacePath =
-                            workspaceFolders && workspaceFolders.length > 0
-                                ? workspaceFolders[0].uri.fsPath
-                                : "";
-
-                        const now = new Date();
-                        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-                        const timeStr = now
-                            .toTimeString()
-                            .split(" ")[0]
-                            .replace(/:/g, "-"); // HH-MM-SS
-
-                        const successDirPath = path.join(
-                            workspacePath,
-                            `salesforce-migrator/${this._customObject}/${this._operation}/Succeeded`
-                        );
-
-                        // Create directory if it doesn't exist
-                        await vscode.workspace.fs.createDirectory(
-                            vscode.Uri.file(successDirPath)
-                        );
-
-                        // Save successful results to file
-                        const successFilePath = path.join(
-                            successDirPath,
-                            `${this._customObject}_${dateStr}_${timeStr}.csv`
-                        );
-
-                        await vscode.workspace.fs.writeFile(
-                            vscode.Uri.file(successFilePath),
-                            Buffer.from(successfulResults)
-                        );
-
-                        progress.report({
-                            message: `Saved successful records to ${successFilePath}`,
-                        });
-
-                        vscode.window.showInformationMessage(
-                            `Successful records saved to ${successFilePath}`
-                        );
-                    } catch (error: any) {
-                        console.error(
-                            "Error saving successful results:",
-                            error
-                        );
-                        vscode.window.showErrorMessage(
-                            `Job completed but failed to retrieve successful records: ${error.message}`
-                        );
-                    }
+                    await this._saveSuccessfulRecords(
+                        jobResult,
+                        jobInfo,
+                        targetOrg,
+                        progress
+                    );
                 } catch (error: any) {
                     vscode.window.showErrorMessage(error.message);
                 }
@@ -476,6 +358,142 @@ export class RecordsMigrationDml {
         processedLines[0] = newHeadersLine;
 
         this._mappedCsv = processedLines.join("\n");
+    }
+
+    private async _saveFailedRecords(
+        jobResult: BulkDmlJobInfo,
+        jobInfo: BulkDmlJobInfo,
+        targetOrg: SalesforceOrg,
+        progress: vscode.Progress<{ message: string }>
+    ): Promise<void> {
+        // If there are failed records, save them to a CSV file
+        if (jobResult.numberRecordsFailed > 0) {
+            progress.report({
+                message: `Getting failed results for job ${jobInfo.id}...`,
+            });
+
+            try {
+                const failedResults = await this._sfBulkApi.getFailedResults(
+                    targetOrg,
+                    jobInfo.id
+                );
+
+                // Create the directory structure if it doesn't exist
+                const workspaceFolders = vscode.workspace.workspaceFolders;
+                const workspacePath =
+                    workspaceFolders && workspaceFolders.length > 0
+                        ? workspaceFolders[0].uri.fsPath
+                        : "";
+
+                const now = new Date();
+                const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+                const timeStr = now
+                    .toTimeString()
+                    .split(" ")[0]
+                    .replace(/:/g, "-"); // HH-MM-SS
+
+                const failedDirPath = path.join(
+                    workspacePath,
+                    `salesforce-migrator/${this._customObject}/${this._operation}/Failed`
+                );
+
+                // Create directory if it doesn't exist
+                await vscode.workspace.fs.createDirectory(
+                    vscode.Uri.file(failedDirPath)
+                );
+
+                // Save failed results to file
+                const failedFilePath = path.join(
+                    failedDirPath,
+                    `${this._customObject}_${dateStr}_${timeStr}.csv`
+                );
+
+                await vscode.workspace.fs.writeFile(
+                    vscode.Uri.file(failedFilePath),
+                    Buffer.from(failedResults)
+                );
+
+                progress.report({
+                    message: `Saved failed records to ${failedFilePath}`,
+                });
+
+                vscode.window.showInformationMessage(
+                    `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}. Failed records saved to ${failedFilePath}`
+                );
+            } catch (error: any) {
+                vscode.window.showErrorMessage(
+                    `Job completed but failed to retrieve failed records: ${error.message}`
+                );
+            }
+        } else {
+            vscode.window.showInformationMessage(
+                `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
+            );
+        }
+    }
+
+    private async _saveSuccessfulRecords(
+        jobResult: BulkDmlJobInfo,
+        jobInfo: BulkDmlJobInfo,
+        targetOrg: SalesforceOrg,
+        progress: vscode.Progress<{ message: string }>
+    ): Promise<void> {
+        try {
+            progress.report({
+                message: `Getting successful results for job ${jobInfo.id}...`,
+            });
+
+            const successfulResults =
+                await this._sfBulkApi.getSuccessfulResults(
+                    targetOrg,
+                    jobInfo.id
+                );
+
+            // Create the directory structure if it doesn't exist
+            const workspaceFolders = vscode.workspace.workspaceFolders;
+            const workspacePath =
+                workspaceFolders && workspaceFolders.length > 0
+                    ? workspaceFolders[0].uri.fsPath
+                    : "";
+
+            const now = new Date();
+            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+            const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+
+            const successDirPath = path.join(
+                workspacePath,
+                `salesforce-migrator/${this._customObject}/${this._operation}/Succeeded`
+            );
+
+            // Create directory if it doesn't exist
+            await vscode.workspace.fs.createDirectory(
+                vscode.Uri.file(successDirPath)
+            );
+
+            // Save successful results to file
+            const successFilePath = path.join(
+                successDirPath,
+                `${this._customObject}_${dateStr}_${timeStr}.csv`
+            );
+
+            await vscode.workspace.fs.writeFile(
+                vscode.Uri.file(successFilePath),
+                Buffer.from(successfulResults)
+            );
+
+            progress.report({
+                message: `Saved successful records to ${successFilePath}`,
+            });
+
+            vscode.window.showInformationMessage(
+                `Successful records saved to ${successFilePath}`
+            );
+        } catch (error: any) {
+            console.error("Error saving successful results:", error);
+            vscode.window.showErrorMessage(
+                `Job completed but failed to retrieve successful records: ${error.message}`
+            );
+        }
     }
 
     private _composeWebviewHtml(): string {
