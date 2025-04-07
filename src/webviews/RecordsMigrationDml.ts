@@ -268,11 +268,10 @@ export class RecordsMigrationDml {
                         throw new Error("Operation cancelled by user");
                     }
 
-                    const completionResult =
-                        await this._sfBulkApi.completeJobUpload(
-                            targetOrg,
-                            jobInfo.id
-                        );
+                    await this._sfBulkApi.completeJobUpload(
+                        targetOrg,
+                        jobInfo.id
+                    );
                     progress.report({
                         message: `Completed uploading ${this._operation} job data`,
                     });
