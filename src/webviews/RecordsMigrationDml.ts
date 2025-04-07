@@ -4,11 +4,9 @@ import { HtmlService } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
 import { SfBulkApi, BulkDmlJobInfo } from "../api/SfBulkApi";
-import { fail } from "assert";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
-    private _webviewView: vscode.WebviewView;
     private _customObject: string;
     private _operation: string;
     private _htmlService: HtmlService;
@@ -28,7 +26,6 @@ export class RecordsMigrationDml {
         operation: string
     ) {
         this._extensionContext = extensionContext;
-        this._webviewView = webviewView;
         this._customObject = customObject;
         this._operation = operation;
         this._htmlService = new HtmlService({
