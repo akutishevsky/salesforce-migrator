@@ -421,7 +421,7 @@ export class SfBulkApi {
 
     /**
      * Gets the failed results of a Bulk API DML job
-     * 
+     *
      * @param org The Salesforce org where the job exists
      * @param jobId The ID of the job to get failed results from
      * @returns Promise that resolves with a CSV string of failed records
@@ -457,7 +457,7 @@ export class SfBulkApi {
 
     /**
      * Gets the successful results of a Bulk API DML job
-     * 
+     *
      * @param org The Salesforce org where the job exists
      * @param jobId The ID of the job to get successful results from
      * @returns Promise that resolves with a CSV string of successful records
@@ -485,7 +485,9 @@ export class SfBulkApi {
                 // If can't parse as JSON, just use the status text
                 errorMessage = response.statusText;
             }
-            throw new Error(`Failed to get successful results: ${errorMessage}`);
+            throw new Error(
+                `Failed to get successful results: ${errorMessage}`
+            );
         }
 
         return await response.text();
