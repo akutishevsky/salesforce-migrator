@@ -4,6 +4,7 @@ import { HtmlService } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
 import { SfBulkApi, BulkDmlJobInfo } from "../api/SfBulkApi";
+import { fail } from "assert";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
@@ -408,9 +409,9 @@ export class RecordsMigrationDml {
                 Buffer.from(failedResults)
             );
 
-            progress.report({
-                message: `Saved failed records to ${failedFilePath}`,
-            });
+            vscode.window.showInformationMessage(
+                `Failed records saved to ${failedFilePath}`
+            );
         } catch (error: any) {
             vscode.window.showErrorMessage(
                 `Job completed but failed to retrieve failed records: ${error.message}`
@@ -463,10 +464,6 @@ export class RecordsMigrationDml {
                 vscode.Uri.file(successFilePath),
                 Buffer.from(successfulResults)
             );
-
-            progress.report({
-                message: `Saved successful records to ${successFilePath}`,
-            });
 
             vscode.window.showInformationMessage(
                 `Successful records saved to ${successFilePath}`
