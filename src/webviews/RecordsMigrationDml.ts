@@ -313,6 +313,12 @@ export class RecordsMigrationDml {
         );
         let fileContentString = fileContent.toString();
 
+        // For Delete operation, use the original CSV without mapping
+        if (this._operation === "Delete") {
+            this._mappedCsv = fileContentString;
+            return;
+        }
+
         const csvLines = fileContentString.split("\n");
         const csvHeaders = csvLines[0]
             .split(",")
