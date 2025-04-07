@@ -455,6 +455,42 @@ export class SfBulkApi {
         return await response.text();
     }
 
+    /**
+     * Gets the successful results of a Bulk API DML job
+     * 
+     * @param org The Salesforce org where the job exists
+     * @param jobId The ID of the job to get successful results from
+     * @returns Promise that resolves with a CSV string of successful records
+     */
+    public async getSuccessfulResults(
+        org: SalesforceOrg,
+        jobId: string
+    ): Promise<string> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/successfulResults/`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                Accept: "text/csv",
+            },
+        });
+
+        if (!response.ok) {
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as { message?: string }[];
+                errorMessage = error[0]?.message || JSON.stringify(error);
+            } catch (e) {
+                // If can't parse as JSON, just use the status text
+                errorMessage = response.statusText;
+            }
+            throw new Error(`Failed to get successful results: ${errorMessage}`);
+        }
+
+        return await response.text();
+    }
+
     public async pollDmlJobUntilComplete(
         org: SalesforceOrg,
         jobId: string,

@@ -344,6 +344,61 @@ export class RecordsMigrationDml {
                             `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}, records failed: ${jobResult.numberRecordsFailed}`
                         );
                     }
+                    
+                    // Save successful results
+                    try {
+                        progress.report({
+                            message: `Getting successful results for job ${jobInfo.id}...`,
+                        });
+                        
+                        const successfulResults = await this._sfBulkApi.getSuccessfulResults(
+                            targetOrg,
+                            jobInfo.id
+                        );
+                        
+                        // Create the directory structure if it doesn't exist
+                        const workspaceFolders = vscode.workspace.workspaceFolders;
+                        const workspacePath =
+                            workspaceFolders && workspaceFolders.length > 0
+                                ? workspaceFolders[0].uri.fsPath
+                                : "";
+                        
+                        const now = new Date();
+                        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+                        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+                        
+                        const successDirPath = path.join(
+                            workspacePath,
+                            `salesforce-migrator/${this._customObject}/${this._operation}/Succeeded`
+                        );
+                        
+                        // Create directory if it doesn't exist
+                        await vscode.workspace.fs.createDirectory(vscode.Uri.file(successDirPath));
+                        
+                        // Save successful results to file
+                        const successFilePath = path.join(
+                            successDirPath,
+                            `${this._customObject}_${dateStr}_${timeStr}.csv`
+                        );
+                        
+                        await vscode.workspace.fs.writeFile(
+                            vscode.Uri.file(successFilePath),
+                            Buffer.from(successfulResults)
+                        );
+                        
+                        progress.report({
+                            message: `Saved successful records to ${successFilePath}`,
+                        });
+                        
+                        vscode.window.showInformationMessage(
+                            `Successful records saved to ${successFilePath}`
+                        );
+                    } catch (error: any) {
+                        console.error('Error saving successful results:', error);
+                        vscode.window.showErrorMessage(
+                            `Job completed but failed to retrieve successful records: ${error.message}`
+                        );
+                    }
                 } catch (error: any) {
                     vscode.window.showErrorMessage(error.message);
                 }
