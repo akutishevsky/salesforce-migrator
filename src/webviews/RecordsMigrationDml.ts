@@ -380,37 +380,13 @@ export class RecordsMigrationDml {
                 jobInfo.id
             );
 
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            const workspacePath =
-                workspaceFolders && workspaceFolders.length > 0
-                    ? workspaceFolders[0].uri.fsPath
-                    : "";
-
-            const now = new Date();
-            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-            const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
-
-            const failedDirPath = path.join(
-                workspacePath,
-                `salesforce-migrator/${this._customObject}/${this._operation}/Failed`
-            );
-
-            await vscode.workspace.fs.createDirectory(
-                vscode.Uri.file(failedDirPath)
-            );
-
-            const failedFilePath = path.join(
-                failedDirPath,
-                `${this._customObject}_${dateStr}_${timeStr}.csv`
-            );
-
-            await vscode.workspace.fs.writeFile(
-                vscode.Uri.file(failedFilePath),
-                Buffer.from(failedResults)
+            const filePath = await this._saveRecordsToFile(
+                failedResults,
+                "Failed"
             );
 
             vscode.window.showInformationMessage(
-                `Failed records saved to ${failedFilePath}`
+                `Failed records saved to ${filePath}`
             );
         } catch (error: any) {
             vscode.window.showErrorMessage(
@@ -436,43 +412,53 @@ export class RecordsMigrationDml {
                     jobInfo.id
                 );
 
-            const workspaceFolders = vscode.workspace.workspaceFolders;
-            const workspacePath =
-                workspaceFolders && workspaceFolders.length > 0
-                    ? workspaceFolders[0].uri.fsPath
-                    : "";
-
-            const now = new Date();
-            const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-            const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
-
-            const successDirPath = path.join(
-                workspacePath,
-                `salesforce-migrator/${this._customObject}/${this._operation}/Succeeded`
-            );
-
-            await vscode.workspace.fs.createDirectory(
-                vscode.Uri.file(successDirPath)
-            );
-
-            const successFilePath = path.join(
-                successDirPath,
-                `${this._customObject}_${dateStr}_${timeStr}.csv`
-            );
-
-            await vscode.workspace.fs.writeFile(
-                vscode.Uri.file(successFilePath),
-                Buffer.from(successfulResults)
+            const filePath = await this._saveRecordsToFile(
+                successfulResults,
+                "Succeeded"
             );
 
             vscode.window.showInformationMessage(
-                `Successful records saved to ${successFilePath}`
+                `Successful records saved to ${filePath}`
             );
         } catch (error: any) {
             vscode.window.showErrorMessage(
                 `Job completed but failed to retrieve successful records: ${error.message}`
             );
         }
+    }
+
+    private async _saveRecordsToFile(
+        content: string,
+        status: "Failed" | "Succeeded"
+    ): Promise<string> {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        const workspacePath =
+            workspaceFolders && workspaceFolders.length > 0
+                ? workspaceFolders[0].uri.fsPath
+                : "";
+
+        const now = new Date();
+        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+
+        const dirPath = path.join(
+            workspacePath,
+            `salesforce-migrator/${this._customObject}/${this._operation}/${status}`
+        );
+
+        await vscode.workspace.fs.createDirectory(vscode.Uri.file(dirPath));
+
+        const filePath = path.join(
+            dirPath,
+            `${this._customObject}_${dateStr}_${timeStr}.csv`
+        );
+
+        await vscode.workspace.fs.writeFile(
+            vscode.Uri.file(filePath),
+            Buffer.from(content)
+        );
+
+        return filePath;
     }
 
     private _composeWebviewHtml(): string {
