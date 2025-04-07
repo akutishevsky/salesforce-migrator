@@ -30,6 +30,7 @@ export interface BulkDmlJobInfo {
     apiVersion: string;
     numberRecordsProcessed: number;
     numberRecordsFailed: number;
+    errorMessage: string;
 }
 
 const INTERVAL = 1000;
@@ -550,7 +551,9 @@ export class SfBulkApi {
                         });
                         reject(
                             new Error(
-                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`
+                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}. Error: ${
+                                    jobStatus.errorMessage
+                                }`
                             )
                         );
                         return;
