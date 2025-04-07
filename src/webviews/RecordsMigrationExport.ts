@@ -189,8 +189,15 @@ export class RecordsMigrationExport {
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
                         });
                         vscode.window.showInformationMessage(
-                            `Records exported successfully to ${fileUri.fsPath}`
-                        );
+                            `Records exported successfully to ${fileUri.fsPath}`,
+                            { modal: false },
+                            "Show File"
+                        ).then(selection => {
+                            if (selection === "Show File") {
+                                vscode.workspace.openTextDocument(fileUri)
+                                    .then(doc => vscode.window.showTextDocument(doc));
+                            }
+                        });
                     } catch (error: any) {
                         // If operation was cancelled by user, show a different message
                         if (error.message === "Operation cancelled by user") {

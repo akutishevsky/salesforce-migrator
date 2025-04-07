@@ -375,9 +375,19 @@ export class RecordsMigrationDml {
                 "Failed"
             );
 
-            vscode.window.showInformationMessage(
-                `Failed records saved to ${filePath}`
-            );
+            vscode.window
+                .showInformationMessage(
+                    `Failed records saved to ${filePath}`,
+                    { modal: false },
+                    "Show File"
+                )
+                .then((selection) => {
+                    if (selection === "Show File") {
+                        vscode.workspace
+                            .openTextDocument(vscode.Uri.file(filePath))
+                            .then((doc) => vscode.window.showTextDocument(doc));
+                    }
+                });
         } catch (error: any) {
             vscode.window.showErrorMessage(
                 `Job completed but failed to retrieve failed records: ${error.message}`
@@ -406,9 +416,19 @@ export class RecordsMigrationDml {
                 "Succeeded"
             );
 
-            vscode.window.showInformationMessage(
-                `Successful records saved to ${filePath}`
-            );
+            vscode.window
+                .showInformationMessage(
+                    `Successful records saved to ${filePath}`,
+                    { modal: false },
+                    "Show File"
+                )
+                .then((selection) => {
+                    if (selection === "Show File") {
+                        vscode.workspace
+                            .openTextDocument(vscode.Uri.file(filePath))
+                            .then((doc) => vscode.window.showTextDocument(doc));
+                    }
+                });
         } catch (error: any) {
             vscode.window.showErrorMessage(
                 `Job completed but failed to retrieve successful records: ${error.message}`
