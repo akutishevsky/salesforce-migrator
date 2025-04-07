@@ -91,9 +91,12 @@ function renderMappingTable(csvHeaders, fields) {
                     }
                 });
 
+                const matchingField = document.querySelector("#matching-field");
+
                 vscode.postMessage({
                     command: "performDmlAction",
                     mapping: mapping,
+                    matchingField: matchingField.value,
                 });
             });
         }
@@ -115,6 +118,7 @@ function renderMappingTable(csvHeaders, fields) {
                 const mappingContainer = document.querySelector(
                     ".sfm-mapping-container"
                 );
+
                 mappingContainer.innerHTML = renderMappingTable(
                     message.csvHeaders,
                     message.fields

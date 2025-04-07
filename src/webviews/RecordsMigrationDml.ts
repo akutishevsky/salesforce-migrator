@@ -130,7 +130,10 @@ export class RecordsMigrationDml {
                         await this._selectSourceFile();
                         break;
                     case "performDmlAction":
-                        await this._performDmlAction(message.mapping);
+                        await this._performDmlAction(
+                            message.mapping,
+                            message.matchingField
+                        );
                         break;
                     default:
                         break;
@@ -197,7 +200,8 @@ export class RecordsMigrationDml {
     }
 
     private async _performDmlAction(
-        mapping: [string, string][]
+        mapping: [string, string][],
+        matchingField: string
     ): Promise<void> {
         await vscode.window.withProgress(
             {
@@ -233,11 +237,18 @@ export class RecordsMigrationDml {
                         throw new Error("Operation cancelled by user");
                     }
 
-                    const jobInfo = await this._sfBulkApi.createDmlJob(
-                        targetOrg,
-                        this._operation,
-                        this._customObject
-                    );
+                    const jobInfo =
+                        this._operation === "Upsert"
+                            ? await this._sfBulkApi.createUpsertJob(
+                                  targetOrg,
+                                  this._customObject,
+                                  matchingField
+                              )
+                            : await this._sfBulkApi.createDmlJob(
+                                  targetOrg,
+                                  this._operation,
+                                  this._customObject
+                              );
                     progress.report({
                         message: `Created the ${this._operation} job with Id: ${jobInfo.id}`,
                     });
