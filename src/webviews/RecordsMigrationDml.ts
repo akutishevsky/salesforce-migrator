@@ -285,15 +285,9 @@ export class RecordsMigrationDml {
                             token
                         );
 
-                    await this._saveFailedRecords(
-                        jobResult,
-                        jobInfo,
-                        targetOrg,
-                        progress
-                    );
+                    await this._saveFailedRecords(jobInfo, targetOrg, progress);
 
                     await this._saveSuccessfulRecords(
-                        jobResult,
                         jobInfo,
                         targetOrg,
                         progress
@@ -365,7 +359,6 @@ export class RecordsMigrationDml {
     }
 
     private async _saveFailedRecords(
-        jobResult: BulkDmlJobInfo,
         jobInfo: BulkDmlJobInfo,
         targetOrg: SalesforceOrg,
         progress: vscode.Progress<{ message: string }>
@@ -396,7 +389,6 @@ export class RecordsMigrationDml {
     }
 
     private async _saveSuccessfulRecords(
-        jobResult: BulkDmlJobInfo,
         jobInfo: BulkDmlJobInfo,
         targetOrg: SalesforceOrg,
         progress: vscode.Progress<{ message: string }>
