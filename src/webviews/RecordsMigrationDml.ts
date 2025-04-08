@@ -11,6 +11,7 @@ export class RecordsMigrationDml {
     private _operation: string;
     private _htmlService: HtmlService;
     private _panel: vscode.WebviewPanel | undefined;
+    private _disposables: vscode.Disposable[] = [];
     private _targetOrg: string | undefined;
     private _orgService: OrgService;
     private _fields: any[] = [];
@@ -73,6 +74,14 @@ export class RecordsMigrationDml {
                     localResourceRoots: [this._extensionContext.extensionUri],
                 }
             );
+            
+            // Register the panel's dispose event
+            const panelDisposeListener = this._panel.onDidDispose(() => {
+                this._disposePanel();
+            });
+            
+            // Add to disposables
+            this._disposables.push(panelDisposeListener);
         }
     }
 
@@ -124,7 +133,7 @@ export class RecordsMigrationDml {
     }
 
     private _setupMessageHandlers(): void {
-        this._panel!.webview.onDidReceiveMessage(
+        const messageHandler = this._panel!.webview.onDidReceiveMessage(
             async (message: any) => {
                 switch (message.command) {
                     case "selectSourceFile":
@@ -139,10 +148,11 @@ export class RecordsMigrationDml {
                     default:
                         break;
                 }
-            },
-            undefined,
-            this._extensionContext.subscriptions
+            }
         );
+        
+        // Add to disposables for proper cleanup
+        this._disposables.push(messageHandler);
     }
 
     private async _selectSourceFile(): Promise<void> {
@@ -631,5 +641,17 @@ export class RecordsMigrationDml {
         `;
 
         return html;
+    }
+    
+    /**
+     * Dispose all panel resources
+     */
+    private _disposePanel(): void {
+        // Dispose all disposables
+        this._disposables.forEach((d) => d.dispose());
+        this._disposables = [];
+        
+        // Clear panel reference
+        this._panel = undefined;
     }
 }

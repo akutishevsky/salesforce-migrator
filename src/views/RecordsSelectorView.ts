@@ -170,28 +170,48 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         }
     }
 
+    private _exportWebview: RecordsMigrationExport | undefined;
+    private _dmlWebview: RecordsMigrationDml | undefined;
+    
     private _openExportWebview(customObject: string): void {
-        const exportWebview = new RecordsMigrationExport(
+        // Dispose any existing export webview
+        this._exportWebview = undefined;
+        
+        // Create new export webview
+        this._exportWebview = new RecordsMigrationExport(
             this._extensionContext,
             this._webviewView!,
             customObject
         );
-        exportWebview.reveal();
+        this._exportWebview.reveal();
     }
 
     private _openDmlWebview(customObject: string, operation: string): void {
-        const dmlWebview = new RecordsMigrationDml(
+        // Dispose any existing DML webview
+        this._dmlWebview = undefined;
+        
+        // Create new DML webview
+        this._dmlWebview = new RecordsMigrationDml(
             this._extensionContext,
             this._webviewView!,
             customObject,
             operation
         );
-        dmlWebview.reveal();
+        this._dmlWebview.reveal();
     }
 
     /**
      * Refresh the custom objects list from the source org
      */
+    /**
+     * Dispose resources
+     */
+    public dispose(): void {
+        // Clear references to release resources
+        this._exportWebview = undefined;
+        this._dmlWebview = undefined;
+    }
+    
     public async refreshRecords(): Promise<void> {
         if (!this._webviewView) {
             return;

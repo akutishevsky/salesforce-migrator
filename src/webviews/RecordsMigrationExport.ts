@@ -11,6 +11,7 @@ export class RecordsMigrationExport {
     private _webviewView: vscode.WebviewView;
     private _htmlService: HtmlService;
     private _panel: vscode.WebviewPanel | undefined;
+    private _disposables: vscode.Disposable[] = [];
     private _customObject: string;
     private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
@@ -66,7 +67,7 @@ export class RecordsMigrationExport {
     }
 
     private _setupMessageHandlers(): void {
-        this._panel!.webview.onDidReceiveMessage(
+        const messageHandler = this._panel!.webview.onDidReceiveMessage(
             async (message: any) => {
                 switch (message.command) {
                     case "getPicklistFieldValues":
@@ -84,10 +85,11 @@ export class RecordsMigrationExport {
                     default:
                         break;
                 }
-            },
-            undefined,
-            this._extensionContext.subscriptions
+            }
         );
+        
+        // Add to disposables for proper cleanup
+        this._disposables.push(messageHandler);
     }
 
     private _handlePicklistFieldValues(message: any): void {
@@ -257,6 +259,14 @@ export class RecordsMigrationExport {
                     localResourceRoots: [this._extensionContext.extensionUri],
                 }
             );
+            
+            // Register the panel's dispose event
+            const panelDisposeListener = this._panel.onDidDispose(() => {
+                this._disposePanel();
+            });
+            
+            // Add to disposables
+            this._disposables.push(panelDisposeListener);
         }
     }
 
@@ -478,5 +488,17 @@ export class RecordsMigrationExport {
         `;
 
         return html;
+    }
+    
+    /**
+     * Dispose all panel resources
+     */
+    private _disposePanel(): void {
+        // Dispose all disposables
+        this._disposables.forEach((d) => d.dispose());
+        this._disposables = [];
+        
+        // Clear panel reference
+        this._panel = undefined;
     }
 }

@@ -61,6 +61,14 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
         this._webviewView.webview.html = this._htmlService.getLoaderHtml();
     }
+    
+    /**
+     * Dispose resources
+     */
+    public dispose(): void {
+        // Clear references to release resources
+        this._webviewView = undefined;
+    }
 
     /**
      * Refresh the org list

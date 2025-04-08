@@ -185,6 +185,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             this._extensionContext.subscriptions
         );
     }
+    
+    /**
+     * Dispose the deployment webview
+     */
+    public dispose(): void {
+        if (this._deploymentWebview) {
+            // Clear reference to release resources
+            this._deploymentWebview = undefined;
+        }
+    }
 
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
