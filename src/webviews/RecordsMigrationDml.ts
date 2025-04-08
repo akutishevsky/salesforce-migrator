@@ -222,6 +222,12 @@ export class RecordsMigrationDml {
         mapping: [string, string][],
         matchingField: string
     ): Promise<void> {
+        // Validate that a CSV file was selected
+        if (!this._selectedSourceFile) {
+            vscode.window.showErrorMessage("Please select a CSV file before performing the DML action.");
+            return;
+        }
+
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
@@ -338,8 +344,7 @@ export class RecordsMigrationDml {
         userSelectedLineEnding: string = "LF"
     ): Promise<void> {
         if (!this._selectedSourceFile) {
-            vscode.window.showErrorMessage("No source file selected");
-            return;
+            throw new Error("No source file selected. Please select a CSV file before proceeding.");
         }
 
         const fileContent = await vscode.workspace.fs.readFile(

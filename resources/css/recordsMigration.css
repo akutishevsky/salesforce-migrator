@@ -212,6 +212,13 @@ input[type="checkbox"] {
     flex: 1;
     text-align: left;
     min-height: 1.5rem;
+    color: var(--vscode-errorForeground, #f14c4c);
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    max-width: 100%;
+    font-weight: bold;
 }
 
 
@@ -459,7 +466,11 @@ p {
     word-wrap: break-word;
     max-width: 100%;
     min-height: 1.5rem;
-    display: none; /* Hidden by default, shown via JavaScript when needed */
+    display: none; /* Hidden by default */
+}
+
+.sfm-error-message:not(:empty) {
+    display: block; /* Show when it contains text */
 }
 
 .sfm-error-message.visible {

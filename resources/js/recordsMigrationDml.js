@@ -77,6 +77,17 @@ function renderMappingTable(csvHeaders, fields) {
         const actionButton = document.querySelector("#action-button");
         if (actionButton) {
             actionButton.addEventListener("click", () => {
+                const sourceFile = document.querySelector("#source-file").value;
+                const errorMessage = document.querySelector("#error-message");
+                
+                // Validate that a CSV file has been selected
+                if (!sourceFile) {
+                    errorMessage.textContent = "Please select a CSV file before proceeding.";
+                    return;
+                }
+                
+                errorMessage.textContent = ""; // Clear any previous error
+                
                 const mapping = [];
                 const fieldSelects =
                     document.querySelectorAll(".sfm-field-mapping");
