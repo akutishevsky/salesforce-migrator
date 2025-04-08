@@ -344,6 +344,30 @@ export class RecordsMigrationDml {
     private async _applyCsvHeadersMapping(
         mapping: [string, string][]
     ): Promise<void> {
+        const fileContentString = await this._validateAndLoadFile();
+        this._detectAndSetLineEndings(fileContentString);
+
+        if (this._operation === "Delete") {
+            this._mappedCsv = fileContentString;
+            return;
+        }
+
+        const parsedCsv = this._parseCsvContent(fileContentString);
+        const { headerToFieldMap, headerIndicesToKeep } =
+            this._createMappingStructures(parsedCsv[0], mapping);
+        const processedRows = this._processRowsWithMapping(
+            parsedCsv,
+            headerIndicesToKeep,
+            headerToFieldMap
+        );
+
+        const hasCRLF = this._detectedLineEnding === "CRLF";
+        this._mappedCsv = csvStringify(processedRows, {
+            record_delimiter: hasCRLF ? "\r\n" : "\n",
+        });
+    }
+
+    private async _validateAndLoadFile(): Promise<string> {
         if (!this._selectedSourceFile) {
             throw new Error(
                 "No source file selected. Please select a CSV file before proceeding."
@@ -354,22 +378,16 @@ export class RecordsMigrationDml {
             this._selectedSourceFile
         );
 
-        // Detect actual line endings in the file
-        const fileContentString = fileContent.toString();
-        const hasCRLF = fileContentString.includes("\r\n");
-        const actualLineEnding = hasCRLF ? "CRLF" : "LF";
+        return fileContent.toString();
+    }
 
-        // Store the detected line ending to use in job creation
-        this._detectedLineEnding = actualLineEnding;
+    private _detectAndSetLineEndings(fileContent: string): void {
+        const hasCRLF = fileContent.includes("\r\n");
+        this._detectedLineEnding = hasCRLF ? "CRLF" : "LF";
+    }
 
-        // For Delete operation, use the original CSV without mapping
-        if (this._operation === "Delete") {
-            this._mappedCsv = fileContentString;
-            return;
-        }
-
-        // Parse the CSV file properly using the csv-parse library
-        const parsedCsv = csvParse(fileContentString, {
+    private _parseCsvContent(fileContent: string): string[][] {
+        const parsedCsv = csvParse(fileContent, {
             columns: false,
             skip_empty_lines: true,
             relax_quotes: true,
@@ -379,8 +397,16 @@ export class RecordsMigrationDml {
             throw new Error("No data found in the CSV file");
         }
 
-        const csvHeaders = parsedCsv[0];
+        return parsedCsv;
+    }
 
+    private _createMappingStructures(
+        csvHeaders: string[],
+        mapping: [string, string][]
+    ): {
+        headerToFieldMap: Map<string, string>;
+        headerIndicesToKeep: number[];
+    } {
         const headerToFieldMap = new Map<string, string>();
         const mappedHeaders = new Set<string>();
 
@@ -397,6 +423,14 @@ export class RecordsMigrationDml {
             }
         });
 
+        return { headerToFieldMap, headerIndicesToKeep };
+    }
+
+    private _processRowsWithMapping(
+        parsedCsv: string[][],
+        headerIndicesToKeep: number[],
+        headerToFieldMap: Map<string, string>
+    ): string[][] {
         // Process each row to keep only mapped columns
         const processedRows = parsedCsv.map((row: string[]) => {
             return headerIndicesToKeep.map((index) => {
@@ -412,10 +446,7 @@ export class RecordsMigrationDml {
             });
         }
 
-        // Convert back to CSV string with proper escaping, preserving the original line endings
-        this._mappedCsv = csvStringify(processedRows, {
-            record_delimiter: hasCRLF ? "\r\n" : "\n",
-        });
+        return processedRows;
     }
 
     private async _saveFailedRecords(
