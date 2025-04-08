@@ -40,23 +40,6 @@ const INTERVAL = 1000;
  */
 export class SfBulkApi {
     /**
-     * Extracts and throws a properly formatted error from a response
-     * @param response The fetch Response object
-     * @throws Error with formatted message
-     */
-    private async throwApiError(response: Response): Promise<never> {
-        let errorMessage: string;
-        try {
-            const error = (await response.json()) as { message?: string }[];
-            errorMessage = error[0]?.message || JSON.stringify(error);
-        } catch (e) {
-            // If can't parse as JSON, just use the status text
-            errorMessage = response.statusText;
-        }
-        throw new Error(`API request failed: ${errorMessage}`);
-    }
-
-    /**
      * Creates a new Bulk API DML job
      */
     public async createDmlJob(
@@ -552,5 +535,22 @@ export class SfBulkApi {
 
             checkJobStatus();
         });
+    }
+
+    /**
+     * Extracts and throws a properly formatted error from a response
+     * @param response The fetch Response object
+     * @throws Error with formatted message
+     */
+    private async throwApiError(response: Response): Promise<never> {
+        let errorMessage: string;
+        try {
+            const error = (await response.json()) as { message?: string }[];
+            errorMessage = error[0]?.message || JSON.stringify(error);
+        } catch (e) {
+            // If can't parse as JSON, just use the status text
+            errorMessage = response.statusText;
+        }
+        throw new Error(`API request failed: ${errorMessage}`);
     }
 }
