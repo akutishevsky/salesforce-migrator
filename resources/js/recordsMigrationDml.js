@@ -73,7 +73,6 @@ function renderMappingTable(csvHeaders, fields) {
                 command: "selectSourceFile",
             });
         });
-
         const actionButton = document.querySelector("#action-button");
         if (actionButton) {
             actionButton.addEventListener("click", () => {
@@ -96,7 +95,8 @@ function renderMappingTable(csvHeaders, fields) {
                 vscode.postMessage({
                     command: "performDmlAction",
                     mapping: mapping,
-                    matchingField: matchingField.value,
+                    matchingField: matchingField ? matchingField.value : ""
+                    // lineEnding is now detected automatically from the file
                 });
             });
         }

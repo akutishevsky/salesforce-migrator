@@ -205,14 +205,15 @@ input[type="checkbox"] {
     margin-top: 0.5rem;
     justify-content: flex-end;
     width: 100%;
+    gap: 1rem;
 }
 
 #error-message {
     flex: 1;
-    margin-right: 1rem;
     text-align: left;
     min-height: 1.5rem;
 }
+
 
 #action-button {
     display: inline-block;

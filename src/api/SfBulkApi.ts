@@ -45,7 +45,8 @@ export class SfBulkApi {
     public async createDmlJob(
         org: SalesforceOrg,
         operation: string,
-        objectName: string
+        objectName: string,
+        lineEnding: string = "LF"
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -58,6 +59,7 @@ export class SfBulkApi {
             body: JSON.stringify({
                 operation: operation.toLowerCase(),
                 object: objectName,
+                lineEnding: lineEnding,
             }),
         });
 
@@ -84,7 +86,8 @@ export class SfBulkApi {
     public async createUpsertJob(
         org: SalesforceOrg,
         objectName: string,
-        externalIdFieldName: string
+        externalIdFieldName: string,
+        lineEnding: string = "LF"
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -98,6 +101,7 @@ export class SfBulkApi {
                 operation: "upsert",
                 object: objectName,
                 externalIdFieldName: externalIdFieldName,
+                lineEnding: lineEnding,
             }),
         });
 

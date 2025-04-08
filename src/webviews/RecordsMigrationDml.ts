@@ -18,6 +18,7 @@ export class RecordsMigrationDml {
     private _sfBulkApi: SfBulkApi;
     private _selectedSourceFile: vscode.Uri | undefined;
     private _mappedCsv!: string;
+    private _detectedLineEnding: string = "LF";
 
     constructor(
         extensionContext: vscode.ExtensionContext,
@@ -217,7 +218,7 @@ export class RecordsMigrationDml {
 
                     await this._applyCsvHeadersMapping(mapping);
                     progress.report({
-                        message: "Formatted the CSV file",
+                        message: `Formatted the CSV file (detected ${this._detectedLineEnding} line endings)`,
                     });
                     if (token.isCancellationRequested) {
                         throw new Error("Operation cancelled by user");
@@ -237,17 +238,20 @@ export class RecordsMigrationDml {
                         throw new Error("Operation cancelled by user");
                     }
 
+                    // Always use the detected line ending from the file instead of the user selection
                     const jobInfo =
                         this._operation === "Upsert"
                             ? await this._sfBulkApi.createUpsertJob(
                                   targetOrg,
                                   this._customObject,
-                                  matchingField
+                                  matchingField,
+                                  this._detectedLineEnding // Use detected line ending
                               )
                             : await this._sfBulkApi.createDmlJob(
                                   targetOrg,
                                   this._operation,
-                                  this._customObject
+                                  this._customObject,
+                                  this._detectedLineEnding // Use detected line ending
                               );
                     progress.report({
                         message: `Created the ${this._operation} job with Id: ${jobInfo.id}`,
@@ -312,7 +316,8 @@ export class RecordsMigrationDml {
     }
 
     private async _applyCsvHeadersMapping(
-        mapping: [string, string][]
+        mapping: [string, string][],
+        userSelectedLineEnding: string = "LF"
     ): Promise<void> {
         if (!this._selectedSourceFile) {
             vscode.window.showErrorMessage("No source file selected");
@@ -322,7 +327,18 @@ export class RecordsMigrationDml {
         const fileContent = await vscode.workspace.fs.readFile(
             this._selectedSourceFile
         );
-        let fileContentString = fileContent.toString();
+        
+        // Detect actual line endings in the file
+        const fileContentString = fileContent.toString();
+        const hasCRLF = fileContentString.includes('\r\n');
+        const actualLineEnding = hasCRLF ? "CRLF" : "LF";
+        const lineEndingChar = hasCRLF ? '\r\n' : '\n';
+        
+        // Store the detected line ending to use in job creation
+        this._detectedLineEnding = actualLineEnding;
+        
+        // Log detected line ending for debugging
+        console.log(`Detected ${actualLineEnding} line endings in the file.`);
 
         // For Delete operation, use the original CSV without mapping
         if (this._operation === "Delete") {
@@ -330,7 +346,8 @@ export class RecordsMigrationDml {
             return;
         }
 
-        const csvLines = fileContentString.split("\n");
+        // Split by the actual line endings in the file
+        const csvLines = hasCRLF ? fileContentString.split('\r\n') : fileContentString.split('\n');
         const csvHeaders = csvLines[0]
             .split(",")
             .map((header: string) => header.trim().replace(/^"|"$/g, ""));
@@ -369,7 +386,8 @@ export class RecordsMigrationDml {
 
         processedLines[0] = newHeadersLine;
 
-        this._mappedCsv = processedLines.join("\n");
+        // Preserve the original file's line endings
+        this._mappedCsv = processedLines.join(lineEndingChar);
     }
 
     private async _saveFailedRecords(
