@@ -40,23 +40,19 @@ export class SfCommandService {
         let childProcess: ChildProcess | null = null;
 
         try {
-            // Create the child process
             childProcess = this._createChildProcess(commandWithJsonFlag);
 
-            // Setup cancellation if token is provided
             const { cancelled, disposable } = this._setupCancellationHandling(
                 childProcess,
                 token
             );
 
-            // Execute the command and get output
             const { stdout, stderr } = await this._executeChildProcess(
                 childProcess,
                 disposable,
                 cancelled
             );
 
-            // Parse the output
             return this._parseCommandOutput(stdout, stderr);
         } catch (error) {
             // Ensure process is killed if any uncaught error occurs
