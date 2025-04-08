@@ -5,6 +5,14 @@ import * as vscode from "vscode";
 const execPromise = promisify(exec);
 
 /**
+ * Interface representing the result of command execution
+ */
+interface CommandOutput {
+    stdout: string;
+    stderr: string;
+}
+
+/**
  * A service class that executes Salesforce CLI commands
  */
 export class SfCommandService {
@@ -32,67 +40,129 @@ export class SfCommandService {
         let childProcess: ChildProcess | null = null;
 
         try {
-            childProcess = exec(commandWithJsonFlag, {
-                maxBuffer: 100 * 1024 * 1024, // 100MB buffer
-                cwd: this._workspacePath,
-            });
+            // Create the child process
+            childProcess = this._createChildProcess(commandWithJsonFlag);
 
-            let cancelled = false;
-            const disposable = token?.onCancellationRequested(() => {
-                if (childProcess?.pid) {
-                    cancelled = true;
-                    this._killChildProcess(childProcess);
-                }
-            });
+            // Setup cancellation if token is provided
+            const { cancelled, disposable } = this._setupCancellationHandling(
+                childProcess,
+                token
+            );
 
-            const result = await new Promise((resolve, reject) => {
-                let stdout = "";
-                let stderr = "";
+            // Execute the command and get output
+            const { stdout, stderr } = await this._executeChildProcess(
+                childProcess,
+                disposable,
+                cancelled
+            );
 
-                childProcess?.stdout?.on("data", (data) => {
-                    stdout += data;
-                });
-
-                childProcess?.stderr?.on("data", (data) => {
-                    stderr += data;
-                });
-
-                childProcess?.on("error", (error) => {
-                    this._killChildProcess(childProcess);
-                    reject(error);
-                });
-
-                childProcess?.on("close", (code) => {
-                    disposable?.dispose();
-
-                    if (cancelled) {
-                        reject(new Error("Operation cancelled"));
-                        return;
-                    }
-
-                    if (stderr && !this._isSalesforceCLIUpdateWarning(stderr)) {
-                        reject(new Error(stderr));
-                        return;
-                    }
-
-                    try {
-                        resolve(JSON.parse(stdout).result);
-                    } catch (error: any) {
-                        try {
-                            resolve(JSON.parse(error.stdout).result);
-                        } catch (parseError) {
-                            reject(parseError);
-                        }
-                    }
-                });
-            });
-
-            return result;
+            // Parse the output
+            return this._parseCommandOutput(stdout, stderr);
         } catch (error) {
+            // Ensure process is killed if any uncaught error occurs
             if (childProcess) {
                 this._killChildProcess(childProcess);
             }
             throw error;
+        }
+    }
+
+    /**
+     * Creates a child process to execute the command
+     * @param command The command to execute
+     * @returns The created child process
+     */
+    private _createChildProcess(command: string): ChildProcess {
+        return exec(command, {
+            maxBuffer: 100 * 1024 * 1024, // 100MB buffer
+            cwd: this._workspacePath,
+        });
+    }
+
+    /**
+     * Sets up cancellation handling for the child process
+     * @param childProcess The child process to handle cancellation for
+     * @param token Optional cancellation token
+     * @returns Object containing cancelled flag and disposable
+     */
+    private _setupCancellationHandling(
+        childProcess: ChildProcess,
+        token?: vscode.CancellationToken
+    ): { cancelled: boolean; disposable: vscode.Disposable | undefined } {
+        let cancelled = false;
+        const disposable = token?.onCancellationRequested(() => {
+            if (childProcess?.pid) {
+                cancelled = true;
+                this._killChildProcess(childProcess);
+            }
+        });
+
+        return { cancelled, disposable };
+    }
+
+    /**
+     * Executes the child process and collects stdout and stderr
+     * @param childProcess The child process to execute
+     * @param disposable The disposable for cancellation
+     * @param cancelled Flag indicating if the operation was cancelled
+     * @returns Promise resolving to the command output
+     */
+    private _executeChildProcess(
+        childProcess: ChildProcess,
+        disposable: vscode.Disposable | undefined,
+        cancelled: boolean
+    ): Promise<CommandOutput> {
+        return new Promise((resolve, reject) => {
+            let stdout = "";
+            let stderr = "";
+
+            childProcess.stdout?.on("data", (data) => {
+                stdout += data;
+            });
+
+            childProcess.stderr?.on("data", (data) => {
+                stderr += data;
+            });
+
+            childProcess.on("error", (error) => {
+                this._killChildProcess(childProcess);
+                reject(error);
+            });
+
+            childProcess.on("close", (code) => {
+                // Clean up cancellation event listener
+                disposable?.dispose();
+
+                if (cancelled) {
+                    reject(new Error("Operation cancelled"));
+                    return;
+                }
+
+                if (stderr && !this._isSalesforceCLIUpdateWarning(stderr)) {
+                    reject(new Error(stderr));
+                    return;
+                }
+
+                resolve({ stdout, stderr });
+            });
+        });
+    }
+
+    /**
+     * Parses the command output to extract the JSON result
+     * @param stdout Standard output from the command
+     * @param stderr Standard error from the command
+     * @returns Parsed JSON result
+     */
+    private _parseCommandOutput(stdout: string, stderr: string): any {
+        try {
+            return JSON.parse(stdout).result;
+        } catch (error: any) {
+            try {
+                return JSON.parse(error.stdout).result;
+            } catch (parseError) {
+                throw parseError;
+            }
         }
     }
 
@@ -127,6 +197,11 @@ export class SfCommandService {
         return command.includes("--json") ? command : `${command} --json`;
     }
 
+    /**
+     * Checks if a stderr message is just a Salesforce CLI update warning
+     * @param message The stderr message to check
+     * @returns True if the message is just an update warning
+     */
     private _isSalesforceCLIUpdateWarning(message: string): boolean {
         return message.includes(
             "Warning: @salesforce/cli update available from"
