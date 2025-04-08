@@ -40,6 +40,23 @@ const INTERVAL = 1000;
  */
 export class SfBulkApi {
     /**
+     * Extracts and throws a properly formatted error from a response
+     * @param response The fetch Response object
+     * @throws Error with formatted message
+     */
+    private async throwApiError(response: Response): Promise<never> {
+        let errorMessage: string;
+        try {
+            const error = (await response.json()) as { message?: string }[];
+            errorMessage = error[0]?.message || JSON.stringify(error);
+        } catch (e) {
+            // If can't parse as JSON, just use the status text
+            errorMessage = response.statusText;
+        }
+        throw new Error(`API request failed: ${errorMessage}`);
+    }
+
+    /**
      * Creates a new Bulk API DML job
      */
     public async createDmlJob(
@@ -64,12 +81,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to create DML job: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkDmlJobInfo;
@@ -106,15 +118,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to create upsert job: ${errorMessage}`);
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkDmlJobInfo;
@@ -142,12 +146,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to create query job: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkQueryJobInfo;
@@ -172,12 +171,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to get job results: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            return this.throwApiError(response);
         }
 
         return await response.text();
@@ -201,12 +195,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to check job status: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkQueryJobInfo;
@@ -230,15 +219,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to check job status: ${errorMessage}`);
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkDmlJobInfo;
@@ -265,12 +246,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to abort job: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            return this.throwApiError(response);
         }
     }
 
@@ -292,15 +268,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to abort job: ${errorMessage}`);
+            return this.throwApiError(response);
         }
     }
 
@@ -329,15 +297,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to upload job data: ${errorMessage}`);
+            return this.throwApiError(response);
         } else {
             console.log("response", await response.text());
         }
@@ -369,15 +329,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to complete job upload: ${errorMessage}`);
+            return this.throwApiError(response);
         }
 
         return (await response.json()) as BulkDmlJobInfo;
@@ -489,15 +441,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(`Failed to get failed results: ${errorMessage}`);
+            return this.throwApiError(response);
         }
 
         return await response.text();
@@ -525,17 +469,7 @@ export class SfBulkApi {
         });
 
         if (!response.ok) {
-            let errorMessage: string;
-            try {
-                const error = (await response.json()) as { message?: string }[];
-                errorMessage = error[0]?.message || JSON.stringify(error);
-            } catch (e) {
-                // If can't parse as JSON, just use the status text
-                errorMessage = response.statusText;
-            }
-            throw new Error(
-                `Failed to get successful results: ${errorMessage}`
-            );
+            return this.throwApiError(response);
         }
 
         return await response.text();
