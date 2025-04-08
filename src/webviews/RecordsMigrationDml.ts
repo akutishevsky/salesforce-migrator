@@ -4,6 +4,8 @@ import { HtmlService } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
 import { SfBulkApi, BulkDmlJobInfo } from "../api/SfBulkApi";
+import { parse as csvParse } from "csv-parse/sync";
+import { stringify as csvStringify } from "csv-stringify/sync";
 
 export class RecordsMigrationDml {
     private _extensionContext: vscode.ExtensionContext;
@@ -74,12 +76,12 @@ export class RecordsMigrationDml {
                     localResourceRoots: [this._extensionContext.extensionUri],
                 }
             );
-            
+
             // Register the panel's dispose event
             const panelDisposeListener = this._panel.onDidDispose(() => {
                 this._disposePanel();
             });
-            
+
             // Add to disposables
             this._disposables.push(panelDisposeListener);
         }
@@ -150,7 +152,7 @@ export class RecordsMigrationDml {
                 }
             }
         );
-        
+
         // Add to disposables for proper cleanup
         this._disposables.push(messageHandler);
     }
@@ -187,10 +189,16 @@ export class RecordsMigrationDml {
                 this._selectedSourceFile
             );
             const fileContentString = fileContent.toString();
-            const csvHeaders = fileContentString
-                .split("\n")[0]
-                .split(",")
-                .map((header: string) => header.trim().replace(/^"|"$/g, ""));
+
+            // Use the csv-parse library to properly parse the CSV
+            const parsedCsv = csvParse(fileContentString, {
+                columns: false,
+                skip_empty_lines: true,
+                relax_quotes: true,
+            });
+
+            // Extract the first row which contains headers
+            const csvHeaders = parsedCsv.length > 0 ? parsedCsv[0] : [];
 
             const fieldLabels = this._fields.map((field: any) => field.label);
             const fieldNames = this._fields.map((field: any) => field.name);
@@ -337,16 +345,16 @@ export class RecordsMigrationDml {
         const fileContent = await vscode.workspace.fs.readFile(
             this._selectedSourceFile
         );
-        
+
         // Detect actual line endings in the file
         const fileContentString = fileContent.toString();
-        const hasCRLF = fileContentString.includes('\r\n');
+        const hasCRLF = fileContentString.includes("\r\n");
         const actualLineEnding = hasCRLF ? "CRLF" : "LF";
-        const lineEndingChar = hasCRLF ? '\r\n' : '\n';
-        
+        const lineEndingChar = hasCRLF ? "\r\n" : "\n";
+
         // Store the detected line ending to use in job creation
         this._detectedLineEnding = actualLineEnding;
-        
+
         // Log detected line ending for debugging
         console.log(`Detected ${actualLineEnding} line endings in the file.`);
 
@@ -356,11 +364,18 @@ export class RecordsMigrationDml {
             return;
         }
 
-        // Split by the actual line endings in the file
-        const csvLines = hasCRLF ? fileContentString.split('\r\n') : fileContentString.split('\n');
-        const csvHeaders = csvLines[0]
-            .split(",")
-            .map((header: string) => header.trim().replace(/^"|"$/g, ""));
+        // Parse the CSV file properly using the csv-parse library
+        const parsedCsv = csvParse(fileContentString, {
+            columns: false,
+            skip_empty_lines: true,
+            relax_quotes: true,
+        });
+
+        if (parsedCsv.length === 0) {
+            throw new Error("No data found in the CSV file");
+        }
+
+        const csvHeaders = parsedCsv[0];
 
         const headerToFieldMap = new Map<string, string>();
         const mappedHeaders = new Set<string>();
@@ -372,32 +387,32 @@ export class RecordsMigrationDml {
 
         // Get indices of headers that have mappings
         const headerIndicesToKeep: number[] = [];
-        csvHeaders.forEach((header, index) => {
+        csvHeaders.forEach((header: string, index: number) => {
             if (mappedHeaders.has(header)) {
                 headerIndicesToKeep.push(index);
             }
         });
 
-        // Process each line to keep only mapped columns
-        const processedLines = csvLines.map((line) => {
-            const values = line.split(",");
-            const newValues = headerIndicesToKeep.map((index) => values[index]);
-            return newValues.join(",");
+        // Process each row to keep only mapped columns
+        const processedRows = parsedCsv.map((row: string[]) => {
+            return headerIndicesToKeep.map((index) => {
+                // Handle potential undefined values in rows that have fewer columns
+                return index < row.length ? row[index] : "";
+            });
         });
 
-        // Replace headers with field names in the first line
-        const newHeadersLine = processedLines[0]
-            .split(",")
-            .map((header) => {
-                const trimmedHeader = header.trim().replace(/^"|"$/g, "");
-                return headerToFieldMap.get(trimmedHeader) || trimmedHeader;
-            })
-            .join(",");
+        // Replace headers with field names in the first row
+        if (processedRows.length > 0) {
+            processedRows[0] = processedRows[0].map((header: string) => {
+                return headerToFieldMap.get(header) || header;
+            });
+        }
 
-        processedLines[0] = newHeadersLine;
-
-        // Preserve the original file's line endings
-        this._mappedCsv = processedLines.join(lineEndingChar);
+        // Convert back to CSV string with proper escaping, preserving the original line endings
+        const lineEndingStr = hasCRLF ? "\r\n" : "\n";
+        this._mappedCsv = csvStringify(processedRows, {
+            record_delimiter: lineEndingStr,
+        });
     }
 
     private async _saveFailedRecords(
@@ -642,7 +657,7 @@ export class RecordsMigrationDml {
 
         return html;
     }
-    
+
     /**
      * Dispose all panel resources
      */
@@ -650,7 +665,7 @@ export class RecordsMigrationDml {
         // Dispose all disposables
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
-        
+
         // Clear panel reference
         this._panel = undefined;
     }

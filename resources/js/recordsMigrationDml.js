@@ -25,21 +25,22 @@ function renderMappingTable(csvHeaders, fields) {
     `;
 
     csvHeaders.forEach((header) => {
-        const cleanHeader = header.trim();
-        if (!cleanHeader) {
+        // Headers are already properly parsed by the server-side code
+        // Just check if we have an empty header
+        if (!header) {
             return;
         }
 
         html += `
             <tr>
-                <td class="sfm-mapping-cell">${cleanHeader}</td>
+                <td class="sfm-mapping-cell">${header}</td>
                 <td class="sfm-mapping-cell">
-                    <select class="sfm-select sfm-field-mapping" data-csv-header="${cleanHeader}">
+                    <select class="sfm-select sfm-field-mapping" data-csv-header="${header}">
                         <option value="">-- None --</option>
         `;
 
         fields.forEach((field) => {
-            const selected = field.name === cleanHeader ? "selected" : "";
+            const selected = field.name === header ? "selected" : "";
             html += `
                 <option value="${field.name}" ${selected}>
                     ${field.label} (${field.name})
