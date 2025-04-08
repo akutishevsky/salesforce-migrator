@@ -358,13 +358,9 @@ export class RecordsMigrationDml {
         const fileContentString = fileContent.toString();
         const hasCRLF = fileContentString.includes("\r\n");
         const actualLineEnding = hasCRLF ? "CRLF" : "LF";
-        const lineEndingChar = hasCRLF ? "\r\n" : "\n";
 
         // Store the detected line ending to use in job creation
         this._detectedLineEnding = actualLineEnding;
-
-        // Log detected line ending for debugging
-        console.log(`Detected ${actualLineEnding} line endings in the file.`);
 
         // For Delete operation, use the original CSV without mapping
         if (this._operation === "Delete") {
@@ -417,9 +413,8 @@ export class RecordsMigrationDml {
         }
 
         // Convert back to CSV string with proper escaping, preserving the original line endings
-        const lineEndingStr = hasCRLF ? "\r\n" : "\n";
         this._mappedCsv = csvStringify(processedRows, {
-            record_delimiter: lineEndingStr,
+            record_delimiter: hasCRLF ? "\r\n" : "\n",
         });
     }
 
