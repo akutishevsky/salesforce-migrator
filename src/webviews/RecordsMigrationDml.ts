@@ -569,8 +569,8 @@ export class RecordsMigrationDml {
 
         const heading =
             this._operation === "Delete"
-                ? `${this._operation} ${this._customObject} records from ${this._targetOrg} org`
-                : `${this._operation} ${this._customObject} records to ${this._targetOrg}`;
+                ? `${this._operation} ${this._customObject} records from <span class="org-name">${this._targetOrg}</span> org`
+                : `${this._operation} ${this._customObject} records to <span class="org-name">${this._targetOrg}</span> org`;
 
         html += `
             <div data-object-name="${this._customObject}" data-dml-operation="${

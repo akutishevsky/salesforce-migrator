@@ -313,9 +313,9 @@ export class RecordsMigrationExport {
         html += `
             <div data-object-name="${this._customObject}" class="sfm-container">
                 <div class="sfm-header">
-                    <h1>Export ${this._customObject} records from ${
+                    <h1>Export ${this._customObject} records from <span class="org-name">${
             this._sourceOrg
-        } org</h1>
+        }</span> org</h1>
                 </div>
                 <div class="sfm-content">
                     ${this._composeFieldsToQueryHtml()}
