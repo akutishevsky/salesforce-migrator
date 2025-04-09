@@ -1,6 +1,6 @@
 # Salesforce Migrator
 
-A VS Code Extension for migrating records and deploying metadata between Salesforce orgs.
+A VS Code Extension for migrating Salesforce records and metadata between orgs.
 
 > If you noticed any bugs feel free to create issues.
 
