@@ -36,7 +36,7 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs.
 
 ## Demos
 
-More demos abailable [here](https://github.com/akutishevsky/salesforce-migrator/tree/main/images)
+More demos abailable [here](https://github.com/akutishevsky/salesforce-migrator/tree/main/images/demos)
 
 ## Tips
 
