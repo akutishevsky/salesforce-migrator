@@ -428,7 +428,7 @@ class RecordsExporter {
     enableButtons = () => {
         const buttons = document.querySelectorAll("button");
         buttons.forEach((button) => {
-            button.setAttribute("disabled", "false");
+            button.removeAttribute("disabled");
             button.classList.remove("disabled");
         });
     };
