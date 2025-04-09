@@ -315,6 +315,15 @@ export class RecordsMigrationDml {
                         message: `Completed uploading ${this._operation} job data`,
                     });
 
+                    // Check if cancelled after completing job upload
+                    if (token.isCancellationRequested) {
+                        await this._sfBulkApi.abortDmlJob(
+                            targetOrg,
+                            jobInfo.id
+                        );
+                        throw new Error("Operation cancelled by user");
+                    }
+
                     const jobResult =
                         await this._sfBulkApi.pollDmlJobUntilComplete(
                             targetOrg,
