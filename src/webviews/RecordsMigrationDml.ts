@@ -567,12 +567,17 @@ export class RecordsMigrationDml {
     private _composeWebviewHtml(): string {
         let html = "";
 
+        const heading =
+            this._operation === "Delete"
+                ? `${this._operation} ${this._customObject} records from ${this._targetOrg} org`
+                : `${this._operation} ${this._customObject} records to ${this._targetOrg}`;
+
         html += `
             <div data-object-name="${this._customObject}" data-dml-operation="${
             this._operation
         }" class="sfm-container">
                 <div class="sfm-header">
-                    <h1>${this._operation} ${this._customObject} Records</h1>
+                    <h1>${heading}</h1>
                 </div>
                 <div class="sfm-content">
                         ${this._composeFileSelectorsHtml()}
