@@ -2,6 +2,8 @@
 
 A VS Code Extension for deploying metadata and migrating records between Salesforce orgs.
 
+> If you noticed any bugs feel free to create issues.
+
 ## Features
 
 ### Salesforce Org Selection
