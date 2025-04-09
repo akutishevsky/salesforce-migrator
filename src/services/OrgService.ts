@@ -17,6 +17,7 @@ export interface SalesforceOrg {
     namespacePrefix: string | null;
     isSandbox: boolean;
     isScratch: boolean;
+    isExpired: boolean;
     trailExpirationDate: string | null;
     tracksSource: boolean;
     alias: string;

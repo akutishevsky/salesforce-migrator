@@ -61,7 +61,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
         this._webviewView.webview.html = this._htmlService.getLoaderHtml();
     }
-    
+
     /**
      * Dispose resources
      */
@@ -185,20 +185,18 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         return orgs
             .map((org) => {
                 const isChecked = org.alias === selectedOrg ? "checked" : "";
-                const isConnected = org.connectedStatus === "Connected";
+                const isConnected = org.isScratch
+                    ? !org.isExpired
+                    : org.connectedStatus === "Connected";
                 const statusClass = isConnected
                     ? "status-connected"
                     : "status-disconnected";
-                const statusIcon = isConnected
-                    ? "codicon-check"
-                    : "codicon-error";
                 const statusText = isConnected ? "Connected" : "Disconnected";
 
                 return this._composeOrgHtml(
                     org,
                     isChecked,
                     statusClass,
-                    statusIcon,
                     statusText
                 );
             })
@@ -212,7 +210,6 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         org: SalesforceOrg,
         isChecked: string,
         statusClass: string,
-        statusIcon: string,
         statusText: string
     ): string {
         return `
@@ -226,7 +223,6 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 <label for="${this._type}-${org.alias}">
                     ${org.alias}
                     <span class="${statusClass}">
-                        <span class="codicon ${statusIcon} status-icon"></span>
                         ${statusText}
                     </span>
                 </label>
@@ -258,7 +254,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 break;
         }
     }
-    
+
     /**
      * Get the OrgService instance
      */
