@@ -13,6 +13,7 @@
     "author": {
         "name": "Anton Kutishevsky"
     },
+    "publisher": "AntonKutishevsky",
     "readme": "README.md",
     "repository": {
         "url": "https://github.com/akutishevsky/salesforce-migrator"
