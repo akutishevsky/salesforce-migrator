@@ -87,7 +87,7 @@ export class RecordsMigrationExport {
                 }
             }
         );
-        
+
         // Add to disposables for proper cleanup
         this._disposables.push(messageHandler);
     }
@@ -190,16 +190,21 @@ export class RecordsMigrationExport {
                         progress.report({
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
                         });
-                        vscode.window.showInformationMessage(
-                            `Records exported successfully to ${fileUri.fsPath}`,
-                            { modal: false },
-                            "Show File"
-                        ).then(selection => {
-                            if (selection === "Show File") {
-                                vscode.workspace.openTextDocument(fileUri)
-                                    .then(doc => vscode.window.showTextDocument(doc));
-                            }
-                        });
+                        vscode.window
+                            .showInformationMessage(
+                                `Records exported successfully to ${fileUri.fsPath}`,
+                                { modal: false },
+                                "Show File"
+                            )
+                            .then((selection) => {
+                                if (selection === "Show File") {
+                                    vscode.workspace
+                                        .openTextDocument(fileUri)
+                                        .then((doc) =>
+                                            vscode.window.showTextDocument(doc)
+                                        );
+                                }
+                            });
                     } catch (error: any) {
                         // If operation was cancelled by user, show a different message
                         if (error.message === "Operation cancelled by user") {
@@ -259,12 +264,12 @@ export class RecordsMigrationExport {
                     localResourceRoots: [this._extensionContext.extensionUri],
                 }
             );
-            
+
             // Register the panel's dispose event
             const panelDisposeListener = this._panel.onDidDispose(() => {
                 this._disposePanel();
             });
-            
+
             // Add to disposables
             this._disposables.push(panelDisposeListener);
         }
@@ -489,7 +494,7 @@ export class RecordsMigrationExport {
 
         return html;
     }
-    
+
     /**
      * Dispose all panel resources
      */
@@ -497,7 +502,7 @@ export class RecordsMigrationExport {
         // Dispose all disposables
         this._disposables.forEach((d) => d.dispose());
         this._disposables = [];
-        
+
         // Clear panel reference
         this._panel = undefined;
     }
