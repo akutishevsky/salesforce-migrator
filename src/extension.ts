@@ -88,9 +88,12 @@ function registerCommands(
 
     const clearWorkspaceStorageCommand = vscode.commands.registerCommand(
         "salesforce-migrator.clearWorkspaceStorage",
-        () => {
+        async () => {
             const orgService = sourceOrgSelector.getOrgService();
-            orgService.clearOrgSelections();
+            await orgService.clearOrgSelections();
+            // Refresh both org selector views to update the UI
+            await sourceOrgSelector.refresh();
+            await targetOrgSelector.refresh();
         }
     );
 

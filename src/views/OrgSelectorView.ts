@@ -79,6 +79,9 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         }
 
         this._renderLoader();
+        
+        // Update internal state with latest org selections from workspace storage
+        this._updateOrgSelections();
 
         vscode.window.withProgress(
             {
@@ -260,5 +263,13 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
      */
     public getOrgService(): OrgService {
         return this._orgService;
+    }
+    
+    /**
+     * Update internal state with latest org selections
+     */
+    private _updateOrgSelections(): void {
+        this._sourceOrg = this._orgService.getSourceOrg();
+        this._targetOrg = this._orgService.getTargetOrg();
     }
 }
