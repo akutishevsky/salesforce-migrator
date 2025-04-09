@@ -4,7 +4,7 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs.
 
 > If you noticed any bugs feel free to create issues.
 
-![Export Records](/images/export-records.gif "Export Records")
+![Export Records](/images/demos/export-records.gif "Export Records")
 
 ## Features
 
