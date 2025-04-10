@@ -1,6 +1,6 @@
 # Salesforce Migrator
 
-A VS Code Extension for migrating Salesforce records and metadata between orgs.
+A VS Code Extension for migrating Salesforce records and metadata between orgs. It uses the Salesforce Bulk API 2.0 under the hood.
 
 > If you noticed any bugs feel free to create issues.
 
@@ -37,6 +37,15 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs.
 ## Demos
 
 More demos abailable [here](https://github.com/akutishevsky/salesforce-migrator/tree/main/images/demos)
+
+## Installation
+
+1.  Open Visual Studio Code.
+2.  Go to the Extensions view (Ctrl+Shift+X or Cmd+Shift+X).
+3.  Search for "Salesforce Migrator".
+4.  Click "Install".
+
+Alternatively, you can install it from the [Visual Studio Code Marketplace](#).
 
 ## Tips
 
