@@ -40,12 +40,12 @@ More demos abailable [here](https://github.com/akutishevsky/salesforce-migrator/
 
 ## Installation
 
-1.  Open Visual Studio Code.
-2.  Go to the Extensions view (Ctrl+Shift+X or Cmd+Shift+X).
-3.  Search for "Salesforce Migrator".
-4.  Click "Install".
+-   Open Visual Studio Code.
+-   Go to the Extensions view (Ctrl+Shift+X or Cmd+Shift+X).
+-   Search for "Salesforce Migrator".
+-   Click "Install".
 
-Alternatively, you can install it from the [Visual Studio Code Marketplace](#).
+Alternatively, you can install it from the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/items?itemName=AntonKutishevsky.salesforce-migrator).
 
 ## Tips
 
