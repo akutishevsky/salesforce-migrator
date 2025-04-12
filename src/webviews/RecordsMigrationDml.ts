@@ -264,20 +264,19 @@ export class RecordsMigrationDml {
                         throw new Error("Operation cancelled by user");
                     }
 
-                    // Always use the detected line ending from the file instead of the user selection
                     const jobInfo =
                         this._operation === "Upsert"
                             ? await this._sfBulkApi.createUpsertJob(
                                   targetOrg,
                                   this._customObject,
                                   matchingField,
-                                  this._detectedLineEnding // Use detected line ending
+                                  "LF" // Force LF line ending for consistency
                               )
                             : await this._sfBulkApi.createDmlJob(
                                   targetOrg,
                                   this._operation,
                                   this._customObject,
-                                  this._detectedLineEnding // Use detected line ending
+                                  "LF" // Force LF line ending for consistency
                               );
                     progress.report({
                         message: `Created the ${this._operation} job with Id: ${jobInfo.id}`,
@@ -370,9 +369,9 @@ export class RecordsMigrationDml {
             headerToFieldMap
         );
 
-        const hasCRLF = this._detectedLineEnding === "CRLF";
+        // Always use LF line endings for consistency with job settings
         this._mappedCsv = csvStringify(processedRows, {
-            record_delimiter: hasCRLF ? "\r\n" : "\n",
+            record_delimiter: "\n",
         });
     }
 

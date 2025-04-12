@@ -46,7 +46,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         operation: string,
         objectName: string,
-        lineEnding: string = "LF"
+        lineEnding: string = "NONE"
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -60,6 +60,7 @@ export class SfBulkApi {
                 operation: operation.toLowerCase(),
                 object: objectName,
                 lineEnding: lineEnding,
+                contentType: "CSV",
             }),
         });
 
@@ -82,7 +83,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         objectName: string,
         externalIdFieldName: string,
-        lineEnding: string = "LF"
+        lineEnding: string = "NONE"
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -97,6 +98,7 @@ export class SfBulkApi {
                 object: objectName,
                 externalIdFieldName: externalIdFieldName,
                 lineEnding: lineEnding,
+                contentType: "CSV",
             }),
         });
 
@@ -270,13 +272,24 @@ export class SfBulkApi {
     ): Promise<void> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/batches`;
 
+        // 1. Remove BOM if present (Windows can add this)
+        let normalizedCsv = csvData.replace(/^\uFEFF/, '');
+        
+        // 2. For Windows compatibility, aggressively normalize line endings to LF
+        // First convert all CRLF to LF, then ensure no lone CR characters
+        normalizedCsv = normalizedCsv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        
+        // 3. Create buffer with explicit UTF-8 encoding
+        const dataBuffer = Buffer.from(normalizedCsv, 'utf-8');
+        
         const response = await fetch(url, {
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
                 "Content-Type": "text/csv",
+                "Accept": "application/json"
             },
-            body: csvData,
+            body: dataBuffer,
         });
 
         if (!response.ok) {
