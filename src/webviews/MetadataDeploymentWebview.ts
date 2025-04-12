@@ -40,6 +40,7 @@ export class MetadataDeploymentWebview {
                 vscode.window.showErrorMessage(
                     "No source org selected. Please select a source org first."
                 );
+                this._disposePanel();
                 return;
             }
 
@@ -48,6 +49,16 @@ export class MetadataDeploymentWebview {
                 vscode.window.showErrorMessage(
                     "No target org selected. Please select a target org first."
                 );
+                this._panel!.webview.html = this._htmlService.composeHtml({
+                    body: `
+                        <div class="error-container">
+                            <p class="error-message">
+                                No target org selected. Please select a target org first.
+                            </p>
+                        </div>
+                    `,
+                    styles: ["/resources/css/metadataDeploymentWebview.css"],
+                });
                 return;
             }
 
@@ -70,8 +81,20 @@ export class MetadataDeploymentWebview {
 
             this._panel!.reveal();
         } catch (error) {
+            if (this._panel) {
+                this._panel.webview.html = this._htmlService.composeHtml({
+                    body: `
+                        <div class="error-container">
+                            <p class="error-message">
+                                Error while retrieving metadata: ${error}
+                            </p>
+                        </div>
+                    `,
+                    styles: ["/resources/css/metadataDeploymentWebview.css"],
+                });
+            }
             vscode.window.showErrorMessage(
-                `Error while deploying metadata: ${error}`
+                `Error while retrieving metadata: ${error}`
             );
         }
     }
