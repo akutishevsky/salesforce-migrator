@@ -79,7 +79,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         }
 
         this._renderLoader();
-        
+
         // Update internal state with latest org selections from workspace storage
         this._updateOrgSelections();
 
@@ -215,16 +215,18 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         statusClass: string,
         statusText: string
     ): string {
+        const orgIdentifier = org.alias || org.username;
+
         return `
             <div>
                 <input type="radio" 
-                       id="${this._type}-${org.alias}" 
+                       id="${this._type}-${orgIdentifier}" 
                        name="${this._type}-org" 
-                       value="${org.alias}" 
-                       data-org-alias="${org.alias}"
+                       value="${orgIdentifier}" 
+                       data-org-alias="${orgIdentifier}"
                        ${isChecked}/>
-                <label for="${this._type}-${org.alias}">
-                    ${org.alias}
+                <label for="${this._type}-${orgIdentifier}">
+                    ${orgIdentifier}
                     <span class="${statusClass}">
                         ${statusText}
                     </span>
@@ -236,18 +238,18 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
             case "orgSelected":
-                const orgAlias = message.orgAlias;
+                const orgIdentifier = message.orgAlias;
 
                 if (this._type === "source") {
-                    this._sourceOrg = orgAlias;
-                    this._orgService.setSourceOrg(orgAlias);
+                    this._sourceOrg = orgIdentifier;
+                    this._orgService.setSourceOrg(orgIdentifier);
                 } else if (this._type === "target") {
-                    this._targetOrg = orgAlias;
-                    this._orgService.setTargetOrg(orgAlias);
+                    this._targetOrg = orgIdentifier;
+                    this._orgService.setTargetOrg(orgIdentifier);
                 }
 
                 vscode.window.showInformationMessage(
-                    `Selected ${this._type} org: ${orgAlias}`
+                    `Selected ${this._type} org: ${orgIdentifier}`
                 );
                 break;
             default:
@@ -264,7 +266,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     public getOrgService(): OrgService {
         return this._orgService;
     }
-    
+
     /**
      * Update internal state with latest org selections
      */
