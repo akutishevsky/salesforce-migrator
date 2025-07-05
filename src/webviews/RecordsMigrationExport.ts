@@ -153,6 +153,20 @@ export class RecordsMigrationExport {
                         message: `Retrieved the org details.`,
                     });
 
+                    // First, get the expected record count using direct SOQL
+                    let expectedRecordCount: number;
+                    try {
+                        expectedRecordCount = await this._sfRestApi.queryRecordCount(
+                            orgDetails,
+                            query
+                        );
+                        progress.report({
+                            message: `Expected ${expectedRecordCount} records based on direct SOQL query.`,
+                        });
+                    } catch (error: any) {
+                        expectedRecordCount = -1; // Continue without validation
+                    }
+
                     let jobInfo;
                     try {
                         jobInfo = await this._sfBulkApi.createQueryJob(
@@ -190,21 +204,54 @@ export class RecordsMigrationExport {
                         progress.report({
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
                         });
-                        vscode.window
-                            .showInformationMessage(
-                                `Records exported successfully to ${fileUri.fsPath}`,
-                                { modal: false },
-                                "Show File"
-                            )
-                            .then((selection) => {
-                                if (selection === "Show File") {
-                                    vscode.workspace
-                                        .openTextDocument(fileUri)
-                                        .then((doc) =>
-                                            vscode.window.showTextDocument(doc)
-                                        );
-                                }
-                            });
+                        
+                        // Validate record count if we have an expected count
+                        const lines = csvData.split('\n').filter(line => line.trim().length > 0);
+                        const actualRecordCount = Math.max(0, lines.length - 1);
+                        
+                        if (expectedRecordCount >= 0 && actualRecordCount !== expectedRecordCount) {
+                            const message = `⚠️ Record count mismatch detected!\n\nExpected: ${expectedRecordCount} records\nActual: ${actualRecordCount} records\n\nThis may indicate missing records due to Salesforce Bulk API timing issues. Consider re-running the export or using a smaller date range.`;
+                            
+                            vscode.window
+                                .showWarningMessage(
+                                    message,
+                                    { modal: true },
+                                    "Show File",
+                                    "Re-run Export"
+                                )
+                                .then((selection) => {
+                                    if (selection === "Show File") {
+                                        vscode.workspace
+                                            .openTextDocument(fileUri)
+                                            .then((doc) =>
+                                                vscode.window.showTextDocument(doc)
+                                            );
+                                    } else if (selection === "Re-run Export") {
+                                        // Re-run the export by calling the same method again
+                                        this._exportRecords(query, fileUri.fsPath);
+                                    }
+                                });
+                        } else {
+                            const successMessage = expectedRecordCount >= 0 
+                                ? `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records (matches expected count).`
+                                : `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records.`;
+                            
+                            vscode.window
+                                .showInformationMessage(
+                                    successMessage,
+                                    { modal: false },
+                                    "Show File"
+                                )
+                                .then((selection) => {
+                                    if (selection === "Show File") {
+                                        vscode.workspace
+                                            .openTextDocument(fileUri)
+                                            .then((doc) =>
+                                                vscode.window.showTextDocument(doc)
+                                            );
+                                    }
+                                });
+                        }
                     } catch (error: any) {
                         // If operation was cancelled by user, show a different message
                         if (error.message === "Operation cancelled by user") {

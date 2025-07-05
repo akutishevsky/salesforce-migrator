@@ -15,6 +15,10 @@ export interface BulkQueryJobInfo {
     apiVersion: string;
     lineEnding: string;
     columnDelimiter: string;
+    numberRecordsProcessed?: number;
+    numberRecordsFailed?: number;
+    totalProcessingTime?: number;
+    query?: string;
 }
 
 export interface BulkDmlJobInfo {
@@ -138,28 +142,61 @@ export class SfBulkApi {
     }
 
     /**
-     * Gets the results of a Bulk API query job
+     * Gets the results of a Bulk API query job with proper pagination handling
      */
     public async getQueryJobResults(
         org: SalesforceOrg,
         jobId: string
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
+        let allResults = '';
+        let hasMore = true;
+        let queryLocator: string | null = null;
+        let isFirstRequest = true;
 
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${org.accessToken}`,
-                "Content-Type": "application/json",
-                Accept: "text/csv",
-            },
-        });
+        while (hasMore) {
+            const url: string = queryLocator 
+                ? `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results?locator=${queryLocator}`
+                : `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
 
-        if (!response.ok) {
-            return this.throwApiError(response);
+            const response: Response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${org.accessToken}`,
+                    "Content-Type": "application/json",
+                    Accept: "text/csv",
+                },
+            });
+
+            if (!response.ok) {
+                return this.throwApiError(response);
+            }
+
+            const csvData: string = await response.text();
+            const nextRecordsUrl: string | null = response.headers.get('Sforce-Locator');
+            const nextRecordsHeader: string | null = response.headers.get('Sforce-NumberOfRecords');
+            
+            // For the first request, include the entire response (including headers)
+            if (isFirstRequest) {
+                allResults = csvData;
+                isFirstRequest = false;
+            } else {
+                // For subsequent requests, skip the header row and append data
+                const lines = csvData.split('\n');
+                if (lines.length > 1) {
+                    allResults += '\n' + lines.slice(1).join('\n');
+                }
+            }
+
+            // Check if there are more records to fetch
+            if (nextRecordsUrl && nextRecordsUrl !== 'null') {
+                queryLocator = nextRecordsUrl;
+                hasMore = true;
+            } else {
+                hasMore = false;
+            }
         }
 
-        return await response.text();
+        return allResults;
     }
 
     /**
@@ -184,6 +221,32 @@ export class SfBulkApi {
         }
 
         return (await response.json()) as BulkQueryJobInfo;
+    }
+
+    /**
+     * Gets comprehensive information about a query job including processing statistics
+     */
+    public async getQueryJobInfo(
+        org: SalesforceOrg,
+        jobId: string
+    ): Promise<BulkQueryJobInfo> {
+        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            return this.throwApiError(response);
+        }
+
+        const jobInfo = (await response.json()) as BulkQueryJobInfo;
+        
+        return jobInfo;
     }
 
     /**
@@ -369,19 +432,33 @@ export class SfBulkApi {
                 }
 
                 try {
-                    const jobStatus = await this.getQueryJobStatus(org, jobId);
+                    const jobStatus = await this.getQueryJobInfo(org, jobId);
+                    const statusMessage = jobStatus.numberRecordsProcessed !== undefined 
+                        ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
+                        : `Current job state: ${jobStatus.state}`;
+                    
                     progress.report({
-                        message: `Current job state: ${jobStatus.state}`,
+                        message: statusMessage,
                     });
 
                     if (jobStatus.state === "JobComplete") {
                         progress.report({
-                            message: `Job ${jobId} completed successfully.`,
+                            message: `Job ${jobId} completed successfully. Retrieving results...`,
                         });
                         const results = await this.getQueryJobResults(
                             org,
                             jobId
                         );
+                        
+                        // Count the number of records retrieved (excluding header row)
+                        const lines = results.split('\n').filter(line => line.trim().length > 0);
+                        const recordCount = Math.max(0, lines.length - 1);
+                        
+                        progress.report({
+                            message: `Retrieved ${recordCount} records from the query job.`,
+                        });
+                        
+                        
                         resolve(results);
                         return;
                     }
