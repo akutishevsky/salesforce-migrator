@@ -1,5 +1,15 @@
 # Change Log
 
+## [1.1.0] 2026-01-17
+
+### Added
+
+-   Added query copier functionality to copy SOQL queries to clipboard from the query editor
+
+### Fixed
+
+-   Updated package versions and added overrides for js-yaml, glob, and brace-expansion to address security vulnerabilities
+
 ## [1.0.3] 2025-07-05
 
 ### Fixed
