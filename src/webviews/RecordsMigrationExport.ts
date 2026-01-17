@@ -406,7 +406,10 @@ export class RecordsMigrationExport {
                     </div>
                 </div>
                 <div class="sfm-query-editor">
-                    <h3>Result query (editable)</h3>
+                    <div class="sfm-query-editor-header">
+                        <h3>Result query (editable)</h3>
+                        <button id="copy-query-button" class="sfm-button sfm-button-small">Copy Query</button>
+                    </div>
                     <textarea id="query" class="sfm-query-textarea"></textarea>
                 </div>
             </div>

@@ -384,6 +384,22 @@ input[type="checkbox"] {
     margin-top: 1rem;
 }
 
+.sfm-query-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.sfm-button-success {
+    background-color: var(--vscode-testing-iconPassed, #4caf50);
+    color: var(--vscode-button-foreground, #fff);
+}
+
+.sfm-button-success:hover {
+    background-color: var(--vscode-testing-iconPassed, #4caf50);
+}
+
 .sfm-query-textarea {
     font-family: var(--vscode-editor-font-family, monospace);
     font-size: var(--vscode-editor-font-size);

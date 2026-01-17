@@ -5,6 +5,7 @@ let query;
 let fieldSelector;
 let fileSelector;
 let recordsExporter;
+let queryCopier;
 
 class FieldSelector {
     fieldElements = [];
@@ -381,6 +382,41 @@ class FileSelector {
     }
 }
 
+class QueryCopier {
+    _copyButton;
+    _queryElement;
+
+    constructor() {
+        this._copyButton = document.querySelector("#copy-query-button");
+        this._queryElement = document.querySelector("#query");
+        this._addEventListeners();
+    }
+
+    _addEventListeners() {
+        this._copyButton.addEventListener("click", () => {
+            const queryValue = this._queryElement.value;
+            if (!queryValue) {
+                return;
+            }
+
+            navigator.clipboard.writeText(queryValue).then(() => {
+                this._showCopiedFeedback();
+            });
+        });
+    }
+
+    _showCopiedFeedback() {
+        const originalText = this._copyButton.textContent;
+        this._copyButton.textContent = "Copied!";
+        this._copyButton.classList.add("sfm-button-success");
+
+        setTimeout(() => {
+            this._copyButton.textContent = originalText;
+            this._copyButton.classList.remove("sfm-button-success");
+        }, 2000);
+    }
+}
+
 class RecordsExporter {
     _exportButton;
 
@@ -457,6 +493,7 @@ class ErrorMessage {
             fieldSelector = new FieldSelector();
             fileSelector = new FileSelector();
             recordsExporter = new RecordsExporter();
+            queryCopier = new QueryCopier();
 
             window.addEventListener("message", (event) => {
                 const { command, value } = event.data;
