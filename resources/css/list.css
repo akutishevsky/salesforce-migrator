@@ -38,3 +38,38 @@
     background-color: var(--vscode-list-hoverBackground);
     color: var(--vscode-list-hoverForeground);
 }
+
+.expand-arrow {
+    display: inline-block;
+    font-size: 0.6rem;
+    margin-right: 0.4rem;
+    transition: transform 0.15s ease;
+}
+
+.list-item-expandable.expanded .expand-arrow {
+    transform: rotate(90deg);
+}
+
+.folder-children {
+    display: none;
+}
+
+.folder-children.visible {
+    display: block;
+}
+
+.folder-children .folder-child-item {
+    cursor: pointer;
+    padding: 0.25rem 0.5rem 0.25rem 1.5rem;
+}
+
+.folder-children .folder-child-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+    color: var(--vscode-list-hoverForeground);
+}
+
+.folder-children .folder-child-loading {
+    padding: 0.25rem 0.5rem 0.25rem 1.5rem;
+    opacity: 0.6;
+    font-style: italic;
+}

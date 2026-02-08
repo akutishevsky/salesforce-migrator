@@ -11,6 +11,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _metadataService: MetadataService;
     private _orgService: OrgService;
     private _deploymentWebview: MetadataDeploymentWebview | undefined;
+    private _metadataObjects: MetadataObject[] = [];
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
@@ -45,11 +46,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             },
             async () => {
                 try {
-                    const metadataObjects: MetadataObject[] =
+                    this._metadataObjects =
                         await this._metadataService.fetchMetadataObjects(
                             sourceOrg
                         );
-                    this._composeWebviewHtml(metadataObjects);
+                    this._composeWebviewHtml(this._metadataObjects);
                     vscode.window.showInformationMessage(
                         "Metadata refreshed successfully."
                     );
@@ -95,10 +96,10 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         }
 
         try {
-            const metadataObjects: MetadataObject[] =
+            this._metadataObjects =
                 await this._metadataService.fetchMetadataObjects(sourceOrg);
 
-            this._composeWebviewHtml(metadataObjects);
+            this._composeWebviewHtml(this._metadataObjects);
             this._setupMessageListener(webviewView);
         } catch (error: any) {
             vscode.window.showErrorMessage(
@@ -171,7 +172,14 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     ): string {
         let html = `<div class="list">`;
         for (const metadataObject of metadataObjects) {
-            html += `<div class="list-item">${metadataObject.xmlName}</div>`;
+            if (metadataObject.inFolder) {
+                html += `<div class="list-item list-item-expandable" data-metadata-type="${metadataObject.xmlName}">
+                    <span class="expand-arrow">&#9654;</span>${metadataObject.xmlName}
+                </div>
+                <div class="folder-children" data-metadata-type="${metadataObject.xmlName}"></div>`;
+            } else {
+                html += `<div class="list-item">${metadataObject.xmlName}</div>`;
+            }
         }
         html += `</div>`;
 
@@ -205,9 +213,56 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     );
                     return;
                 }
-
                 this._deploymentWebview.reveal(message.metadata);
                 break;
+            case "expandFolders":
+                this._loadFolders(message.metadataType);
+                break;
+            case "folderSelected":
+                if (!this._deploymentWebview) {
+                    vscode.window.showErrorMessage(
+                        "Deployment webview is not initialized."
+                    );
+                    return;
+                }
+                this._deploymentWebview.reveal(message.metadataType, message.folder);
+                break;
+        }
+    }
+
+    private async _loadFolders(metadataType: string): Promise<void> {
+        if (!this._webviewView) {
+            return;
+        }
+
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            return;
+        }
+
+        try {
+            const folders = await this._metadataService.listMetadataFolders(
+                sourceOrg,
+                metadataType
+            );
+
+            folders.sort((a: any, b: any) => a.fullName.localeCompare(b.fullName));
+
+            this._webviewView.webview.postMessage({
+                command: "foldersLoaded",
+                metadataType,
+                folders: folders.map((f: any) => f.fullName),
+            });
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to load folders: ${error.message || error}`
+            );
+            this._webviewView.webview.postMessage({
+                command: "foldersLoaded",
+                metadataType,
+                folders: [],
+                error: error.message || String(error),
+            });
         }
     }
 
