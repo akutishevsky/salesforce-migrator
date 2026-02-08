@@ -64,6 +64,13 @@
                     "when": "salesforce-migrator.isSfdxProject"
                 },
                 {
+                    "id": "salesforce-migrator.metadata-selection",
+                    "name": "Selected Metadata",
+                    "icon": "/images/view.svg",
+                    "type": "webview",
+                    "when": "salesforce-migrator.isSfdxProject"
+                },
+                {
                     "id": "salesforce-migrator.records-selector",
                     "name": "Records",
                     "icon": "/images/view.svg",

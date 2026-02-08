@@ -3,6 +3,8 @@ import { HtmlService } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { MetadataService, MetadataObject } from "../services/MetadataService";
 import { MetadataDeploymentWebview } from "../webviews/MetadataDeploymentWebview";
+import { MetadataSelectionView } from "./MetadataSelectionView";
+import { SfCommandService } from "../services/SfCommandService";
 
 export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _extensionContext: vscode.ExtensionContext;
@@ -10,13 +12,40 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _webviewView: vscode.WebviewView | undefined;
     private _metadataService: MetadataService;
     private _orgService: OrgService;
+    private _sfCommandService: SfCommandService;
     private _deploymentWebview: MetadataDeploymentWebview | undefined;
     private _metadataObjects: MetadataObject[] = [];
+    private _selectedItems: Map<string, string[]> = new Map();
+    private _selectionView: MetadataSelectionView | undefined;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
         this._metadataService = new MetadataService();
         this._orgService = new OrgService(extensionContext);
+        this._sfCommandService = new SfCommandService();
+    }
+
+    public setSelectionView(selectionView: MetadataSelectionView): void {
+        this._selectionView = selectionView;
+        this._selectionView.setOnBatchAction((action, data) => {
+            switch (action) {
+                case "batchRetrieve":
+                    this._batchRetrieve();
+                    break;
+                case "batchDeploy":
+                    this._batchDeploy();
+                    break;
+                case "clearSelections":
+                    this._selectedItems.clear();
+                    this._updateSelectionView();
+                    break;
+                case "removeItem":
+                    if (data) {
+                        this._removeItem(data.key, data.item);
+                    }
+                    break;
+            }
+        });
     }
 
     /**
@@ -83,7 +112,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
 
         this._deploymentWebview = new MetadataDeploymentWebview(
             this._extensionContext,
-            this._webviewView
+            this._webviewView,
+            this._onSelectionChanged.bind(this)
         );
 
         const sourceOrg = this._orgService.getSourceOrg();
@@ -105,7 +135,6 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             vscode.window.showErrorMessage(
                 `Failed to load metadata: ${error.message || error}`
             );
-            // Show empty state or error state
             this._showErrorState();
         }
     }
@@ -139,7 +168,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 "/resources/js/metadataSelectorView.js",
             ],
         });
-        
+
         // Ensure message listener is setup after HTML is updated
         this._setupMessageListener(this._webviewView);
     }
@@ -186,6 +215,64 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         return html;
     }
 
+    private _getSelectionKey(metadataType: string, folder?: string): string {
+        return folder ? `${metadataType}/${folder}` : metadataType;
+    }
+
+    private _onSelectionChanged(
+        metadataType: string,
+        folder: string | undefined,
+        selectedItems: string[]
+    ): void {
+        const key = this._getSelectionKey(metadataType, folder);
+
+        if (selectedItems.length === 0) {
+            this._selectedItems.delete(key);
+        } else {
+            this._selectedItems.set(key, selectedItems);
+        }
+
+        this._updateSelectionView();
+    }
+
+    private _removeItem(key: string, item: string): void {
+        const items = this._selectedItems.get(key);
+        if (!items) {
+            return;
+        }
+
+        const filtered = items.filter((i) => i !== item);
+        if (filtered.length === 0) {
+            this._selectedItems.delete(key);
+        } else {
+            this._selectedItems.set(key, filtered);
+        }
+
+        this._updateSelectionView();
+    }
+
+    private _updateSelectionView(): void {
+        if (this._selectionView) {
+            this._selectionView.updateSelections(this._selectedItems);
+        }
+        this._syncDeploymentCheckboxes();
+    }
+
+    private _syncDeploymentCheckboxes(): void {
+        if (!this._deploymentWebview) {
+            return;
+        }
+
+        const currentType = this._deploymentWebview.currentMetadataType;
+        if (!currentType) {
+            return;
+        }
+
+        const key = this._getSelectionKey(currentType, this._deploymentWebview.currentFolder);
+        const selected = this._selectedItems.get(key) || [];
+        this._deploymentWebview.updateCheckboxSelections(selected);
+    }
+
     private _setupMessageListener(webviewView: vscode.WebviewView): void {
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this),
@@ -193,13 +280,12 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             this._extensionContext.subscriptions
         );
     }
-    
+
     /**
      * Dispose the deployment webview
      */
     public dispose(): void {
         if (this._deploymentWebview) {
-            // Clear reference to release resources
             this._deploymentWebview = undefined;
         }
     }
@@ -213,7 +299,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     );
                     return;
                 }
-                this._deploymentWebview.reveal(message.metadata);
+                {
+                    const key = this._getSelectionKey(message.metadata);
+                    const selected = this._selectedItems.get(key) || [];
+                    this._deploymentWebview.reveal(message.metadata, undefined, selected);
+                }
                 break;
             case "expandFolders":
                 this._loadFolders(message.metadataType);
@@ -225,7 +315,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     );
                     return;
                 }
-                this._deploymentWebview.reveal(message.metadataType, message.folder);
+                {
+                    const key = this._getSelectionKey(message.metadataType, message.folder);
+                    const selected = this._selectedItems.get(key) || [];
+                    this._deploymentWebview.reveal(message.metadataType, message.folder, selected);
+                }
                 break;
         }
     }
@@ -263,6 +357,269 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 folders: [],
                 error: error.message || String(error),
             });
+        }
+    }
+
+    private _buildMetadataFlags(): string[] {
+        const flags: string[] = [];
+        for (const [key, items] of this._selectedItems.entries()) {
+            const metadataType = key.includes("/") ? key.split("/")[0] : key;
+            const folder = key.includes("/") ? key.split("/").slice(1).join("/") : undefined;
+
+            for (const item of items) {
+                const fullName = folder ? `${folder}/${item}` : item;
+                flags.push(`${metadataType}:${fullName}`);
+            }
+        }
+        return flags;
+    }
+
+    private _collectFolderItems(): { folderFlags: string[] } {
+        const folderFlags: string[] = [];
+
+        for (const [key] of this._selectedItems.entries()) {
+            if (!key.includes("/")) {
+                continue;
+            }
+            const metadataType = key.split("/")[0];
+            const folder = key.split("/").slice(1).join("/");
+            const folderTypeName = this._metadataService.getFolderTypeName(metadataType);
+            if (folderTypeName) {
+                const folderFlag = `${folderTypeName}:${folder}`;
+                if (!folderFlags.includes(folderFlag)) {
+                    folderFlags.push(folderFlag);
+                }
+            }
+        }
+
+        return { folderFlags };
+    }
+
+    private async _batchRetrieve(): Promise<void> {
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            vscode.window.showErrorMessage(
+                "No source org selected. Please select a source org first."
+            );
+            return;
+        }
+
+        const metadataFlags = this._buildMetadataFlags();
+        if (metadataFlags.length === 0) {
+            vscode.window.showWarningMessage("No items selected.");
+            return;
+        }
+
+        const tokenSource = new vscode.CancellationTokenSource();
+
+        const result = await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Retrieving ${metadataFlags.length} metadata item(s)...`,
+                cancellable: true,
+            },
+            async (progress, token): Promise<{ success?: boolean; error?: any }> => {
+                token.onCancellationRequested(() => {
+                    tokenSource.cancel();
+                });
+
+                try {
+                    const mFlags = metadataFlags.map((f) => `-m ${f}`).join(" ");
+                    const command = `sf project retrieve start ${mFlags} --target-org ${sourceOrg}`;
+                    await this._sfCommandService.execute(command, tokenSource.token);
+
+                    if (tokenSource.token.isCancellationRequested) {
+                        return {};
+                    }
+
+                    return { success: true };
+                } catch (error: any) {
+                    return { error };
+                } finally {
+                    tokenSource.dispose();
+                }
+            }
+        );
+
+        if (result.error) {
+            if (result.error.message === "Operation cancelled") {
+                vscode.window.showInformationMessage(
+                    "Batch retrieval was cancelled."
+                );
+            } else {
+                vscode.window.showErrorMessage(
+                    `Error during batch retrieval: ${result.error.message || result.error}`
+                );
+            }
+            return;
+        }
+
+        if (result.success) {
+            this._selectedItems.clear();
+            this._updateSelectionView();
+            vscode.window.showInformationMessage(
+                `Successfully retrieved ${metadataFlags.length} metadata item(s).`
+            );
+        }
+    }
+
+    private async _batchDeploy(): Promise<void> {
+        const sourceOrg = this._orgService.getSourceOrg();
+        if (!sourceOrg) {
+            vscode.window.showErrorMessage(
+                "No source org selected. Please select a source org first."
+            );
+            return;
+        }
+
+        const targetOrg = this._orgService.getTargetOrg();
+        if (!targetOrg) {
+            vscode.window.showErrorMessage(
+                "No target org selected. Please select a target org first."
+            );
+            return;
+        }
+
+        const metadataFlags = this._buildMetadataFlags();
+        if (metadataFlags.length === 0) {
+            vscode.window.showWarningMessage("No items selected.");
+            return;
+        }
+
+        const { folderFlags } = this._collectFolderItems();
+        const hasFolders = folderFlags.length > 0;
+        const totalSteps = hasFolders ? 4 : 2;
+
+        const tokenSource = new vscode.CancellationTokenSource();
+
+        const result = await vscode.window.withProgress(
+            {
+                location: vscode.ProgressLocation.Notification,
+                title: `Deploying ${metadataFlags.length} metadata item(s)...`,
+                cancellable: true,
+            },
+            async (progress, token): Promise<{ deployResult?: any; cancelled?: boolean; error?: any }> => {
+                token.onCancellationRequested(() => {
+                    tokenSource.cancel();
+                });
+
+                try {
+                    let currentStep = 1;
+
+                    if (hasFolders) {
+                        // Step 1: Retrieve folders from source
+                        progress.report({
+                            message: `Step ${currentStep}/${totalSteps}: Retrieving folders from source...`,
+                        });
+                        const folderMFlags = folderFlags.map((f) => `-m ${f}`).join(" ");
+                        await this._sfCommandService.execute(
+                            `sf project retrieve start ${folderMFlags} --target-org ${sourceOrg}`,
+                            tokenSource.token
+                        );
+
+                        if (tokenSource.token.isCancellationRequested) {
+                            return { cancelled: true };
+                        }
+
+                        currentStep++;
+
+                        // Step 2: Deploy folders to target
+                        progress.report({
+                            message: `Step ${currentStep}/${totalSteps}: Deploying folders to target...`,
+                        });
+                        await this._sfCommandService.execute(
+                            `sf project deploy start ${folderMFlags} --target-org ${targetOrg}`,
+                            tokenSource.token
+                        );
+
+                        if (tokenSource.token.isCancellationRequested) {
+                            return { cancelled: true };
+                        }
+
+                        currentStep++;
+                    }
+
+                    // Retrieve items from source
+                    progress.report({
+                        message: `Step ${currentStep}/${totalSteps}: Retrieving items from source...`,
+                    });
+                    const mFlags = metadataFlags.map((f) => `-m ${f}`).join(" ");
+                    await this._sfCommandService.execute(
+                        `sf project retrieve start ${mFlags} --target-org ${sourceOrg}`,
+                        tokenSource.token
+                    );
+
+                    if (tokenSource.token.isCancellationRequested) {
+                        return { cancelled: true };
+                    }
+
+                    currentStep++;
+
+                    // Deploy items to target
+                    progress.report({
+                        message: `Step ${currentStep}/${totalSteps}: Deploying items to target...`,
+                    });
+                    const deployResult = await this._sfCommandService.execute(
+                        `sf project deploy start ${mFlags} --target-org ${targetOrg}`,
+                        tokenSource.token
+                    );
+
+                    if (tokenSource.token.isCancellationRequested) {
+                        return { cancelled: true };
+                    }
+
+                    return { deployResult };
+                } catch (error: any) {
+                    return { error };
+                } finally {
+                    tokenSource.dispose();
+                }
+            }
+        );
+
+        if (result.cancelled) {
+            vscode.window.showInformationMessage(
+                "Batch deployment was cancelled."
+            );
+            return;
+        }
+
+        if (result.error) {
+            if (result.error.message === "Operation cancelled") {
+                vscode.window.showInformationMessage(
+                    "Batch deployment was cancelled."
+                );
+            } else {
+                vscode.window.showErrorMessage(
+                    `Error during batch deployment: ${result.error.message || result.error}`
+                );
+            }
+            return;
+        }
+
+        this._selectedItems.clear();
+        this._updateSelectionView();
+
+        if (result.deployResult?.success) {
+            const selection = await vscode.window.showInformationMessage(
+                `Successfully deployed ${metadataFlags.length} metadata item(s).`,
+                "View Deploy URL"
+            );
+            if (selection === "View Deploy URL") {
+                vscode.env.openExternal(result.deployResult?.deployUrl);
+            }
+        } else {
+            const componentFailures = result.deployResult?.details?.componentFailures;
+            const problems = componentFailures?.map(
+                (failure: any) => failure.problem
+            ) || [];
+            const selection = await vscode.window.showErrorMessage(
+                `Deployment failed. Problems: ${problems.join(" • ")}`,
+                "View Deploy URL"
+            );
+            if (selection === "View Deploy URL") {
+                vscode.env.openExternal(result.deployResult?.deployUrl);
+            }
         }
     }
 
