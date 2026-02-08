@@ -23,8 +23,9 @@ Extension Entry Point (src/extension.ts)
     │
     ├── Views Layer (src/views/)
     │   ├── OrgSelectorView.ts      # Source/Target org selection webviews
-    │   ├── MetadataSelectorView.ts # Metadata type browsing
-    │   └── RecordsSelectorView.ts  # Custom object browsing
+    │   ├── MetadataSelectorView.ts  # Metadata type browsing
+    │   ├── MetadataSelectionView.ts # Selected metadata accumulator for batch operations
+    │   └── RecordsSelectorView.ts   # Custom object browsing
     │
     ├── Webviews Layer (src/webviews/)
     │   ├── MetadataDeploymentWebview.ts # Metadata retrieval/deployment via CLI
@@ -52,6 +53,8 @@ Extension Entry Point (src/extension.ts)
 **Metadata Migration**: Uses Salesforce CLI commands (`sf project retrieve start` / `sf project deploy start`)
 
 **Folder-based Metadata**: Types like EmailTemplate, Report, Dashboard, Document require special handling. They use an inline expandable tree in the sidebar (arrow toggle to reveal folders). Folder type mapping is in `MetadataService.FOLDER_TYPE_MAP` (e.g. `EmailTemplate→EmailFolder`). Deployment automatically deploys the folder to the target org before deploying the item (4-step flow: retrieve folder → deploy folder → retrieve item → deploy item).
+
+**Multi-select Metadata**: Users can select multiple metadata items via checkboxes in the deployment table. Selections accumulate in the "Selected Metadata" sidebar view (`MetadataSelectionView.ts`), grouped by type, across different metadata types. Batch retrieve/deploy operates on all selected items at once. Checkbox state syncs when items are removed from the selection view.
 
 ## Critical Implementation Details
 

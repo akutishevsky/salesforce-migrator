@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.2.0] 2026-02-08
+
+### Added
+
+-   Added multi-select metadata retrieval and deployment with checkboxes in the deployment panel and a new "Selected Metadata" sidebar view for batch operations
+-   Added folder-based metadata support for EmailTemplate, Report, Dashboard, and Document types with inline expandable tree navigation
+
+### Fixed
+
+-   Fixed progress notification blocking by moving result messages outside withProgress
+-   Fixed table border rendering in metadata deployment panel
+
 ## [1.1.0] 2026-01-17
 
 ### Added

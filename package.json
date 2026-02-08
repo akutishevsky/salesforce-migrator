@@ -2,7 +2,7 @@
     "name": "salesforce-migrator",
     "displayName": "Salesforce Migrator",
     "description": "VS Code Extension for migrating Salesforce metadata and records between orgs.",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "icon": "/images/logo.png",
     "engines": {
         "vscode": "^1.98.0"
