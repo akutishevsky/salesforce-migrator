@@ -17,7 +17,9 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs. 
 ### Metadata Migration
 
 -   **Metadata Type Browser:** Lists all available metadata types from source org with filtering capabilities.
+-   **Folder-based Metadata:** Supports folder-based metadata types (EmailTemplate, Report, Dashboard, Document) with an inline expandable tree for browsing folders and their items.
 -   **Metadata Component Viewer:** For each type, shows all components available for migration.
+-   **Multi-select Metadata:** Select multiple metadata items across different types using checkboxes. Accumulated selections are shown in a dedicated "Selected Metadata" sidebar view for batch retrieval or deployment.
 -   **Retrieval and Deployment Interface:** Dedicated webview for orchestrating metadata deployment operations.
 -   **Deployment Status Tracking:** Shows progress during retrieval and deployment operations with ability to open a Deployment URL in a browser.
 
