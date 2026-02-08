@@ -30,9 +30,9 @@ export class MetadataDeploymentWebview {
         this._metadataService = new MetadataService();
     }
 
-    public async reveal(metadataType?: string): Promise<void> {
+    public async reveal(metadataType?: string, folder?: string): Promise<void> {
         try {
-            this._initializePanel(metadataType!);
+            this._initializePanel(metadataType!, folder);
             this._renderLoader();
 
             const sourceOrg = this._orgService.getSourceOrg();
@@ -64,7 +64,8 @@ export class MetadataDeploymentWebview {
 
             const metadata = await this._metadataService.listMetadataByType(
                 sourceOrg,
-                metadataType!
+                metadataType!,
+                folder
             );
 
             this._panel!.webview.html = this._htmlService.composeHtml({
@@ -99,8 +100,10 @@ export class MetadataDeploymentWebview {
         }
     }
 
-    private _initializePanel(metadataType: string): void {
-        const webviewTitle = `${metadataType} Deployment`;
+    private _initializePanel(metadataType: string, folder?: string): void {
+        const webviewTitle = folder
+            ? `${metadataType}/${folder} Deployment`
+            : `${metadataType} Deployment`;
 
         if (!this._panel) {
             this._panel = vscode.window.createWebviewPanel(
@@ -302,31 +305,16 @@ export class MetadataDeploymentWebview {
                 }
 
                 try {
-                    await this._retrieveMetadataWithProgress(
-                        progress,
-                        metadataType,
-                        metadataTypeName,
-                        sourceOrg,
-                        tokenSource.token
-                    );
-
-                    if (tokenSource.token.isCancellationRequested) {
-                        return;
-                    }
-
-                    const deployResult = await this._deployToTargetOrg(
-                        progress,
-                        metadataType,
-                        metadataTypeName,
-                        targetOrg,
-                        tokenSource.token
-                    );
-
-                    if (!tokenSource.token.isCancellationRequested) {
-                        await this._showDeploymentResult(
-                            deployResult,
-                            metadataTypeName,
-                            progress
+                    const folderTypeName = this._metadataService.getFolderTypeName(metadataType);
+                    if (folderTypeName && metadataTypeName.includes("/")) {
+                        await this._deployFolderBasedMetadata(
+                            progress, metadataType, metadataTypeName,
+                            folderTypeName, sourceOrg, targetOrg, tokenSource.token
+                        );
+                    } else {
+                        await this._deployStandardMetadata(
+                            progress, metadataType, metadataTypeName,
+                            sourceOrg, targetOrg, tokenSource.token
                         );
                     }
                 } catch (error: any) {
@@ -344,6 +332,86 @@ export class MetadataDeploymentWebview {
                 }
             }
         );
+    }
+
+    private async _deployStandardMetadata(
+        progress: vscode.Progress<{ increment?: number }>,
+        metadataType: string,
+        metadataTypeName: string,
+        sourceOrg: string,
+        targetOrg: string,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        await this._retrieveMetadataWithProgress(
+            progress, metadataType, metadataTypeName, sourceOrg, token
+        );
+
+        if (token.isCancellationRequested) {
+            return;
+        }
+
+        const deployResult = await this._deployToTargetOrg(
+            progress, metadataType, metadataTypeName, targetOrg, token
+        );
+
+        if (!token.isCancellationRequested) {
+            await this._showDeploymentResult(deployResult, metadataTypeName, progress);
+        }
+    }
+
+    private async _deployFolderBasedMetadata(
+        progress: vscode.Progress<{ increment?: number }>,
+        metadataType: string,
+        metadataTypeName: string,
+        folderTypeName: string,
+        sourceOrg: string,
+        targetOrg: string,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        const folderName = metadataTypeName.split("/")[0];
+
+        // Step 1: Retrieve folder from source
+        progress.report({ increment: 20 });
+        await this._sfCommandService.execute(
+            `sf project retrieve start -m ${folderTypeName}:${folderName} --target-org ${sourceOrg}`,
+            token
+        );
+
+        if (token.isCancellationRequested) {
+            return;
+        }
+
+        // Step 2: Deploy folder to target
+        progress.report({ increment: 40 });
+        await this._sfCommandService.execute(
+            `sf project deploy start -m ${folderTypeName}:${folderName} --target-org ${targetOrg}`,
+            token
+        );
+
+        if (token.isCancellationRequested) {
+            return;
+        }
+
+        // Step 3: Retrieve item from source
+        progress.report({ increment: 60 });
+        await this._sfCommandService.execute(
+            `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`,
+            token
+        );
+
+        if (token.isCancellationRequested) {
+            return;
+        }
+
+        // Step 4: Deploy item to target
+        progress.report({ increment: 80 });
+        const deployResult = await this._deployToTargetOrg(
+            progress, metadataType, metadataTypeName, targetOrg, token
+        );
+
+        if (!token.isCancellationRequested) {
+            await this._showDeploymentResult(deployResult, metadataTypeName, progress);
+        }
     }
 
     private async _retrieveMetadataWithProgress(

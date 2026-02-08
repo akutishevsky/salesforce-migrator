@@ -49,7 +49,9 @@ Extension Entry Point (src/extension.ts)
 
 **Records DML**: User uploads CSV → selects operation → normalizes line endings (Windows fix) → creates Bulk API DML job → uploads data → polls until complete → shows results
 
-**Metadata Migration**: Uses Salesforce CLI commands (`sf org retrieve` / `sf org deploy`)
+**Metadata Migration**: Uses Salesforce CLI commands (`sf project retrieve start` / `sf project deploy start`)
+
+**Folder-based Metadata**: Types like EmailTemplate, Report, Dashboard, Document require special handling. They use an inline expandable tree in the sidebar (arrow toggle to reveal folders). Folder type mapping is in `MetadataService.FOLDER_TYPE_MAP` (e.g. `EmailTemplate→EmailFolder`). Deployment automatically deploys the folder to the target org before deploying the item (4-step flow: retrieve folder → deploy folder → retrieve item → deploy item).
 
 ## Critical Implementation Details
 
