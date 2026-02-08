@@ -43,10 +43,11 @@ button:active {
 /* Responsive table styles */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin: 0;
   padding: 0;
-  border: 0.0625rem solid var(--vscode-panel-border);
+  border: 1px solid var(--vscode-panel-border);
   border-radius: 0.25rem;
   overflow: hidden;
 }
@@ -59,11 +60,29 @@ table th,
 table td {
   padding: 0.75rem 0.9375rem;
   text-align: left;
-  border-bottom: 0.0625rem solid var(--vscode-panel-border);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 table tr:hover {
   background-color: var(--vscode-list-hoverBackground);
+}
+
+/* Checkbox column */
+th.col-select,
+td.col-select {
+  width: 2.5rem;
+  text-align: center;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+input[type="checkbox"] {
+  cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--vscode-focusBorder);
 }
 
 /* Medium screen adjustments */
@@ -99,13 +118,13 @@ table tr:hover {
   }
   
   table tr {
-    border-bottom: 0.1875rem solid var(--vscode-panel-border);
+    border-bottom: 3px solid var(--vscode-panel-border);
     display: block;
     margin-bottom: 0.625rem;
   }
-  
+
   table td {
-    border-bottom: 0.0625rem solid var(--vscode-panel-border);
+    border-bottom: 1px solid var(--vscode-panel-border);
     display: block;
     text-align: right;
     position: relative;
@@ -123,13 +142,23 @@ table tr:hover {
     color: var(--vscode-editor-foreground);
   }
   
+  td.col-select {
+    display: flex;
+    justify-content: flex-start;
+    padding-left: 0.9375rem;
+  }
+
+  td.col-select::before {
+    display: none;
+  }
+
   td[data-label="Action"] {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
     gap: 0.3125rem;
   }
-  
+
   td[data-label="Action"] button {
     flex: 0 1 auto;
     margin-right: 0;

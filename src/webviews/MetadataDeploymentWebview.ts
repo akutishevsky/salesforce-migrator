@@ -4,6 +4,12 @@ import { MetadataService } from "../services/MetadataService";
 import { OrgService } from "../services/OrgService";
 import { SfCommandService } from "../services/SfCommandService";
 
+export type SelectionChangedCallback = (
+    metadataType: string,
+    folder: string | undefined,
+    selectedItems: string[]
+) => void;
+
 export class MetadataDeploymentWebview {
     private _extensionContext: vscode.ExtensionContext;
     private _webviewView: vscode.WebviewView;
@@ -14,10 +20,14 @@ export class MetadataDeploymentWebview {
     private _metadataService!: MetadataService;
     private _messageListener: vscode.Disposable | undefined;
     private _disposables: vscode.Disposable[] = [];
+    private _onSelectionChanged: SelectionChangedCallback | undefined;
+    private _currentMetadataType: string | undefined;
+    private _currentFolder: string | undefined;
 
     constructor(
         extensionContext: vscode.ExtensionContext,
-        webviewView: vscode.WebviewView
+        webviewView: vscode.WebviewView,
+        onSelectionChanged?: SelectionChangedCallback
     ) {
         this._extensionContext = extensionContext;
         this._webviewView = webviewView;
@@ -28,9 +38,30 @@ export class MetadataDeploymentWebview {
         this._orgService = new OrgService(extensionContext);
         this._sfCommandService = new SfCommandService();
         this._metadataService = new MetadataService();
+        this._onSelectionChanged = onSelectionChanged;
     }
 
-    public async reveal(metadataType?: string, folder?: string): Promise<void> {
+    public get currentMetadataType(): string | undefined {
+        return this._currentMetadataType;
+    }
+
+    public get currentFolder(): string | undefined {
+        return this._currentFolder;
+    }
+
+    public updateCheckboxSelections(selectedItems: string[]): void {
+        if (this._panel) {
+            this._panel.webview.postMessage({
+                command: "updateSelections",
+                selectedItems,
+            });
+        }
+    }
+
+    public async reveal(metadataType?: string, folder?: string, selectedItems?: string[]): Promise<void> {
+        this._currentMetadataType = metadataType;
+        this._currentFolder = folder;
+
         try {
             this._initializePanel(metadataType!, folder);
             this._renderLoader();
@@ -69,7 +100,7 @@ export class MetadataDeploymentWebview {
             );
 
             this._panel!.webview.html = this._htmlService.composeHtml({
-                body: this._composeWebviewHtml(metadata),
+                body: this._composeWebviewHtml(metadata, selectedItems || []),
                 styles: ["/resources/css/metadataDeploymentWebview.css"],
                 scripts: ["/resources/js/metadataDeploymentWebview.js"],
             });
@@ -77,7 +108,8 @@ export class MetadataDeploymentWebview {
             this._setupMessageListener(
                 this._panel!.webview,
                 metadataType!,
-                sourceOrg
+                sourceOrg,
+                folder
             );
 
             this._panel!.reveal();
@@ -132,16 +164,16 @@ export class MetadataDeploymentWebview {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
-    private _composeWebviewHtml(metadata: any): string {
+    private _composeWebviewHtml(metadata: any, selectedItems: string[]): string {
         let html = "";
 
         html += `
             <table>
                 <thead>
-                    ${this._composeTableHeadHtml(metadata)}
+                    ${this._composeTableHeadHtml()}
                 </thead>
                 <tbody>
-                    ${this._composeTableBodyHtml(metadata)}
+                    ${this._composeTableBodyHtml(metadata, selectedItems)}
                 </tbody>
             </table>
         `;
@@ -149,9 +181,10 @@ export class MetadataDeploymentWebview {
         return html;
     }
 
-    private _composeTableHeadHtml(metadata: any): string {
+    private _composeTableHeadHtml(): string {
         return `
             <tr>
+                <th class="col-select"><input type="checkbox" id="select-all" title="Select All" /></th>
                 <th>Action</th>
                 <th>Full Name</th>
                 <th>Created By</th>
@@ -162,7 +195,7 @@ export class MetadataDeploymentWebview {
         `;
     }
 
-    private _composeTableBodyHtml(metadata: any): string {
+    private _composeTableBodyHtml(metadata: any, selectedItems: string[]): string {
         let html = "";
 
         metadata.sort((a: any, b: any) => {
@@ -170,8 +203,14 @@ export class MetadataDeploymentWebview {
         });
 
         for (const item of metadata) {
+            const isChecked = selectedItems.includes(item.fullName) ? "checked" : "";
             html += `
                 <tr>
+                    <td class="col-select" data-label="Select">
+                        <input type="checkbox" class="item-checkbox" value="${
+                            item.fullName
+                        }" ${isChecked} />
+                    </td>
                     <td data-label="Action">
                         <button class="btn-action" id="retrieve" value="${
                             item.fullName
@@ -198,7 +237,8 @@ export class MetadataDeploymentWebview {
     private _setupMessageListener(
         webview: vscode.Webview,
         metadataType: string,
-        sourceOrg: string
+        sourceOrg: string,
+        folder?: string
     ): void {
         // Clean up previous listener if it exists
         this._clearMessageListener();
@@ -219,6 +259,15 @@ export class MetadataDeploymentWebview {
                         message.metadataTypeName,
                         sourceOrg
                     );
+                    break;
+                case "selectionChanged":
+                    if (this._onSelectionChanged) {
+                        this._onSelectionChanged(
+                            metadataType,
+                            folder,
+                            message.selectedItems
+                        );
+                    }
                     break;
             }
         });

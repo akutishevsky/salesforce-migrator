@@ -1,0 +1,103 @@
+/* Metadata selection view styles */
+
+.empty-state {
+    padding: 1rem 0.5rem;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.empty-hint {
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.selection-container {
+    padding: 0.25rem 0;
+}
+
+.selection-group {
+    margin-bottom: 0.5rem;
+}
+
+.selection-group-header {
+    font-weight: bold;
+    font-size: 0.85em;
+    padding: 0.25rem 0.5rem;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.selection-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.2rem 0.5rem 0.2rem 1rem;
+}
+
+.selection-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+.selection-item-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.remove-item {
+    background: none;
+    border: none;
+    color: var(--vscode-icon-foreground);
+    cursor: pointer;
+    padding: 0.1rem 0.3rem;
+    font-size: 0.75rem;
+    opacity: 0;
+    flex-shrink: 0;
+    border-radius: 0.125rem;
+}
+
+.selection-item:hover .remove-item {
+    opacity: 0.6;
+}
+
+.remove-item:hover {
+    opacity: 1 !important;
+    background-color: var(--vscode-toolbar-hoverBackground);
+}
+
+.selection-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.5rem;
+    border-top: 0.0625rem solid var(--vscode-panel-border);
+    margin-top: 0.25rem;
+}
+
+.action-btn {
+    padding: 0.375rem 0.5rem;
+    border: none;
+    border-radius: 0.125rem;
+    cursor: pointer;
+    font-size: var(--vscode-font-size);
+    font-family: var(--vscode-font-family);
+    color: var(--vscode-button-foreground);
+    background: var(--vscode-button-background);
+    width: 100%;
+}
+
+.action-btn:hover {
+    background: var(--vscode-button-hoverBackground);
+}
+
+.action-btn-secondary {
+    color: var(--vscode-button-secondaryForeground);
+    background: var(--vscode-button-secondaryBackground);
+}
+
+.action-btn-secondary:hover {
+    background: var(--vscode-button-secondaryHoverBackground);
+}

@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { OrgSelectorWebview } from "./views/OrgSelectorView";
 import { MetadataSelectorView } from "./views/MetadataSelectorView";
+import { MetadataSelectionView } from "./views/MetadataSelectionView";
 import { RecordsSelectorView } from "./views/RecordsSelectorView";
 
 function checkIsSfdxProject(): boolean {
@@ -40,12 +41,17 @@ function createViewProviders(extensionContext: vscode.ExtensionContext) {
         "target"
     );
     const metadataSelectorView = new MetadataSelectorView(extensionContext);
+    const metadataSelectionView = new MetadataSelectionView(extensionContext);
     const recordsSelectorView = new RecordsSelectorView(extensionContext);
+
+    // Wire the selection view to the metadata selector
+    metadataSelectorView.setSelectionView(metadataSelectionView);
 
     return {
         sourceOrgSelector,
         targetOrgSelector,
         metadataSelectorView,
+        metadataSelectionView,
         recordsSelectorView,
     };
 }
@@ -56,6 +62,7 @@ function registerCommands(
         sourceOrgSelector: OrgSelectorWebview;
         targetOrgSelector: OrgSelectorWebview;
         metadataSelectorView: MetadataSelectorView;
+        metadataSelectionView: MetadataSelectionView;
         recordsSelectorView: RecordsSelectorView;
     }
 ) {
@@ -112,6 +119,7 @@ function registerWebviewProviders(
         sourceOrgSelector: OrgSelectorWebview;
         targetOrgSelector: OrgSelectorWebview;
         metadataSelectorView: MetadataSelectorView;
+        metadataSelectionView: MetadataSelectionView;
         recordsSelectorView: RecordsSelectorView;
     },
     commands: {
@@ -126,6 +134,7 @@ function registerWebviewProviders(
         sourceOrgSelector,
         targetOrgSelector,
         metadataSelectorView,
+        metadataSelectionView,
         recordsSelectorView,
     } = viewProviders;
     const {
@@ -148,6 +157,10 @@ function registerWebviewProviders(
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.metadata-selector",
             metadataSelectorView
+        ),
+        vscode.window.registerWebviewViewProvider(
+            "salesforce-migrator.metadata-selection",
+            metadataSelectionView
         ),
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.records-selector",
