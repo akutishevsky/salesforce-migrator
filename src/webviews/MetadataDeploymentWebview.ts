@@ -631,8 +631,11 @@ export class MetadataDeploymentWebview {
             "View Deploy URL",
         );
 
-        if (selection === "View Deploy URL") {
-            vscode.env.openExternal(deployResult?.deployUrl);
+        if (selection === "View Deploy URL" && deployResult?.deployUrl) {
+            const deployUri = vscode.Uri.parse(deployResult.deployUrl);
+            if (deployUri.scheme === "https") {
+                vscode.env.openExternal(deployUri);
+            }
         }
     }
 
@@ -648,8 +651,11 @@ export class MetadataDeploymentWebview {
             "View Deploy URL",
         );
 
-        if (selection === "View Deploy URL") {
-            vscode.env.openExternal(deployResult?.deployUrl);
+        if (selection === "View Deploy URL" && deployResult?.deployUrl) {
+            const deployUri = vscode.Uri.parse(deployResult.deployUrl);
+            if (deployUri.scheme === "https") {
+                vscode.env.openExternal(deployUri);
+            }
         }
     }
 

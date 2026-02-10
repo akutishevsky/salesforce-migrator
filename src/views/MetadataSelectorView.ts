@@ -704,8 +704,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 `Successfully deployed ${metadataFlags.length} metadata item(s).`,
                 "View Deploy URL",
             );
-            if (selection === "View Deploy URL") {
-                vscode.env.openExternal(result.deployResult?.deployUrl);
+            if (
+                selection === "View Deploy URL" &&
+                result.deployResult?.deployUrl
+            ) {
+                const deployUri = vscode.Uri.parse(
+                    result.deployResult.deployUrl,
+                );
+                if (deployUri.scheme === "https") {
+                    vscode.env.openExternal(deployUri);
+                }
             }
         } else {
             const componentFailures =
@@ -716,8 +724,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 `Deployment failed. Problems: ${problems.join(" • ")}`,
                 "View Deploy URL",
             );
-            if (selection === "View Deploy URL") {
-                vscode.env.openExternal(result.deployResult?.deployUrl);
+            if (
+                selection === "View Deploy URL" &&
+                result.deployResult?.deployUrl
+            ) {
+                const deployUri = vscode.Uri.parse(
+                    result.deployResult.deployUrl,
+                );
+                if (deployUri.scheme === "https") {
+                    vscode.env.openExternal(deployUri);
+                }
             }
         }
     }
