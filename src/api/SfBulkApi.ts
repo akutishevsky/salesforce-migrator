@@ -64,12 +64,23 @@ export class SfBulkApi {
     /**
      * Creates a new Bulk API DML job
      */
+    private static readonly VALID_DML_OPERATIONS = [
+        "insert",
+        "update",
+        "delete",
+        "upsert",
+        "harddelete",
+    ];
+
     public async createDmlJob(
         org: SalesforceOrg,
         operation: string,
         objectName: string,
         lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
+        if (!SfBulkApi.VALID_DML_OPERATIONS.includes(operation.toLowerCase())) {
+            throw new Error(`Invalid DML operation: ${operation}`);
+        }
         const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
