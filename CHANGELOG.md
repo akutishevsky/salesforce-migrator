@@ -1,5 +1,54 @@
 # Change Log
 
+## [1.2.1] 2026-02-10
+
+### Security
+
+- Replaced `exec()` with `cross-spawn` to prevent command injection
+- Added Content Security Policy to all webview HTML pages
+- Replaced `unsafe-inline` with hash-based CSP in loading page
+- Replaced `innerHTML` with DOM APIs across webviews to prevent XSS (folder list, DML mapping table, records export)
+- Escaped user-controlled values in webview HTML (org identifiers, metadata names, object names, field labels, error messages)
+- Added input validation for webview message fields across all handlers
+- Added format validation for object names, field names, org aliases, and metadata names
+- Validated HTTPS scheme for Salesforce instance URLs in API classes
+- Validated `jobId` format and URL-encoded `queryLocator` in Bulk API calls
+- Validated SOQL query `FROM` clause matches expected object
+- Validated `deployUrl` scheme before opening external URLs
+- Added path traversal checks on export destination, DML output, custom object file save, and `defaultPath`
+- Added operation allowlist to `createDmlJob`
+- Sanitized CSV cell values to prevent formula injection
+- Sanitized error messages to avoid exposing internal details
+- Removed `console.log` of Bulk API response body
+- Added sensitive file patterns to `.gitignore`
+- Replaced ReDoS-vulnerable regex in `queryRecordCount`
+
+### Fixed
+
+- Added 60-second timeout to all individual `fetch()` calls
+- Added 30-minute timeout to job polling loops
+- Added 150 MB file size limit on CSV upload
+- Added 100 MB buffer size limit to CLI output accumulation
+- Added pagination guard to `getQueryJobResults`
+- Used array chunks for query result accumulation to reduce memory pressure
+- Validated date/datetime/numeric values in WHERE clause builder
+- Added HTTP 401 detection with re-authentication guidance
+- Silently ignore unknown commands in OrgSelectorView
+
+### Refactored
+
+- Marked class members as `readonly` where appropriate across all services and views
+- Preferred `node:crypto` over `crypto` for Node.js built-in imports
+- Preferred `.dataset` over `getAttribute('data-…')` / `hasAttribute` / `setAttribute`
+- Preferred `String#replaceAll()` over `String#replace()` with `/g` flag
+- Used `new Error()` instead of `Error()`
+- Used `localeCompare` for reliable alphabetical sorting
+- Used parameterless `catch` instead of void operator
+- Renamed catch parameters to `error_` convention
+- Replaced single-case `switch` with `if` statement
+- Removed nested template literals
+- General code smell fixes across extension entry point, services, views, and webviews
+
 ## [1.2.0] 2026-02-08
 
 ### Added
