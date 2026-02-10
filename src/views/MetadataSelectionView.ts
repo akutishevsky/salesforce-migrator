@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 
 export type BatchActionCallback = (
     action: "batchRetrieve" | "batchDeploy" | "clearSelections" | "removeItem",
@@ -81,19 +81,21 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
 
             const sortedItems = [...items].sort();
 
+            const safeKey = escapeHtml(key);
             let itemsHtml = "";
             for (const item of sortedItems) {
+                const safeItem = escapeHtml(item);
                 itemsHtml += `
                     <div class="selection-item">
-                        <span class="selection-item-name" title="${item}">${item}</span>
-                        <button class="remove-item" data-key="${key}" data-item="${item}" title="Remove">&#10005;</button>
+                        <span class="selection-item-name" title="${safeItem}">${safeItem}</span>
+                        <button class="remove-item" data-key="${safeKey}" data-item="${safeItem}" title="Remove">&#10005;</button>
                     </div>
                 `;
             }
 
             groupsHtml += `
                 <div class="selection-group">
-                    <div class="selection-group-header">${key}</div>
+                    <div class="selection-group-header">${safeKey}</div>
                     ${itemsHtml}
                 </div>
             `;
