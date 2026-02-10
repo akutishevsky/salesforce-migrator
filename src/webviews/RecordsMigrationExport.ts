@@ -302,6 +302,20 @@ export class RecordsMigrationExport {
             throw new Error("Please select a destination file.");
         }
 
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (workspaceFolders && workspaceFolders.length > 0) {
+            const workspacePath = workspaceFolders[0].uri.fsPath;
+            const resolvedPath = path.resolve(destinationFilePath);
+            if (
+                !resolvedPath.startsWith(workspacePath + path.sep) &&
+                resolvedPath !== workspacePath
+            ) {
+                throw new Error(
+                    "Destination file must be within the workspace folder.",
+                );
+            }
+        }
+
         this._fileUri = vscode.Uri.file(destinationFilePath);
 
         try {
