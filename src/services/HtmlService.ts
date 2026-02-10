@@ -21,8 +21,8 @@ export function escapeHtml(str: string): string {
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
  */
 export class HtmlService {
-    private _webviewView?: vscode.WebviewView;
-    private _extensionUri: vscode.Uri;
+    private readonly _webviewView?: vscode.WebviewView;
+    private readonly _extensionUri: vscode.Uri;
 
     constructor({
         view,
