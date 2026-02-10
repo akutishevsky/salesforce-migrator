@@ -139,6 +139,14 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
                         this._onBatchAction("clearSelections");
                         break;
                     case "removeItem":
+                        if (
+                            typeof message.key !== "string" ||
+                            !message.key.trim() ||
+                            typeof message.item !== "string" ||
+                            !message.item.trim()
+                        ) {
+                            return;
+                        }
                         this._onBatchAction("removeItem", {
                             key: message.key,
                             item: message.item,
