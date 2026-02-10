@@ -38,11 +38,18 @@ export interface BulkDmlJobInfo {
 }
 
 const INTERVAL = 1000;
+const SALESFORCE_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
 
 /**
  * Service for interacting with Salesforce Bulk API
  */
 export class SfBulkApi {
+    private _validateJobId(jobId: string): void {
+        if (!SALESFORCE_ID_PATTERN.test(jobId)) {
+            throw new Error("Invalid job ID format");
+        }
+    }
+
     private _buildUrl(org: SalesforceOrg, path: string): string {
         if (!org.instanceUrl.startsWith("https://")) {
             throw new Error("Instance URL must use HTTPS");
@@ -155,6 +162,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<string> {
+        this._validateJobId(jobId);
         let allResults = "";
         let hasMore = true;
         let queryLocator: string | null = null;
@@ -220,6 +228,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkQueryJobInfo> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
@@ -244,6 +253,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkQueryJobInfo> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
@@ -270,6 +280,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkDmlJobInfo> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
@@ -294,6 +305,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<void> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
@@ -316,6 +328,7 @@ export class SfBulkApi {
      * Aborts a Bulk API DML job
      */
     public async abortDmlJob(org: SalesforceOrg, jobId: string): Promise<void> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
@@ -347,6 +360,7 @@ export class SfBulkApi {
         jobId: string,
         csvData: string,
     ): Promise<void> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}/batches`);
 
         // 1. Remove BOM if present (Windows can add this)
@@ -388,6 +402,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkDmlJobInfo> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
@@ -417,6 +432,7 @@ export class SfBulkApi {
         progress: vscode.Progress<{ message: string }>,
         token?: vscode.CancellationToken,
     ): Promise<string> {
+        this._validateJobId(jobId);
         return new Promise<string>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
@@ -519,6 +535,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<string> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}/failedResults/`);
 
         const response = await fetch(url, {
@@ -547,6 +564,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<string> {
+        this._validateJobId(jobId);
         const url = this._buildUrl(
             org,
             `/jobs/ingest/${jobId}/successfulResults/`,
@@ -573,6 +591,7 @@ export class SfBulkApi {
         progress: vscode.Progress<{ message: string }>,
         token?: vscode.CancellationToken,
     ): Promise<BulkDmlJobInfo> {
+        this._validateJobId(jobId);
         return new Promise<BulkDmlJobInfo>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
