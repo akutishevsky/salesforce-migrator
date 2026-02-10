@@ -145,6 +145,10 @@ export class RecordsMigrationExport {
         }
     }
 
+    private _sanitizeCsvFormulas(csvData: string): string {
+        return csvData.replace(/(?<=^|,|")([ \t]*[=+\-@|])/gm, "'$1");
+    }
+
     private _validateQueryObject(query: string): boolean {
         const match = query.match(/\bFROM\s+(\S+)/i);
         if (!match) {
@@ -227,9 +231,11 @@ export class RecordsMigrationExport {
                             );
 
                         const fileUri = this._fileUri!;
+                        const sanitizedCsvData =
+                            this._sanitizeCsvFormulas(csvData);
                         await vscode.workspace.fs.writeFile(
                             fileUri,
-                            Buffer.from(csvData),
+                            Buffer.from(sanitizedCsvData),
                         );
                         progress.report({
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
