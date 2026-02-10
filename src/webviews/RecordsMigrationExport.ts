@@ -3,7 +3,7 @@ import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
-import path from "path";
+import path from "node:path";
 
 export class RecordsMigrationExport {
     private _extensionContext: vscode.ExtensionContext;

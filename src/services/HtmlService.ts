@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import crypto from "crypto";
-import fs from "fs";
+import fs from "node:fs";
 
 const LOADING_HTML_PATH = "loading.html";
 const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
