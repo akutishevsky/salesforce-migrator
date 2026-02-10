@@ -7,7 +7,7 @@ export type BatchActionCallback = (
 ) => void;
 
 export class MetadataSelectionView implements vscode.WebviewViewProvider {
-    private _extensionContext: vscode.ExtensionContext;
+    private readonly _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
     private _webviewView: vscode.WebviewView | undefined;
     private _selectedItems: Map<string, string[]> = new Map();
