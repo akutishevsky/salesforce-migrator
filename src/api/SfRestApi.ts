@@ -74,10 +74,11 @@ export class SfRestApi {
         query: string,
     ): Promise<number> {
         // Convert the query to a COUNT query
-        const countQuery = query.replace(
-            /^SELECT\s+.*?\s+FROM/i,
-            "SELECT COUNT() FROM",
-        );
+        const fromIndex = query.search(/\bFROM\b/i);
+        if (fromIndex === -1) {
+            throw new Error("Invalid query: missing FROM clause");
+        }
+        const countQuery = "SELECT COUNT() " + query.substring(fromIndex);
 
         const url = this._buildUrl(
             org,
