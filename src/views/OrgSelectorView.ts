@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 
 export type OrgSelectorType = "source" | "target";
@@ -18,7 +18,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
 
     constructor(
         extensionContext: vscode.ExtensionContext,
-        type: OrgSelectorType
+        type: OrgSelectorType,
     ) {
         this._extensionContext = extensionContext;
         this._type = type;
@@ -31,7 +31,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         this._webviewView = webviewView;
         this._htmlService = new HtmlService({
@@ -50,7 +50,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         this._composeWebviewHtml(orgs);
 
         webviewView.webview.onDidReceiveMessage(
-            this._processWebviewMessage.bind(this)
+            this._processWebviewMessage.bind(this),
         );
     }
 
@@ -93,9 +93,9 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 const orgs = await this._orgService.fetchOrgs();
                 this._composeWebviewHtml(orgs);
                 vscode.window.showInformationMessage(
-                    `${this._type} orgs refreshed successfully.`
+                    `${this._type} orgs refreshed successfully.`,
                 );
-            }
+            },
         );
     }
 
@@ -170,11 +170,11 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
      * Get unique orgs from the org list by removing duplicates
      */
     private _getUniqueOrgs(
-        orgs: Record<string, SalesforceOrg[]>
+        orgs: Record<string, SalesforceOrg[]>,
     ): SalesforceOrg[] {
         const flatOrgs = Object.values(orgs).flat() as SalesforceOrg[];
         return Array.from(
-            new Map(flatOrgs.map((org) => [org.alias, org])).values()
+            new Map(flatOrgs.map((org) => [org.alias, org])).values(),
         );
     }
 
@@ -183,7 +183,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
      */
     private _composeOrgListHtml(
         orgs: SalesforceOrg[],
-        selectedOrg: string | undefined
+        selectedOrg: string | undefined,
     ): string {
         return orgs
             .map((org) => {
@@ -200,7 +200,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                     org,
                     isChecked,
                     statusClass,
-                    statusText
+                    statusText,
                 );
             })
             .join("");
@@ -213,20 +213,21 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         org: SalesforceOrg,
         isChecked: string,
         statusClass: string,
-        statusText: string
+        statusText: string,
     ): string {
         const orgIdentifier = org.alias || org.username;
+        const safeId = escapeHtml(orgIdentifier);
 
         return `
             <div>
-                <input type="radio" 
-                       id="${this._type}-${orgIdentifier}" 
-                       name="${this._type}-org" 
-                       value="${orgIdentifier}" 
-                       data-org-alias="${orgIdentifier}"
+                <input type="radio"
+                       id="${this._type}-${safeId}"
+                       name="${this._type}-org"
+                       value="${safeId}"
+                       data-org-alias="${safeId}"
                        ${isChecked}/>
-                <label for="${this._type}-${orgIdentifier}">
-                    ${orgIdentifier}
+                <label for="${this._type}-${safeId}">
+                    ${safeId}
                     <span class="${statusClass}">
                         ${statusText}
                     </span>
@@ -238,6 +239,12 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
             case "orgSelected":
+                if (
+                    typeof message.orgAlias !== "string" ||
+                    !message.orgAlias.trim()
+                ) {
+                    return;
+                }
                 const orgIdentifier = message.orgAlias;
 
                 if (this._type === "source") {
@@ -249,13 +256,10 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 }
 
                 vscode.window.showInformationMessage(
-                    `Selected ${this._type} org: ${orgIdentifier}`
+                    `Selected ${this._type} org: ${orgIdentifier}`,
                 );
                 break;
             default:
-                vscode.window.showErrorMessage(
-                    `Unknown command: ${message.command}`
-                );
                 break;
         }
     }

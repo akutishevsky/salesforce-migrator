@@ -1,8 +1,6 @@
-import { exec, ChildProcess } from "node:child_process";
-import { promisify } from "util";
+import { ChildProcess } from "node:child_process";
+import spawn from "cross-spawn";
 import * as vscode from "vscode";
-
-const execPromise = promisify(exec);
 
 /**
  * Interface representing the result of command execution
@@ -34,23 +32,24 @@ export class SfCommandService {
      */
     public async execute(
         command: string,
-        token?: vscode.CancellationToken
+        args: string[],
+        token?: vscode.CancellationToken,
     ): Promise<any> {
-        const commandWithJsonFlag = this._addJsonFlag(command);
+        const argsWithJsonFlag = this._addJsonFlag(args);
         let childProcess: ChildProcess | null = null;
 
         try {
-            childProcess = this._createChildProcess(commandWithJsonFlag);
+            childProcess = this._createChildProcess(command, argsWithJsonFlag);
 
-            const { cancelled, disposable } = this._setupCancellationHandling(
+            const { state, disposable } = this._setupCancellationHandling(
                 childProcess,
-                token
+                token,
             );
 
             const { stdout, stderr } = await this._executeChildProcess(
                 childProcess,
                 disposable,
-                cancelled
+                state,
             );
 
             return this._parseCommandOutput(stdout, stderr);
@@ -68,9 +67,8 @@ export class SfCommandService {
      * @param command The command to execute
      * @returns The created child process
      */
-    private _createChildProcess(command: string): ChildProcess {
-        return exec(command, {
-            maxBuffer: 100 * 1024 * 1024, // 100MB buffer
+    private _createChildProcess(command: string, args: string[]): ChildProcess {
+        return spawn(command, args, {
             cwd: this._workspacePath,
         });
     }
@@ -83,17 +81,20 @@ export class SfCommandService {
      */
     private _setupCancellationHandling(
         childProcess: ChildProcess,
-        token?: vscode.CancellationToken
-    ): { cancelled: boolean; disposable: vscode.Disposable | undefined } {
-        let cancelled = false;
+        token?: vscode.CancellationToken,
+    ): {
+        state: { cancelled: boolean };
+        disposable: vscode.Disposable | undefined;
+    } {
+        const state = { cancelled: false };
         const disposable = token?.onCancellationRequested(() => {
             if (childProcess?.pid) {
-                cancelled = true;
+                state.cancelled = true;
                 this._killChildProcess(childProcess);
             }
         });
 
-        return { cancelled, disposable };
+        return { state, disposable };
     }
 
     /**
@@ -106,18 +107,35 @@ export class SfCommandService {
     private _executeChildProcess(
         childProcess: ChildProcess,
         disposable: vscode.Disposable | undefined,
-        cancelled: boolean
+        state: { cancelled: boolean },
     ): Promise<CommandOutput> {
+        const MAX_BUFFER_SIZE = 100 * 1024 * 1024; // 100 MB
         return new Promise((resolve, reject) => {
             let stdout = "";
             let stderr = "";
 
             childProcess.stdout?.on("data", (data) => {
                 stdout += data;
+                if (stdout.length > MAX_BUFFER_SIZE) {
+                    this._killChildProcess(childProcess);
+                    reject(
+                        new Error(
+                            "Command output exceeded maximum buffer size (100 MB)",
+                        ),
+                    );
+                }
             });
 
             childProcess.stderr?.on("data", (data) => {
                 stderr += data;
+                if (stderr.length > MAX_BUFFER_SIZE) {
+                    this._killChildProcess(childProcess);
+                    reject(
+                        new Error(
+                            "Command error output exceeded maximum buffer size (100 MB)",
+                        ),
+                    );
+                }
             });
 
             childProcess.on("error", (error) => {
@@ -129,13 +147,14 @@ export class SfCommandService {
                 // Clean up cancellation event listener
                 disposable?.dispose();
 
-                if (cancelled) {
+                if (state.cancelled) {
                     reject(new Error("Operation cancelled"));
                     return;
                 }
 
                 if (stderr && !this._isSalesforceCLIUpdateWarning(stderr)) {
-                    reject(new Error(stderr));
+                    const sanitizedError = stderr.split("\n")[0].slice(0, 500);
+                    reject(new Error(sanitizedError));
                     return;
                 }
 
@@ -189,8 +208,8 @@ export class SfCommandService {
      * @param command The command to process
      * @returns {string} A new command string with the `--json` flag
      */
-    private _addJsonFlag(command: string): string {
-        return command.includes("--json") ? command : `${command} --json`;
+    private _addJsonFlag(args: string[]): string[] {
+        return args.includes("--json") ? args : [...args, "--json"];
     }
 
     /**
@@ -200,7 +219,7 @@ export class SfCommandService {
      */
     private _isSalesforceCLIUpdateWarning(message: string): boolean {
         return message.includes(
-            "Warning: @salesforce/cli update available from"
+            "Warning: @salesforce/cli update available from",
         );
     }
 }

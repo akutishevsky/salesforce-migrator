@@ -16,7 +16,7 @@ class FieldSelector {
 
     constructor() {
         this.fieldElements = document.querySelectorAll(
-            ".sfm-field-item > input[type='checkbox']"
+            ".sfm-field-item > input[type='checkbox']",
         );
         this.addAllButton = document.querySelector("#add-all-fields");
         this.clearAllButton = document.querySelector("#clear-all-fields");
@@ -112,13 +112,15 @@ class WhereClausePopulator {
 
     _selectField() {
         const whereFieldSelector = document.querySelector(
-            "#where-field-selector"
+            "#where-field-selector",
         );
         whereFieldSelector.addEventListener("change", (e) => {
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
-            whereValueSelect.innerHTML = "";
+            while (whereValueSelect.firstChild) {
+                whereValueSelect.removeChild(whereValueSelect.firstChild);
+            }
 
             const selectedOption =
                 e.currentTarget.options[e.currentTarget.selectedIndex];
@@ -148,10 +150,17 @@ class WhereClausePopulator {
         const whereValueSelect = document.querySelector("#where-value-select");
         const whereValue = document.querySelector("#where-value");
 
-        whereValueSelect.innerHTML = `
-            <option value="true">TRUE</option>
-            <option value="false">FALSE</option>
-        `;
+        while (whereValueSelect.firstChild) {
+            whereValueSelect.removeChild(whereValueSelect.firstChild);
+        }
+        const trueOption = document.createElement("option");
+        trueOption.value = "true";
+        trueOption.textContent = "TRUE";
+        const falseOption = document.createElement("option");
+        falseOption.value = "false";
+        falseOption.textContent = "FALSE";
+        whereValueSelect.appendChild(trueOption);
+        whereValueSelect.appendChild(falseOption);
         whereValueSelect.style.display = "block";
         whereValue.style.display = "none";
     }
@@ -179,12 +188,12 @@ class WhereClausePopulator {
 
         addWhereClauseButton.addEventListener("click", () => {
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
             const whereValue = document.querySelector("#where-value");
             const whereOperation = document.querySelector("#where-operation");
             const fieldSelector = document.querySelector(
-                "#where-field-selector"
+                "#where-field-selector",
             );
 
             if (!this._selectedFieldApiName || !fieldSelector.value) {
@@ -208,7 +217,7 @@ class WhereClausePopulator {
                 (existingClause) =>
                     existingClause.fieldApiName === whereClause.fieldApiName &&
                     existingClause.operation === whereClause.operation &&
-                    existingClause.value === whereClause.value
+                    existingClause.value === whereClause.value,
             );
 
             if (!clauseExists) {
@@ -220,16 +229,16 @@ class WhereClausePopulator {
 
     _clearWhereClause() {
         const clearWhereClauseButton = document.querySelector(
-            "#clear-where-clause"
+            "#clear-where-clause",
         );
         clearWhereClauseButton.addEventListener("click", () => {
             const whereFieldSelector = document.querySelector(
-                "#where-field-selector"
+                "#where-field-selector",
             );
             const whereOperation = document.querySelector("#where-operation");
             const whereValue = document.querySelector("#where-value");
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
             const actualWhereValue =
                 whereValueSelect.style.display === "block"
@@ -240,7 +249,7 @@ class WhereClausePopulator {
                 (clause) =>
                     clause.fieldApiName !== whereFieldSelector.value ||
                     clause.operation !== whereOperation.value ||
-                    clause.value !== actualWhereValue
+                    clause.value !== actualWhereValue,
             );
 
             query.update();
@@ -249,7 +258,7 @@ class WhereClausePopulator {
 
     _clearAllWhereClauses() {
         const clearAllWhereClausesButton = document.querySelector(
-            "#clear-all-where-clauses"
+            "#clear-all-where-clauses",
         );
         clearAllWhereClausesButton.addEventListener("click", () => {
             this.whereClauses = [];
@@ -300,7 +309,7 @@ class Query {
 
     _composeSelectFields() {
         const fieldCheckboxes = document.querySelectorAll(
-            ".sfm-field-item > input[type='checkbox']"
+            ".sfm-field-item > input[type='checkbox']",
         );
 
         const selectedFields = Array.from(fieldCheckboxes)
@@ -337,19 +346,42 @@ class Query {
                     clause.fieldType === "id"
                 ) {
                     formattedValue = `'${clause.value.replace(/'/g, "\\'")}'`;
-                } else if (
-                    clause.fieldType === "date" ||
-                    clause.fieldType === "datetime"
-                ) {
-                    formattedValue = `${clause.value}`;
+                } else if (clause.fieldType === "date") {
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(clause.value)) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
+                } else if (clause.fieldType === "datetime") {
+                    if (
+                        !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?Z?)?$/.test(
+                            clause.value,
+                        )
+                    ) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
                 } else if (clause.fieldType === "boolean") {
-                    formattedValue = clause.value.toLowerCase();
+                    formattedValue =
+                        clause.value.toLowerCase() === "true"
+                            ? "true"
+                            : "false";
+                } else if (
+                    clause.fieldType === "int" ||
+                    clause.fieldType === "double" ||
+                    clause.fieldType === "currency" ||
+                    clause.fieldType === "percent"
+                ) {
+                    if (!/^-?\d+(\.\d+)?$/.test(clause.value)) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
                 } else {
                     formattedValue = `''`;
                 }
 
                 return `${clause.fieldApiName} ${clause.operation} ${formattedValue}`;
             })
+            .filter((clause) => clause !== null)
             .join(" AND ");
 
         return `\nWHERE ${whereClause}`;
@@ -501,7 +533,7 @@ class ErrorMessage {
                 switch (command) {
                     case "populatePicklistFieldValues":
                         whereClausePopulator.showPicklistWhereValueSelect(
-                            value
+                            value,
                         );
                         break;
                     case "setDestinationFile":

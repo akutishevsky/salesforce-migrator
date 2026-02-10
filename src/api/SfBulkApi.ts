@@ -38,23 +38,69 @@ export interface BulkDmlJobInfo {
 }
 
 const INTERVAL = 1000;
+const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const REQUEST_TIMEOUT_MS = 60_000; // 60 seconds per individual request
+const SALESFORCE_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
+const OBJECT_NAME_PATTERN = /^[a-zA-Z]\w*(__[a-z]+)?$/;
+const FIELD_NAME_PATTERN = /^[a-zA-Z]\w*(__[a-z]+)?$/;
 
 /**
  * Service for interacting with Salesforce Bulk API
  */
 export class SfBulkApi {
+    private _validateJobId(jobId: string): void {
+        if (!SALESFORCE_ID_PATTERN.test(jobId)) {
+            throw new Error("Invalid job ID format");
+        }
+    }
+
+    private _validateObjectName(objectName: string): void {
+        if (!OBJECT_NAME_PATTERN.test(objectName)) {
+            throw new Error("Invalid object name format");
+        }
+    }
+
+    private _validateFieldName(fieldName: string): void {
+        if (!FIELD_NAME_PATTERN.test(fieldName)) {
+            throw new Error("Invalid field name format");
+        }
+    }
+
+    private _buildUrl(org: SalesforceOrg, path: string): string {
+        if (!org.instanceUrl.startsWith("https://")) {
+            throw new Error("Instance URL must use HTTPS");
+        }
+        if (!/^\d+\.\d+$/.test(org.apiVersion)) {
+            throw new Error("Invalid API version format");
+        }
+        return `${org.instanceUrl}/services/data/v${org.apiVersion}${path}`;
+    }
+
     /**
      * Creates a new Bulk API DML job
      */
+    private static readonly VALID_DML_OPERATIONS = [
+        "insert",
+        "update",
+        "delete",
+        "upsert",
+        "harddelete",
+    ];
+
     public async createDmlJob(
         org: SalesforceOrg,
         operation: string,
         objectName: string,
-        lineEnding: string = "NONE"
+        lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+        if (!SfBulkApi.VALID_DML_OPERATIONS.includes(operation.toLowerCase())) {
+            throw new Error(`Invalid DML operation: ${operation}`);
+        }
+        this._validateObjectName(objectName);
+        const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -87,11 +133,14 @@ export class SfBulkApi {
         org: SalesforceOrg,
         objectName: string,
         externalIdFieldName: string,
-        lineEnding: string = "NONE"
+        lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+        this._validateObjectName(objectName);
+        this._validateFieldName(externalIdFieldName);
+        const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -118,11 +167,12 @@ export class SfBulkApi {
      */
     public async createQueryJob(
         org: SalesforceOrg,
-        query: string
+        query: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query`;
+        const url = this._buildUrl(org, "/jobs/query");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -146,19 +196,32 @@ export class SfBulkApi {
      */
     public async getQueryJobResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
-        let allResults = '';
+        this._validateJobId(jobId);
+        const MAX_PAGES = 100;
+        const resultChunks: string[] = [];
         let hasMore = true;
         let queryLocator: string | null = null;
         let isFirstRequest = true;
+        let pageCount = 0;
 
         while (hasMore) {
-            const url: string = queryLocator 
-                ? `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results?locator=${queryLocator}`
-                : `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
+            if (++pageCount > MAX_PAGES) {
+                throw new Error(
+                    `Query exceeded maximum of ${MAX_PAGES} result pages`,
+                );
+            }
+            const basePath = `/jobs/query/${jobId}/results`;
+            const url: string = queryLocator
+                ? this._buildUrl(
+                      org,
+                      `${basePath}?locator=${encodeURIComponent(queryLocator)}`,
+                  )
+                : this._buildUrl(org, basePath);
 
             const response: Response = await fetch(url, {
+                signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${org.accessToken}`,
@@ -172,23 +235,23 @@ export class SfBulkApi {
             }
 
             const csvData: string = await response.text();
-            const nextRecordsUrl: string | null = response.headers.get('Sforce-Locator');
-            const nextRecordsHeader: string | null = response.headers.get('Sforce-NumberOfRecords');
-            
+            const nextRecordsUrl: string | null =
+                response.headers.get("Sforce-Locator");
+
             // For the first request, include the entire response (including headers)
             if (isFirstRequest) {
-                allResults = csvData;
+                resultChunks.push(csvData);
                 isFirstRequest = false;
             } else {
                 // For subsequent requests, skip the header row and append data
-                const lines = csvData.split('\n');
+                const lines = csvData.split("\n");
                 if (lines.length > 1) {
-                    allResults += '\n' + lines.slice(1).join('\n');
+                    resultChunks.push(lines.slice(1).join("\n"));
                 }
             }
 
             // Check if there are more records to fetch
-            if (nextRecordsUrl && nextRecordsUrl !== 'null') {
+            if (nextRecordsUrl && nextRecordsUrl !== "null") {
                 queryLocator = nextRecordsUrl;
                 hasMore = true;
             } else {
@@ -196,7 +259,7 @@ export class SfBulkApi {
             }
         }
 
-        return allResults;
+        return resultChunks.join("\n");
     }
 
     /**
@@ -204,11 +267,13 @@ export class SfBulkApi {
      */
     public async getQueryJobStatus(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -228,11 +293,13 @@ export class SfBulkApi {
      */
     public async getQueryJobInfo(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -245,7 +312,7 @@ export class SfBulkApi {
         }
 
         const jobInfo = (await response.json()) as BulkQueryJobInfo;
-        
+
         return jobInfo;
     }
 
@@ -254,11 +321,13 @@ export class SfBulkApi {
      */
     public async getDmlJobStatus(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -278,11 +347,13 @@ export class SfBulkApi {
      */
     public async abortQueryJob(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -302,9 +373,11 @@ export class SfBulkApi {
      * Aborts a Bulk API DML job
      */
     public async abortDmlJob(org: SalesforceOrg, jobId: string): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -331,34 +404,36 @@ export class SfBulkApi {
     public async uploadJobData(
         org: SalesforceOrg,
         jobId: string,
-        csvData: string
+        csvData: string,
     ): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/batches`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}/batches`);
 
         // 1. Remove BOM if present (Windows can add this)
-        let normalizedCsv = csvData.replace(/^\uFEFF/, '');
-        
+        let normalizedCsv = csvData.replace(/^\uFEFF/, "");
+
         // 2. For Windows compatibility, aggressively normalize line endings to LF
         // First convert all CRLF to LF, then ensure no lone CR characters
-        normalizedCsv = normalizedCsv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
+        normalizedCsv = normalizedCsv
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n");
+
         // 3. Create buffer with explicit UTF-8 encoding
-        const dataBuffer = Buffer.from(normalizedCsv, 'utf-8');
-        
+        const dataBuffer = Buffer.from(normalizedCsv, "utf-8");
+
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
                 "Content-Type": "text/csv",
-                "Accept": "application/json"
+                Accept: "application/json",
             },
             body: dataBuffer,
         });
 
         if (!response.ok) {
             return this.throwApiError(response);
-        } else {
-            console.log("response", await response.text());
         }
     }
 
@@ -372,11 +447,13 @@ export class SfBulkApi {
      */
     public async completeJobUpload(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -401,11 +478,13 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
         progress: vscode.Progress<{ message: string }>,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<string> {
+        this._validateJobId(jobId);
         return new Promise<string>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
+            const startTime = Date.now();
             if (token) {
                 token.onCancellationRequested(async () => {
                     isCancelled = true;
@@ -419,7 +498,7 @@ export class SfBulkApi {
                         reject(
                             error instanceof Error
                                 ? error
-                                : new Error(String(error))
+                                : new Error(String(error)),
                         );
                     }
                 });
@@ -431,12 +510,18 @@ export class SfBulkApi {
                     return;
                 }
 
+                if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+                    reject(new Error("Job polling timed out after 30 minutes"));
+                    return;
+                }
+
                 try {
                     const jobStatus = await this.getQueryJobInfo(org, jobId);
-                    const statusMessage = jobStatus.numberRecordsProcessed !== undefined 
-                        ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
-                        : `Current job state: ${jobStatus.state}`;
-                    
+                    const statusMessage =
+                        jobStatus.numberRecordsProcessed !== undefined
+                            ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
+                            : `Current job state: ${jobStatus.state}`;
+
                     progress.report({
                         message: statusMessage,
                     });
@@ -447,18 +532,19 @@ export class SfBulkApi {
                         });
                         const results = await this.getQueryJobResults(
                             org,
-                            jobId
+                            jobId,
                         );
-                        
+
                         // Count the number of records retrieved (excluding header row)
-                        const lines = results.split('\n').filter(line => line.trim().length > 0);
+                        const lines = results
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0);
                         const recordCount = Math.max(0, lines.length - 1);
-                        
+
                         progress.report({
                             message: `Retrieved ${recordCount} records from the query job.`,
                         });
-                        
-                        
+
                         resolve(results);
                         return;
                     }
@@ -472,8 +558,8 @@ export class SfBulkApi {
                         });
                         reject(
                             new Error(
-                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`
-                            )
+                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`,
+                            ),
                         );
                         return;
                     }
@@ -483,7 +569,7 @@ export class SfBulkApi {
                     reject(
                         error instanceof Error
                             ? error
-                            : new Error(String(error))
+                            : new Error(String(error)),
                     );
                 }
             };
@@ -501,11 +587,13 @@ export class SfBulkApi {
      */
     public async getFailedResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/failedResults/`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}/failedResults/`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -529,11 +617,16 @@ export class SfBulkApi {
      */
     public async getSuccessfulResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/successfulResults/`;
+        this._validateJobId(jobId);
+        const url = this._buildUrl(
+            org,
+            `/jobs/ingest/${jobId}/successfulResults/`,
+        );
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -552,11 +645,13 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
         progress: vscode.Progress<{ message: string }>,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<BulkDmlJobInfo> {
+        this._validateJobId(jobId);
         return new Promise<BulkDmlJobInfo>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
+            const startTime = Date.now();
             if (token) {
                 token.onCancellationRequested(async () => {
                     isCancelled = true;
@@ -570,7 +665,7 @@ export class SfBulkApi {
                         reject(
                             error instanceof Error
                                 ? error
-                                : new Error(String(error))
+                                : new Error(String(error)),
                         );
                     }
                 });
@@ -579,6 +674,11 @@ export class SfBulkApi {
             const checkJobStatus = async () => {
                 // If already cancelled, don't continue checking
                 if (isCancelled) {
+                    return;
+                }
+
+                if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+                    reject(new Error("Job polling timed out after 30 minutes"));
                     return;
                 }
 
@@ -607,8 +707,8 @@ export class SfBulkApi {
                             new Error(
                                 `Job ${jobStatus.state.toLowerCase()}: ${jobId}. Error: ${
                                     jobStatus.errorMessage
-                                }`
-                            )
+                                }`,
+                            ),
                         );
                         return;
                     }
@@ -618,7 +718,7 @@ export class SfBulkApi {
                     reject(
                         error instanceof Error
                             ? error
-                            : new Error(String(error))
+                            : new Error(String(error)),
                     );
                 }
             };
@@ -633,13 +733,19 @@ export class SfBulkApi {
      * @throws Error with formatted message
      */
     private async throwApiError(response: Response): Promise<never> {
+        if (response.status === 401) {
+            throw new Error(
+                "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+            );
+        }
         let errorMessage: string;
         try {
             const error = (await response.json()) as { message?: string }[];
-            errorMessage = error[0]?.message || JSON.stringify(error);
+            errorMessage =
+                error[0]?.message ||
+                `HTTP ${response.status} ${response.statusText}`;
         } catch (e) {
-            // If can't parse as JSON, just use the status text
-            errorMessage = response.statusText;
+            errorMessage = `HTTP ${response.status} ${response.statusText}`;
         }
         throw new Error(`API request failed: ${errorMessage}`);
     }

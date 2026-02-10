@@ -27,8 +27,14 @@ export class ObjectService {
      * @returns {Promise<CustomObject[]>} List of custom objects
      */
     public async getCustomObjects(targetOrg: string): Promise<CustomObject[]> {
-        return await this._sfCommandService.execute(
-            `sf org list metadata --metadata-type CustomObject --target-org ${targetOrg}`
-        );
+        return await this._sfCommandService.execute("sf", [
+            "org",
+            "list",
+            "metadata",
+            "--metadata-type",
+            "CustomObject",
+            "--target-org",
+            targetOrg,
+        ]);
     }
 }

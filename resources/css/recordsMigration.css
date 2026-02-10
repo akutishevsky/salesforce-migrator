@@ -54,7 +54,7 @@ body {
 .sfm-header h1 .org-name {
     font-family: var(--vscode-editor-font-family, monospace);
     font-size: 1.4rem;
-    background-color: var(--vscode-editorWidget-background); 
+    background-color: var(--vscode-editorWidget-background);
     padding: 0.1rem 0.4rem;
     border-radius: var(--border-radius);
 }
@@ -228,7 +228,6 @@ input[type="checkbox"] {
     max-width: 100%;
     font-weight: bold;
 }
-
 
 #action-button {
     display: inline-block;

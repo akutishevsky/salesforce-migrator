@@ -12,20 +12,20 @@ function checkIsSfdxProject(): boolean {
         vscode.commands.executeCommand(
             "setContext",
             "salesforce-migrator.isSfdxProject",
-            false
+            false,
         );
         return false;
     }
 
     const projectFilePath = path.join(
         workspaceFolders[0].uri.fsPath,
-        "sfdx-project.json"
+        "sfdx-project.json",
     );
     const isSfdxProject = fs.existsSync(projectFilePath);
     vscode.commands.executeCommand(
         "setContext",
         "salesforce-migrator.isSfdxProject",
-        isSfdxProject
+        isSfdxProject,
     );
 
     return isSfdxProject;
@@ -34,11 +34,11 @@ function checkIsSfdxProject(): boolean {
 function createViewProviders(extensionContext: vscode.ExtensionContext) {
     const sourceOrgSelector = new OrgSelectorWebview(
         extensionContext,
-        "source"
+        "source",
     );
     const targetOrgSelector = new OrgSelectorWebview(
         extensionContext,
-        "target"
+        "target",
     );
     const metadataSelectorView = new MetadataSelectorView(extensionContext);
     const metadataSelectionView = new MetadataSelectionView(extensionContext);
@@ -64,7 +64,7 @@ function registerCommands(
         metadataSelectorView: MetadataSelectorView;
         metadataSelectionView: MetadataSelectionView;
         recordsSelectorView: RecordsSelectorView;
-    }
+    },
 ) {
     const {
         sourceOrgSelector,
@@ -75,22 +75,22 @@ function registerCommands(
 
     const refreshSourceOrgsCommand = vscode.commands.registerCommand(
         "salesforce-migrator.refreshSourceOrgs",
-        () => sourceOrgSelector.refresh()
+        () => sourceOrgSelector.refresh(),
     );
 
     const refreshTargetOrgsCommand = vscode.commands.registerCommand(
         "salesforce-migrator.refreshTargetOrgs",
-        () => targetOrgSelector.refresh()
+        () => targetOrgSelector.refresh(),
     );
 
     const refreshMetadataCommand = vscode.commands.registerCommand(
         "salesforce-migrator.refreshMetadata",
-        () => metadataSelectorView.refreshMetadata()
+        () => metadataSelectorView.refreshMetadata(),
     );
 
     const refreshRecordsCommand = vscode.commands.registerCommand(
         "salesforce-migrator.refreshRecords",
-        () => recordsSelectorView.refreshRecords()
+        () => recordsSelectorView.refreshRecords(),
     );
 
     const clearWorkspaceStorageCommand = vscode.commands.registerCommand(
@@ -101,7 +101,7 @@ function registerCommands(
             // Refresh both org selector views to update the UI
             await sourceOrgSelector.refresh();
             await targetOrgSelector.refresh();
-        }
+        },
     );
 
     return {
@@ -128,7 +128,7 @@ function registerWebviewProviders(
         refreshMetadataCommand: vscode.Disposable;
         refreshRecordsCommand: vscode.Disposable;
         clearWorkspaceStorageCommand: vscode.Disposable;
-    }
+    },
 ) {
     const {
         sourceOrgSelector,
@@ -148,30 +148,30 @@ function registerWebviewProviders(
     extensionContext.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.source-org-selector",
-            sourceOrgSelector
+            sourceOrgSelector,
         ),
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.target-org-selector",
-            targetOrgSelector
+            targetOrgSelector,
         ),
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.metadata-selector",
-            metadataSelectorView
+            metadataSelectorView,
         ),
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.metadata-selection",
-            metadataSelectionView
+            metadataSelectionView,
         ),
         vscode.window.registerWebviewViewProvider(
             "salesforce-migrator.records-selector",
-            recordsSelectorView
+            recordsSelectorView,
         ),
 
         refreshSourceOrgsCommand,
         refreshTargetOrgsCommand,
         refreshMetadataCommand,
         refreshRecordsCommand,
-        clearWorkspaceStorageCommand
+        clearWorkspaceStorageCommand,
     );
 }
 
@@ -185,8 +185,9 @@ export function activate(extensionContext: vscode.ExtensionContext) {
         const commands = registerCommands(extensionContext, viewProviders);
         registerWebviewProviders(extensionContext, viewProviders, commands);
     } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         vscode.window.showErrorMessage(
-            `Failed to activate the extension: ${error}`
+            `Failed to activate the extension: ${message}`,
         );
     }
 }

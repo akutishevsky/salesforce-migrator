@@ -39,9 +39,13 @@ export class MetadataService {
      * @returns {Promise<Metadata>} Complete `Metadata` information from the specified org
      */
     public async listMetadataTypes(targetOrg: string): Promise<Metadata> {
-        const metadata = await this._sfCommandService.execute(
-            `sf org list metadata-types --target-org ${targetOrg}`
-        );
+        const metadata = await this._sfCommandService.execute("sf", [
+            "org",
+            "list",
+            "metadata-types",
+            "--target-org",
+            targetOrg,
+        ]);
         return metadata;
     }
 
@@ -51,7 +55,7 @@ export class MetadataService {
      * @returns {Promise<MetadataObject[]>} Array of `MetadataObject` from the specified org
      */
     public async fetchMetadataObjects(
-        targetOrg: string
+        targetOrg: string,
     ): Promise<MetadataObject[]> {
         const metadata = await this.listMetadataTypes(targetOrg);
         return metadata.metadataObjects;
@@ -74,16 +78,22 @@ export class MetadataService {
      */
     public async listMetadataFolders(
         targetOrg: string,
-        metadataType: string
+        metadataType: string,
     ): Promise<any[]> {
         const folderType = FOLDER_TYPE_MAP[metadataType];
         if (!folderType) {
             return [];
         }
 
-        const folders = await this._sfCommandService.execute(
-            `sf org list metadata --target-org ${targetOrg} --metadata-type ${folderType}`
-        );
+        const folders = await this._sfCommandService.execute("sf", [
+            "org",
+            "list",
+            "metadata",
+            "--target-org",
+            targetOrg,
+            "--metadata-type",
+            folderType,
+        ]);
         return folders;
     }
 
@@ -97,14 +107,22 @@ export class MetadataService {
     public async listMetadataByType(
         targetOrg: string,
         metadataType: string,
-        folder?: string
+        folder?: string,
     ): Promise<any[]> {
-        let command = `sf org list metadata --target-org ${targetOrg} --metadata-type ${metadataType}`;
+        const args = [
+            "org",
+            "list",
+            "metadata",
+            "--target-org",
+            targetOrg,
+            "--metadata-type",
+            metadataType,
+        ];
         if (folder) {
-            command += ` --folder ${folder}`;
+            args.push("--folder", folder);
         }
 
-        const metadata = await this._sfCommandService.execute(command);
+        const metadata = await this._sfCommandService.execute("sf", args);
         return metadata;
     }
 }

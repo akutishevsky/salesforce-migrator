@@ -2,12 +2,13 @@ const vscode = acquireVsCodeApi();
 
 function selectSalesforceOrg(event) {
     const selectedOrgAlias = event.target.value;
-    const selectorType = event.target.closest('[data-selector-type]').dataset.selectorType;
+    const selectorType = event.target.closest("[data-selector-type]").dataset
+        .selectorType;
 
     vscode.postMessage({
         command: "orgSelected",
         orgAlias: selectedOrgAlias,
-        selectorType: selectorType
+        selectorType: selectorType,
     });
 }
 

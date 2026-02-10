@@ -1,2 +1,11 @@
 node_modules
 out
+SECURITY_AUDIT.md
+.claude/agent-memory/
+
+# Sensitive files
+.env
+.env.*
+*.pem
+*.key
+credentials.json

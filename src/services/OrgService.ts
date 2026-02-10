@@ -47,7 +47,7 @@ export class OrgService {
      */
     public getSourceOrg(): string | undefined {
         return this._extensionContext.workspaceState.get<string>(
-            this._sourceOrgKey
+            this._sourceOrgKey,
         );
     }
 
@@ -56,7 +56,7 @@ export class OrgService {
      */
     public getTargetOrg(): string | undefined {
         return this._extensionContext.workspaceState.get<string>(
-            this._targetOrgKey
+            this._targetOrgKey,
         );
     }
 
@@ -67,13 +67,22 @@ export class OrgService {
         return type === "source" ? this.getSourceOrg() : this.getTargetOrg();
     }
 
+    private static readonly ORG_ALIAS_PATTERN = /^[\w.\-@]+$/;
+
+    private _validateOrgAlias(orgAlias: string): void {
+        if (!OrgService.ORG_ALIAS_PATTERN.test(orgAlias)) {
+            throw new Error("Invalid org alias format");
+        }
+    }
+
     /**
      * Set the source org
      */
     public setSourceOrg(orgAlias: string): Thenable<void> {
+        this._validateOrgAlias(orgAlias);
         return this._extensionContext.workspaceState.update(
             this._sourceOrgKey,
-            orgAlias
+            orgAlias,
         );
     }
 
@@ -81,9 +90,10 @@ export class OrgService {
      * Set the target org
      */
     public setTargetOrg(orgAlias: string): Thenable<void> {
+        this._validateOrgAlias(orgAlias);
         return this._extensionContext.workspaceState.update(
             this._targetOrgKey,
-            orgAlias
+            orgAlias,
         );
     }
 
@@ -100,13 +110,16 @@ export class OrgService {
      * Fetch orgs from Salesforce CLI
      */
     public async fetchOrgs(): Promise<Record<string, SalesforceOrg[]>> {
-        return await this._sfCommandService.execute("sf org list");
+        return await this._sfCommandService.execute("sf", ["org", "list"]);
     }
 
     public async fetchOrgDetails(orgAlias: string): Promise<SalesforceOrg> {
-        const orgDetails = await this._sfCommandService.execute(
-            `sf org display --target-org ${orgAlias}`
-        );
+        const orgDetails = await this._sfCommandService.execute("sf", [
+            "org",
+            "display",
+            "--target-org",
+            orgAlias,
+        ]);
         return orgDetails;
     }
 
@@ -115,16 +128,16 @@ export class OrgService {
      */
     public clearOrgSelections(): Thenable<void> {
         vscode.window.showInformationMessage(
-            "Cleared Salesforce Migrator workspace storage"
+            "Cleared Salesforce Migrator workspace storage",
         );
         return Promise.all([
             this._extensionContext.workspaceState.update(
                 this._sourceOrgKey,
-                undefined
+                undefined,
             ),
             this._extensionContext.workspaceState.update(
                 this._targetOrgKey,
-                undefined
+                undefined,
             ),
         ]).then(() => {});
     }

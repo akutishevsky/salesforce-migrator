@@ -12,16 +12,30 @@ export interface FieldDescription {
  * Service for interacting with Salesforce REST API
  */
 export class SfRestApi {
+    private _buildUrl(org: SalesforceOrg, path: string): string {
+        if (!org.instanceUrl.startsWith("https://")) {
+            throw new Error("Instance URL must use HTTPS");
+        }
+        if (!/^\d+\.\d+$/.test(org.apiVersion)) {
+            throw new Error("Invalid API version format");
+        }
+        return `${org.instanceUrl}/services/data/v${org.apiVersion}${path}`;
+    }
+
     /**
      * Describes an object to retrieve its fields
      */
     public async describeObject(
         org: SalesforceOrg,
-        objectName: string
+        objectName: string,
     ): Promise<{ fields: FieldDescription[] }> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/sobjects/${objectName}/describe/`;
+        if (!/^[a-zA-Z]\w*(__[a-z]+)?$/.test(objectName)) {
+            throw new Error("Invalid object name format");
+        }
+        const url = this._buildUrl(org, `/sobjects/${objectName}/describe/`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(60_000),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -30,12 +44,23 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to describe object: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            if (response.status === 401) {
+                throw new Error(
+                    "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+                );
+            }
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as {
+                    message?: string;
+                }[];
+                errorMessage =
+                    error[0]?.message ||
+                    `HTTP ${response.status} ${response.statusText}`;
+            } catch (e) {
+                errorMessage = `HTTP ${response.status} ${response.statusText}`;
+            }
+            throw new Error(`Failed to describe object: ${errorMessage}`);
         }
 
         return (await response.json()) as { fields: FieldDescription[] };
@@ -46,14 +71,22 @@ export class SfRestApi {
      */
     public async queryRecordCount(
         org: SalesforceOrg,
-        query: string
+        query: string,
     ): Promise<number> {
         // Convert the query to a COUNT query
-        const countQuery = query.replace(/^SELECT\s+.*?\s+FROM/i, 'SELECT COUNT() FROM');
-        
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/query?q=${encodeURIComponent(countQuery)}`;
+        const fromIndex = query.search(/\bFROM\b/i);
+        if (fromIndex === -1) {
+            throw new Error("Invalid query: missing FROM clause");
+        }
+        const countQuery = "SELECT COUNT() " + query.substring(fromIndex);
+
+        const url = this._buildUrl(
+            org,
+            `/query?q=${encodeURIComponent(countQuery)}`,
+        );
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(60_000),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -62,12 +95,23 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to count records: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`
-            );
+            if (response.status === 401) {
+                throw new Error(
+                    "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+                );
+            }
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as {
+                    message?: string;
+                }[];
+                errorMessage =
+                    error[0]?.message ||
+                    `HTTP ${response.status} ${response.statusText}`;
+            } catch (e) {
+                errorMessage = `HTTP ${response.status} ${response.statusText}`;
+            }
+            throw new Error(`Failed to count records: ${errorMessage}`);
         }
 
         const result = (await response.json()) as { totalSize: number };

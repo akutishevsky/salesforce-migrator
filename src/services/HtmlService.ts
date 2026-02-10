@@ -1,8 +1,21 @@
 import * as vscode from "vscode";
+import crypto from "crypto";
 import fs from "fs";
 
 const LOADING_HTML_PATH = "loading.html";
 const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
+
+/**
+ * Escapes a string for safe interpolation into HTML.
+ */
+export function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
 
 /**
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
@@ -30,13 +43,12 @@ export class HtmlService {
             this._extensionUri,
             "resources",
             "html",
-            LOADING_HTML_PATH
+            LOADING_HTML_PATH,
         );
         const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
         return htmlContent;
     }
 
-    
     /**
      * @returns {string} The `HTML` string for the specified file.
      */
@@ -45,7 +57,7 @@ export class HtmlService {
             this._extensionUri,
             "resources",
             "html",
-            NO_SOURCE_ORG_HTML_PATH
+            NO_SOURCE_ORG_HTML_PATH,
         );
         const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
         return htmlContent;
@@ -71,18 +83,21 @@ export class HtmlService {
         styles?: string[];
         scripts?: string[];
     }): string {
+        const nonce = crypto.randomBytes(16).toString("base64");
+        const cspSource = this._webviewView?.webview.cspSource;
         const html = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource}; script-src 'nonce-${nonce}'; img-src ${cspSource} https:; font-src ${cspSource};">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>${title}</title>
+                <title>${escapeHtml(title)}</title>
                 ${this._composeStyles(styles)}
             </head>
                 <body>
                     ${body}
-                    ${this._composeScripts(scripts)}
+                    ${this._composeScripts(scripts, nonce)}
                 </body>
             </html>`;
         return html;
@@ -97,7 +112,7 @@ export class HtmlService {
                     rel="stylesheet" 
                     href="
                         ${this._webviewView?.webview.asWebviewUri(
-                            vscode.Uri.joinPath(this._extensionUri, style)
+                            vscode.Uri.joinPath(this._extensionUri, style),
                         )}" 
                 />`;
         }
@@ -105,16 +120,17 @@ export class HtmlService {
         return stylesHtml;
     }
 
-    private _composeScripts(scripts: string[]): string {
+    private _composeScripts(scripts: string[], nonce: string): string {
         let scriptsHtml = "";
 
         for (const script of scripts) {
             scriptsHtml += `
-                <script 
+                <script
+                    nonce="${nonce}"
                     src="
                         ${this._webviewView?.webview.asWebviewUri(
-                            vscode.Uri.joinPath(this._extensionUri, script)
-                        )}" 
+                            vscode.Uri.joinPath(this._extensionUri, script),
+                        )}"
                 ></script>`;
         }
 

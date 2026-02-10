@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 
 export type BatchActionCallback = (
     action: "batchRetrieve" | "batchDeploy" | "clearSelections" | "removeItem",
-    data?: { key: string; item: string }
+    data?: { key: string; item: string },
 ) => void;
 
 export class MetadataSelectionView implements vscode.WebviewViewProvider {
@@ -24,7 +24,7 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         this._webviewView = webviewView;
         this._htmlService = new HtmlService({
@@ -81,19 +81,21 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
 
             const sortedItems = [...items].sort();
 
+            const safeKey = escapeHtml(key);
             let itemsHtml = "";
             for (const item of sortedItems) {
+                const safeItem = escapeHtml(item);
                 itemsHtml += `
                     <div class="selection-item">
-                        <span class="selection-item-name" title="${item}">${item}</span>
-                        <button class="remove-item" data-key="${key}" data-item="${item}" title="Remove">&#10005;</button>
+                        <span class="selection-item-name" title="${safeItem}">${safeItem}</span>
+                        <button class="remove-item" data-key="${safeKey}" data-item="${safeItem}" title="Remove">&#10005;</button>
                     </div>
                 `;
             }
 
             groupsHtml += `
                 <div class="selection-group">
-                    <div class="selection-group-header">${key}</div>
+                    <div class="selection-group-header">${safeKey}</div>
                     ${itemsHtml}
                 </div>
             `;
@@ -137,6 +139,14 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
                         this._onBatchAction("clearSelections");
                         break;
                     case "removeItem":
+                        if (
+                            typeof message.key !== "string" ||
+                            !message.key.trim() ||
+                            typeof message.item !== "string" ||
+                            !message.item.trim()
+                        ) {
+                            return;
+                        }
                         this._onBatchAction("removeItem", {
                             key: message.key,
                             item: message.item,
@@ -145,7 +155,7 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
                 }
             },
             undefined,
-            this._extensionContext.subscriptions
+            this._extensionContext.subscriptions,
         );
     }
 }
