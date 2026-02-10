@@ -18,6 +18,7 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs. 
 - **Org Selection:** Provides separate interfaces for selecting source and target Salesforce orgs from already authorized via Salesforce CLI orgs.
 - **Org Categorization:** Organizes available orgs into **DevHub**, **Sandbox**, **Scratch**, and **Other** categories.
 - **Connection Status:** Visual indicators showing connection status (Connected/Disconnected) for each org.
+- **Auto-refresh on Org Change:** Metadata and records views automatically refresh when the source org is changed.
 
 ### Metadata Migration
 
@@ -25,7 +26,7 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs. 
 - **Folder-based Metadata:** Supports folder-based metadata types (EmailTemplate, Report, Dashboard, Document) with an inline expandable tree for browsing folders and their items.
 - **Metadata Component Viewer:** For each type, shows all components available for migration.
 - **Multi-select Metadata:** Select multiple metadata items across different types using checkboxes. Accumulated selections are shown in a dedicated "Selected Metadata" sidebar view for batch retrieval or deployment.
-- **Retrieval and Deployment Interface:** Dedicated webview for orchestrating metadata deployment operations.
+- **Retrieval and Deployment Interface:** Dedicated webview for orchestrating metadata deployment operations with a search input for filtering components.
 - **Deployment Status Tracking:** Shows progress during retrieval and deployment operations with ability to open a Deployment URL in a browser.
 
 ### Records Migration
@@ -36,6 +37,7 @@ A VS Code Extension for migrating Salesforce records and metadata between orgs. 
 - **Progress Tracking:** Real-time progress reporting during operations.
 - **Cancellation Support:** Ability to cancel long-running operations.
 - **Job Status Monitoring:** Polls job status until completion with informative updates.
+- **Export to DML Workflow:** After exporting records, proceed directly to DML operations with the exported file using the "Proceed to DML" button.
 
 ### UI
 

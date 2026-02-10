@@ -28,12 +28,12 @@ Extension Entry Point (src/extension.ts)
     │   └── RecordsSelectorView.ts   # Custom object browsing
     │
     ├── Webviews Layer (src/webviews/)
-    │   ├── MetadataDeploymentWebview.ts # Metadata retrieval/deployment via CLI
+    │   ├── MetadataDeploymentWebview.ts # Metadata retrieval/deployment via CLI (with search)
     │   ├── RecordsMigrationExport.ts    # Export records via Bulk API query jobs
     │   └── RecordsMigrationDml.ts       # DML operations (insert/update/delete/upsert)
     │
     ├── Services Layer (src/services/)
-    │   ├── OrgService.ts        # Org state and selection (stored in workspace state)
+    │   ├── OrgService.ts        # Org state, selection, and onSourceOrgChanged event
     │   ├── SfCommandService.ts  # Salesforce CLI command execution (100MB buffer)
     │   ├── MetadataService.ts   # Metadata listing and fetching
     │   ├── ObjectService.ts     # Custom object listing
@@ -48,7 +48,7 @@ Extension Entry Point (src/extension.ts)
 
 **Records Export**: User selects object → builds SOQL → validates count via REST API → creates Bulk API query job → polls until complete → retrieves paginated results → exports CSV
 
-**Records DML**: User uploads CSV → selects operation → normalizes line endings (Windows fix) → creates Bulk API DML job → uploads data → polls until complete → shows results
+**Records DML**: User uploads CSV (or proceeds directly from export via "Proceed to DML" button) → selects operation → normalizes line endings (Windows fix) → creates Bulk API DML job → uploads data → polls until complete → shows results
 
 **Metadata Migration**: Uses Salesforce CLI commands (`sf project retrieve start` / `sf project deploy start`)
 
@@ -62,6 +62,7 @@ Extension Entry Point (src/extension.ts)
 - **Pagination with query locators**: Query results may span multiple API calls; `Sfdx-Locator` header indicates more data
 - **Record count validation**: Pre/post-operation count verification in export operations
 - **Cancellation support**: Long-running operations support VS Code cancellation tokens with process group cleanup
+- **Source org change event**: `OrgService.onSourceOrgChanged` fires when source org changes; views subscribe to auto-refresh metadata/records lists and close stale deployment panels
 
 ## Code Style
 
