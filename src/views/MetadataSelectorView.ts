@@ -7,15 +7,15 @@ import { MetadataSelectionView } from "./MetadataSelectionView";
 import { SfCommandService } from "../services/SfCommandService";
 
 export class MetadataSelectorView implements vscode.WebviewViewProvider {
-    private _extensionContext: vscode.ExtensionContext;
+    private readonly _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
     private _webviewView: vscode.WebviewView | undefined;
-    private _metadataService: MetadataService;
-    private _orgService: OrgService;
-    private _sfCommandService: SfCommandService;
+    private readonly _metadataService: MetadataService;
+    private readonly _orgService: OrgService;
+    private readonly _sfCommandService: SfCommandService;
     private _deploymentWebview: MetadataDeploymentWebview | undefined;
     private _metadataObjects: MetadataObject[] = [];
-    private _selectedItems: Map<string, string[]> = new Map();
+    private readonly _selectedItems: Map<string, string[]> = new Map();
     private _selectionView: MetadataSelectionView | undefined;
 
     constructor(extensionContext: vscode.ExtensionContext) {
@@ -576,98 +576,29 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     let currentStep = 1;
 
                     if (hasFolders) {
-                        // Step 1: Retrieve folders from source
-                        progress.report({
-                            message: `Step ${currentStep}/${totalSteps}: Retrieving folders from source...`,
-                        });
-                        const folderMFlagArgs = folderFlags.flatMap((f) => [
-                            "-m",
-                            f,
-                        ]);
-                        await this._sfCommandService.execute(
-                            "sf",
-                            [
-                                "project",
-                                "retrieve",
-                                "start",
-                                ...folderMFlagArgs,
-                                "--target-org",
-                                sourceOrg,
-                            ],
-                            tokenSource.token,
-                        );
-
-                        if (tokenSource.token.isCancellationRequested) {
-                            return { cancelled: true };
-                        }
-
-                        currentStep++;
-
-                        // Step 2: Deploy folders to target
-                        progress.report({
-                            message: `Step ${currentStep}/${totalSteps}: Deploying folders to target...`,
-                        });
-                        await this._sfCommandService.execute(
-                            "sf",
-                            [
-                                "project",
-                                "deploy",
-                                "start",
-                                ...folderMFlagArgs,
-                                "--target-org",
-                                targetOrg,
-                            ],
-                            tokenSource.token,
-                        );
-
-                        if (tokenSource.token.isCancellationRequested) {
-                            return { cancelled: true };
-                        }
-
-                        currentStep++;
-                    }
-
-                    // Retrieve items from source
-                    progress.report({
-                        message: `Step ${currentStep}/${totalSteps}: Retrieving items from source...`,
-                    });
-                    const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
-                    await this._sfCommandService.execute(
-                        "sf",
-                        [
-                            "project",
-                            "retrieve",
-                            "start",
-                            ...mFlagArgs,
-                            "--target-org",
+                        currentStep = await this._deployFolders(
+                            folderFlags,
                             sourceOrg,
-                        ],
-                        tokenSource.token,
-                    );
-
-                    if (tokenSource.token.isCancellationRequested) {
-                        return { cancelled: true };
+                            targetOrg,
+                            totalSteps,
+                            currentStep,
+                            progress,
+                            tokenSource,
+                        );
+                        if (tokenSource.token.isCancellationRequested) {
+                            return { cancelled: true };
+                        }
                     }
 
-                    currentStep++;
-
-                    // Deploy items to target
-                    progress.report({
-                        message: `Step ${currentStep}/${totalSteps}: Deploying items to target...`,
-                    });
-                    const deployResult = await this._sfCommandService.execute(
-                        "sf",
-                        [
-                            "project",
-                            "deploy",
-                            "start",
-                            ...mFlagArgs,
-                            "--target-org",
-                            targetOrg,
-                        ],
-                        tokenSource.token,
+                    const deployResult = await this._deployItems(
+                        metadataFlags,
+                        sourceOrg,
+                        targetOrg,
+                        totalSteps,
+                        currentStep,
+                        progress,
+                        tokenSource,
                     );
-
                     if (tokenSource.token.isCancellationRequested) {
                         return { cancelled: true };
                     }
@@ -681,6 +612,115 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             },
         );
 
+        this._handleBatchDeployResult(result, metadataFlags.length);
+    }
+
+    private async _deployFolders(
+        folderFlags: string[],
+        sourceOrg: string,
+        targetOrg: string,
+        totalSteps: number,
+        currentStep: number,
+        progress: vscode.Progress<{ message: string }>,
+        tokenSource: vscode.CancellationTokenSource,
+    ): Promise<number> {
+        const folderMFlagArgs = folderFlags.flatMap((f) => ["-m", f]);
+
+        progress.report({
+            message: `Step ${currentStep}/${totalSteps}: Retrieving folders from source...`,
+        });
+        await this._sfCommandService.execute(
+            "sf",
+            [
+                "project",
+                "retrieve",
+                "start",
+                ...folderMFlagArgs,
+                "--target-org",
+                sourceOrg,
+            ],
+            tokenSource.token,
+        );
+
+        if (tokenSource.token.isCancellationRequested) {
+            return currentStep;
+        }
+
+        currentStep++;
+
+        progress.report({
+            message: `Step ${currentStep}/${totalSteps}: Deploying folders to target...`,
+        });
+        await this._sfCommandService.execute(
+            "sf",
+            [
+                "project",
+                "deploy",
+                "start",
+                ...folderMFlagArgs,
+                "--target-org",
+                targetOrg,
+            ],
+            tokenSource.token,
+        );
+
+        return currentStep + 1;
+    }
+
+    private async _deployItems(
+        metadataFlags: string[],
+        sourceOrg: string,
+        targetOrg: string,
+        totalSteps: number,
+        currentStep: number,
+        progress: vscode.Progress<{ message: string }>,
+        tokenSource: vscode.CancellationTokenSource,
+    ): Promise<any> {
+        const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
+
+        progress.report({
+            message: `Step ${currentStep}/${totalSteps}: Retrieving items from source...`,
+        });
+        await this._sfCommandService.execute(
+            "sf",
+            [
+                "project",
+                "retrieve",
+                "start",
+                ...mFlagArgs,
+                "--target-org",
+                sourceOrg,
+            ],
+            tokenSource.token,
+        );
+
+        if (tokenSource.token.isCancellationRequested) {
+            return undefined;
+        }
+
+        currentStep++;
+
+        progress.report({
+            message: `Step ${currentStep}/${totalSteps}: Deploying items to target...`,
+        });
+        return this._sfCommandService.execute(
+            "sf",
+            [
+                "project",
+                "deploy",
+                "start",
+                ...mFlagArgs,
+                "--target-org",
+                targetOrg,
+            ],
+            tokenSource.token,
+        );
+    }
+
+    private async _handleBatchDeployResult(
+        result: { deployResult?: any; cancelled?: boolean; error?: any },
+        itemCount: number,
+    ): Promise<void> {
         if (result.cancelled) {
             vscode.window.showInformationMessage(
                 "Batch deployment was cancelled.",
@@ -704,41 +744,19 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         this._selectedItems.clear();
         this._updateSelectionView();
 
-        if (result.deployResult?.success) {
-            const selection = await vscode.window.showInformationMessage(
-                `Successfully deployed ${metadataFlags.length} metadata item(s).`,
-                "View Deploy URL",
-            );
-            if (
-                selection === "View Deploy URL" &&
-                result.deployResult?.deployUrl
-            ) {
-                const deployUri = vscode.Uri.parse(
-                    result.deployResult.deployUrl,
-                );
-                if (deployUri.scheme === "https") {
-                    vscode.env.openExternal(deployUri);
-                }
-            }
-        } else {
-            const componentFailures =
-                result.deployResult?.details?.componentFailures;
-            const problems =
-                componentFailures?.map((failure: any) => failure.problem) || [];
-            const selection = await vscode.window.showErrorMessage(
-                `Deployment failed. Problems: ${problems.join(" • ")}`,
-                "View Deploy URL",
-            );
-            if (
-                selection === "View Deploy URL" &&
-                result.deployResult?.deployUrl
-            ) {
-                const deployUri = vscode.Uri.parse(
-                    result.deployResult.deployUrl,
-                );
-                if (deployUri.scheme === "https") {
-                    vscode.env.openExternal(deployUri);
-                }
+        const message = result.deployResult?.success
+            ? `Successfully deployed ${itemCount} metadata item(s).`
+            : `Deployment failed. Problems: ${(result.deployResult?.details?.componentFailures?.map((f: any) => f.problem) || []).join(" • ")}`;
+
+        const showFn = result.deployResult?.success
+            ? vscode.window.showInformationMessage
+            : vscode.window.showErrorMessage;
+
+        const selection = await showFn(message, "View Deploy URL");
+        if (selection === "View Deploy URL" && result.deployResult?.deployUrl) {
+            const deployUri = vscode.Uri.parse(result.deployResult.deployUrl);
+            if (deployUri.scheme === "https") {
+                vscode.env.openExternal(deployUri);
             }
         }
     }
