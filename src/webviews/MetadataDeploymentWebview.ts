@@ -353,7 +353,7 @@ export class MetadataDeploymentWebview {
                         );
                     } else {
                         vscode.window.showErrorMessage(
-                            `Error retrieving ${metadataTypeName}: ${error}`,
+                            `Error retrieving ${metadataTypeName}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
                 } finally {
@@ -420,7 +420,7 @@ export class MetadataDeploymentWebview {
                         );
                     } else {
                         vscode.window.showErrorMessage(
-                            `Error deploying ${metadataTypeName}: ${error}`,
+                            `Error deploying ${metadataTypeName}: ${error instanceof Error ? error.message : String(error)}`,
                         );
                     }
                 } finally {

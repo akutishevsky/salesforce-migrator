@@ -153,7 +153,8 @@ export class SfCommandService {
                 }
 
                 if (stderr && !this._isSalesforceCLIUpdateWarning(stderr)) {
-                    reject(new Error(stderr));
+                    const sanitizedError = stderr.split("\n")[0].slice(0, 500);
+                    reject(new Error(sanitizedError));
                     return;
                 }
 
