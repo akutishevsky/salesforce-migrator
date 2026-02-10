@@ -28,6 +28,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         this._orgChangeSubscription = OrgService.onSourceOrgChanged(() => {
             this._selectedItems.clear();
             this._updateSelectionView();
+            if (this._deploymentWebview) {
+                this._deploymentWebview.dispose();
+            }
             this.refreshMetadata();
         });
     }

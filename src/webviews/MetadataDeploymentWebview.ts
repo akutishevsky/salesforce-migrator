@@ -674,6 +674,10 @@ export class MetadataDeploymentWebview {
     /**
      * Dispose all panel resources
      */
+    public dispose(): void {
+        this._disposePanel();
+    }
+
     private _disposePanel(): void {
         // Clear message listener
         this._clearMessageListener();
