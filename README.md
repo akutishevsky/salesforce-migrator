@@ -1,5 +1,10 @@
 # Salesforce Migrator
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=akutishevsky_salesforce-migrator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=akutishevsky_salesforce-migrator)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=akutishevsky_salesforce-migrator&metric=bugs)](https://sonarcloud.io/summary/new_code?id=akutishevsky_salesforce-migrator)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=akutishevsky_salesforce-migrator&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=akutishevsky_salesforce-migrator)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=akutishevsky_salesforce-migrator&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=akutishevsky_salesforce-migrator)
+
 A VS Code Extension for migrating Salesforce records and metadata between orgs. It uses the Salesforce Bulk API 2.0 under the hood.
 
 > If you noticed any bugs feel free to create issues.
