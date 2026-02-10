@@ -733,6 +733,11 @@ export class SfBulkApi {
      * @throws Error with formatted message
      */
     private async throwApiError(response: Response): Promise<never> {
+        if (response.status === 401) {
+            throw new Error(
+                "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+            );
+        }
         let errorMessage: string;
         try {
             const error = (await response.json()) as { message?: string }[];

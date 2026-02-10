@@ -44,6 +44,11 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error(
+                    "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+                );
+            }
             let errorMessage: string;
             try {
                 const error = (await response.json()) as {
@@ -89,6 +94,11 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
+            if (response.status === 401) {
+                throw new Error(
+                    "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
+                );
+            }
             let errorMessage: string;
             try {
                 const error = (await response.json()) as {
