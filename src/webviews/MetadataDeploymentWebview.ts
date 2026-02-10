@@ -123,7 +123,7 @@ export class MetadataDeploymentWebview {
                     body: `
                         <div class="error-container">
                             <p class="error-message">
-                                Error while retrieving metadata: ${error}
+                                Error while retrieving metadata: ${escapeHtml(String(error))}
                             </p>
                         </div>
                     `,
