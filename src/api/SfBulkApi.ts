@@ -643,10 +643,11 @@ export class SfBulkApi {
         let errorMessage: string;
         try {
             const error = (await response.json()) as { message?: string }[];
-            errorMessage = error[0]?.message || JSON.stringify(error);
+            errorMessage =
+                error[0]?.message ||
+                `HTTP ${response.status} ${response.statusText}`;
         } catch (e) {
-            // If can't parse as JSON, just use the status text
-            errorMessage = response.statusText;
+            errorMessage = `HTTP ${response.status} ${response.statusText}`;
         }
         throw new Error(`API request failed: ${errorMessage}`);
     }

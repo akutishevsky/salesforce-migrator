@@ -30,12 +30,18 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to describe object: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`,
-            );
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as {
+                    message?: string;
+                }[];
+                errorMessage =
+                    error[0]?.message ||
+                    `HTTP ${response.status} ${response.statusText}`;
+            } catch (e) {
+                errorMessage = `HTTP ${response.status} ${response.statusText}`;
+            }
+            throw new Error(`Failed to describe object: ${errorMessage}`);
         }
 
         return (await response.json()) as { fields: FieldDescription[] };
@@ -65,12 +71,18 @@ export class SfRestApi {
         });
 
         if (!response.ok) {
-            const error = (await response.json()) as { message?: string }[];
-            throw new Error(
-                `Failed to count records: ${
-                    error[0]?.message || JSON.stringify(error)
-                }`,
-            );
+            let errorMessage: string;
+            try {
+                const error = (await response.json()) as {
+                    message?: string;
+                }[];
+                errorMessage =
+                    error[0]?.message ||
+                    `HTTP ${response.status} ${response.statusText}`;
+            } catch (e) {
+                errorMessage = `HTTP ${response.status} ${response.statusText}`;
+            }
+            throw new Error(`Failed to count records: ${errorMessage}`);
         }
 
         const result = (await response.json()) as { totalSize: number };
