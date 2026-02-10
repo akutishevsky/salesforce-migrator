@@ -183,7 +183,7 @@ export class SfBulkApi {
     ): Promise<string> {
         this._validateJobId(jobId);
         const MAX_PAGES = 100;
-        let allResults = "";
+        const resultChunks: string[] = [];
         let hasMore = true;
         let queryLocator: string | null = null;
         let isFirstRequest = true;
@@ -220,19 +220,16 @@ export class SfBulkApi {
             const csvData: string = await response.text();
             const nextRecordsUrl: string | null =
                 response.headers.get("Sforce-Locator");
-            const nextRecordsHeader: string | null = response.headers.get(
-                "Sforce-NumberOfRecords",
-            );
 
             // For the first request, include the entire response (including headers)
             if (isFirstRequest) {
-                allResults = csvData;
+                resultChunks.push(csvData);
                 isFirstRequest = false;
             } else {
                 // For subsequent requests, skip the header row and append data
                 const lines = csvData.split("\n");
                 if (lines.length > 1) {
-                    allResults += "\n" + lines.slice(1).join("\n");
+                    resultChunks.push(lines.slice(1).join("\n"));
                 }
             }
 
@@ -245,7 +242,7 @@ export class SfBulkApi {
             }
         }
 
-        return allResults;
+        return resultChunks.join("\n");
     }
 
     /**
