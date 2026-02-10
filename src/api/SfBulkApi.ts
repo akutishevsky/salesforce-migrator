@@ -210,29 +210,20 @@ export class SfBulkApi {
             );
             const locator = csvData.locator;
 
-            if (page === 1) {
-                resultChunks.push(csvData.text);
-            } else {
-                const lines = csvData.text.split("\n");
-                if (lines.length > 1) {
-                    resultChunks.push(lines.slice(1).join("\n"));
-                }
-            }
+            const textToAppend =
+                page === 1
+                    ? csvData.text
+                    : csvData.text.split("\n").slice(1).join("\n");
+            resultChunks.push(textToAppend);
 
             if (!locator || locator === "null") {
-                break;
+                return resultChunks.join("\n");
             }
 
             queryLocator = locator;
-
-            if (page === MAX_PAGES) {
-                throw new Error(
-                    `Query exceeded maximum of ${MAX_PAGES} result pages`,
-                );
-            }
         }
 
-        return resultChunks.join("\n");
+        throw new Error(`Query exceeded maximum of ${MAX_PAGES} result pages`);
     }
 
     private async _fetchQueryResultPage(
@@ -416,7 +407,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}/batches`);
 
         // 1. Remove BOM if present (Windows can add this)
-        let normalizedCsv = csvData.replace(/^\uFEFF/, "");
+        let normalizedCsv = csvData.replaceAll("\uFEFF", "");
 
         // 2. For Windows compatibility, aggressively normalize line endings to LF
         // First convert all CRLF to LF, then ensure no lone CR characters
@@ -524,9 +515,9 @@ export class SfBulkApi {
                 try {
                     const jobStatus = await this.getQueryJobInfo(org, jobId);
                     const statusMessage =
-                        jobStatus.numberRecordsProcessed === undefined
-                            ? `Current job state: ${jobStatus.state}`
-                            : `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`;
+                        jobStatus.numberRecordsProcessed !== undefined
+                            ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
+                            : `Current job state: ${jobStatus.state}`;
 
                     progress.report({
                         message: statusMessage,
