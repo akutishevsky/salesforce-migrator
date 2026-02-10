@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { ObjectService, CustomObject } from "../services/ObjectService";
 import { OrgService } from "../services/OrgService";
 import { RecordsMigrationExport } from "../webviews/RecordsMigrationExport";
@@ -112,7 +112,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _composeObjectListHtml(customObjects: CustomObject[]): string {
         let html = `<div class="list">`;
         for (const customObject of customObjects) {
-            html += `<div class="list-item">${customObject.fullName}</div>`;
+            html += `<div class="list-item">${escapeHtml(customObject.fullName)}</div>`;
         }
         html += `</div>`;
 
