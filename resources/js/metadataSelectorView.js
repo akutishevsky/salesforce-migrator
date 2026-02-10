@@ -12,11 +12,19 @@ const selectMetadataItem = (item, metadataListItems) => {
     });
 };
 
+const findFolderChildrenContainer = (metadataType) => {
+    const containers = document.querySelectorAll(".folder-children");
+    for (const container of containers) {
+        if (container.getAttribute("data-metadata-type") === metadataType) {
+            return container;
+        }
+    }
+    return null;
+};
+
 const toggleExpandableItem = (item) => {
     const metadataType = item.getAttribute("data-metadata-type");
-    const childrenContainer = document.querySelector(
-        `.folder-children[data-metadata-type="${metadataType}"]`,
-    );
+    const childrenContainer = findFolderChildrenContainer(metadataType);
 
     if (!childrenContainer) {
         return;
@@ -32,8 +40,11 @@ const toggleExpandableItem = (item) => {
         childrenContainer.classList.add("visible");
 
         if (!childrenContainer.hasAttribute("data-loaded")) {
-            childrenContainer.innerHTML =
-                '<div class="folder-child-loading">Loading folders...</div>';
+            const loading = document.createElement("div");
+            loading.className = "folder-child-loading";
+            loading.textContent = "Loading folders...";
+            childrenContainer.textContent = "";
+            childrenContainer.appendChild(loading);
             vscode.postMessage({
                 command: "expandFolders",
                 metadataType: metadataType,
@@ -61,37 +72,39 @@ const setupMetadataItemListeners = () => {
 };
 
 const handleFoldersLoaded = (message) => {
-    const container = document.querySelector(
-        `.folder-children[data-metadata-type="${message.metadataType}"]`,
-    );
+    const container = findFolderChildrenContainer(message.metadataType);
 
     if (!container) {
         return;
     }
 
     container.setAttribute("data-loaded", "true");
+    container.textContent = "";
 
     if (message.error || !message.folders || message.folders.length === 0) {
-        container.innerHTML =
-            '<div class="folder-child-loading">No folders found</div>';
+        const noFolders = document.createElement("div");
+        noFolders.className = "folder-child-loading";
+        noFolders.textContent = "No folders found";
+        container.appendChild(noFolders);
         return;
     }
 
-    let html = "";
     for (const folder of message.folders) {
-        html += `<div class="folder-child-item" data-metadata-type="${message.metadataType}">${folder}</div>`;
-    }
-    container.innerHTML = html;
+        const folderItem = document.createElement("div");
+        folderItem.className = "folder-child-item";
+        folderItem.dataset.metadataType = message.metadataType;
+        folderItem.textContent = folder;
 
-    container.querySelectorAll(".folder-child-item").forEach((item) => {
-        item.addEventListener("click", () => {
+        folderItem.addEventListener("click", () => {
             vscode.postMessage({
                 command: "folderSelected",
-                metadataType: item.getAttribute("data-metadata-type"),
-                folder: item.textContent.trim(),
+                metadataType: folderItem.dataset.metadataType,
+                folder: folderItem.textContent.trim(),
             });
         });
-    });
+
+        container.appendChild(folderItem);
+    }
 };
 
 window.addEventListener("message", (event) => {
