@@ -7,7 +7,7 @@ export type BatchActionCallback = (
 ) => void;
 
 export class MetadataSelectionView implements vscode.WebviewViewProvider {
-    private _extensionContext: vscode.ExtensionContext;
+    private readonly _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
     private _webviewView: vscode.WebviewView | undefined;
     private _selectedItems: Map<string, string[]> = new Map();
@@ -58,6 +58,10 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
         });
     }
 
+    private _localeCompare(a: string, b: string): number {
+        return a.localeCompare(b);
+    }
+
     private _composeBodyHtml(): string {
         const totalCount = this._getTotalCount();
 
@@ -71,7 +75,9 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
         }
 
         let groupsHtml = "";
-        const sortedKeys = Array.from(this._selectedItems.keys()).sort();
+        const sortedKeys = Array.from(this._selectedItems.keys()).sort(
+            this._localeCompare,
+        );
 
         for (const key of sortedKeys) {
             const items = this._selectedItems.get(key)!;
@@ -79,7 +85,7 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
                 continue;
             }
 
-            const sortedItems = [...items].sort();
+            const sortedItems = [...items].sort(this._localeCompare);
 
             const safeKey = escapeHtml(key);
             let itemsHtml = "";
