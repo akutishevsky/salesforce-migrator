@@ -54,6 +54,9 @@ export class SfBulkApi {
         if (!org.instanceUrl.startsWith("https://")) {
             throw new Error("Instance URL must use HTTPS");
         }
+        if (!/^\d+\.\d+$/.test(org.apiVersion)) {
+            throw new Error("Invalid API version format");
+        }
         return `${org.instanceUrl}/services/data/v${org.apiVersion}${path}`;
     }
 

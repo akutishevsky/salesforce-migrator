@@ -16,6 +16,9 @@ export class SfRestApi {
         if (!org.instanceUrl.startsWith("https://")) {
             throw new Error("Instance URL must use HTTPS");
         }
+        if (!/^\d+\.\d+$/.test(org.apiVersion)) {
+            throw new Error("Invalid API version format");
+        }
         return `${org.instanceUrl}/services/data/v${org.apiVersion}${path}`;
     }
 
@@ -26,6 +29,9 @@ export class SfRestApi {
         org: SalesforceOrg,
         objectName: string,
     ): Promise<{ fields: FieldDescription[] }> {
+        if (!/^[a-zA-Z]\w*(__[a-z]+)?$/.test(objectName)) {
+            throw new Error("Invalid object name format");
+        }
         const url = this._buildUrl(org, `/sobjects/${objectName}/describe/`);
 
         const response = await fetch(url, {
