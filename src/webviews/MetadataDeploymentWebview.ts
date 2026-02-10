@@ -254,6 +254,12 @@ export class MetadataDeploymentWebview {
         this._messageListener = webview.onDidReceiveMessage(async (message) => {
             switch (message.command) {
                 case "retrieve":
+                    if (
+                        typeof message.metadataTypeName !== "string" ||
+                        !message.metadataTypeName.trim()
+                    ) {
+                        return;
+                    }
                     await this._retrieveMetadata(
                         metadataType,
                         message.metadataTypeName,
@@ -261,6 +267,12 @@ export class MetadataDeploymentWebview {
                     );
                     break;
                 case "deploy":
+                    if (
+                        typeof message.metadataTypeName !== "string" ||
+                        !message.metadataTypeName.trim()
+                    ) {
+                        return;
+                    }
                     this._deployMetadata(
                         metadataType,
                         message.metadataTypeName,
@@ -269,6 +281,14 @@ export class MetadataDeploymentWebview {
                     break;
                 case "selectionChanged":
                     if (this._onSelectionChanged) {
+                        if (
+                            !Array.isArray(message.selectedItems) ||
+                            !message.selectedItems.every(
+                                (item: unknown) => typeof item === "string",
+                            )
+                        ) {
+                            return;
+                        }
                         this._onSelectionChanged(
                             metadataType,
                             folder,
