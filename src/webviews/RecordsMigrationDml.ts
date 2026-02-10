@@ -570,6 +570,10 @@ export class RecordsMigrationDml {
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
         const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
 
+        if (/[\/\\]|\.\./.test(this._customObject)) {
+            throw new Error("Invalid object name");
+        }
+
         const dirPath = path.join(
             workspacePath,
             `salesforce-migrator/${this._customObject}/${this._operation}/${status}`,
