@@ -39,7 +39,7 @@ const toggleExpandableItem = (item) => {
         item.classList.add("expanded");
         childrenContainer.classList.add("visible");
 
-        if (!childrenContainer.hasAttribute("data-loaded")) {
+        if (!childrenContainer.dataset.loaded) {
             const loading = document.createElement("div");
             loading.className = "folder-child-loading";
             loading.textContent = "Loading folders...";
@@ -78,7 +78,7 @@ const handleFoldersLoaded = (message) => {
         return;
     }
 
-    container.setAttribute("data-loaded", "true");
+    container.dataset.loaded = "true";
     container.textContent = "";
 
     if (message.error || !message.folders || message.folders.length === 0) {
