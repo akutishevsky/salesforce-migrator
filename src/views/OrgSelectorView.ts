@@ -8,10 +8,10 @@ export type OrgSelectorType = "source" | "target";
  * Webview UI component for selecting Salesforce orgs
  */
 export class OrgSelectorWebview implements vscode.WebviewViewProvider {
-    private _extensionContext: vscode.ExtensionContext;
+    private readonly _extensionContext: vscode.ExtensionContext;
     private _htmlService!: HtmlService;
-    private _orgService: OrgService;
-    private _type: OrgSelectorType;
+    private readonly _orgService: OrgService;
+    private readonly _type: OrgSelectorType;
     private _sourceOrg: string | undefined;
     private _targetOrg: string | undefined;
     private _webviewView: vscode.WebviewView | undefined;
@@ -172,7 +172,7 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _getUniqueOrgs(
         orgs: Record<string, SalesforceOrg[]>,
     ): SalesforceOrg[] {
-        const flatOrgs = Object.values(orgs).flat() as SalesforceOrg[];
+        const flatOrgs = Object.values(orgs).flat();
         return Array.from(
             new Map(flatOrgs.map((org) => [org.alias, org])).values(),
         );
@@ -237,31 +237,27 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     }
 
     private _processWebviewMessage(message: any): void {
-        switch (message.command) {
-            case "orgSelected":
-                if (
-                    typeof message.orgAlias !== "string" ||
-                    !message.orgAlias.trim()
-                ) {
-                    return;
-                }
-                const orgIdentifier = message.orgAlias;
-
-                if (this._type === "source") {
-                    this._sourceOrg = orgIdentifier;
-                    this._orgService.setSourceOrg(orgIdentifier);
-                } else if (this._type === "target") {
-                    this._targetOrg = orgIdentifier;
-                    this._orgService.setTargetOrg(orgIdentifier);
-                }
-
-                vscode.window.showInformationMessage(
-                    `Selected ${this._type} org: ${orgIdentifier}`,
-                );
-                break;
-            default:
-                break;
+        if (message.command !== "orgSelected") {
+            return;
         }
+
+        if (typeof message.orgAlias !== "string" || !message.orgAlias.trim()) {
+            return;
+        }
+
+        const orgIdentifier = message.orgAlias;
+
+        if (this._type === "source") {
+            this._sourceOrg = orgIdentifier;
+            this._orgService.setSourceOrg(orgIdentifier);
+        } else if (this._type === "target") {
+            this._targetOrg = orgIdentifier;
+            this._orgService.setTargetOrg(orgIdentifier);
+        }
+
+        vscode.window.showInformationMessage(
+            `Selected ${this._type} org: ${orgIdentifier}`,
+        );
     }
 
     /**
