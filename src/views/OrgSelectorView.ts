@@ -260,9 +260,6 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
                 );
                 break;
             default:
-                vscode.window.showErrorMessage(
-                    `Unknown command: ${message.command}`,
-                );
                 break;
         }
     }
