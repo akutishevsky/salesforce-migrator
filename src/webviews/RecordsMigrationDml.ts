@@ -586,10 +586,23 @@ export class RecordsMigrationDml {
             throw new Error("Invalid object name");
         }
 
+        if (/[\/\\]|\.\./.test(this._operation)) {
+            throw new Error("Invalid operation name");
+        }
+
         const dirPath = path.join(
             workspacePath,
             `salesforce-migrator/${this._customObject}/${this._operation}/${status}`,
         );
+
+        const resolvedDir = path.resolve(dirPath);
+        if (
+            workspacePath &&
+            !resolvedDir.startsWith(workspacePath + path.sep) &&
+            resolvedDir !== workspacePath
+        ) {
+            throw new Error("Output path must be within the workspace folder.");
+        }
 
         await vscode.workspace.fs.createDirectory(vscode.Uri.file(dirPath));
 
