@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import crypto from "crypto";
-import fs from "fs";
+import crypto from "node:crypto";
+import fs from "node:fs";
 
 const LOADING_HTML_PATH = "loading.html";
 const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
@@ -10,19 +10,19 @@ const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
  */
 export function escapeHtml(str: string): string {
     return str
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 /**
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
  */
 export class HtmlService {
-    private _webviewView?: vscode.WebviewView;
-    private _extensionUri: vscode.Uri;
+    private readonly _webviewView?: vscode.WebviewView;
+    private readonly _extensionUri: vscode.Uri;
 
     constructor({
         view,

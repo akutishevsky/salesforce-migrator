@@ -173,11 +173,7 @@ export class SfCommandService {
         try {
             return JSON.parse(stdout).result;
         } catch (error: any) {
-            try {
-                return JSON.parse(error.stdout).result;
-            } catch (parseError) {
-                throw parseError;
-            }
+            return JSON.parse(error.stdout).result;
         }
     }
 
@@ -186,19 +182,19 @@ export class SfCommandService {
      * @param childProcess The process to kill
      */
     private _killChildProcess(childProcess: ChildProcess | null): void {
-        if (!childProcess || !childProcess.pid) {
+        if (!childProcess?.pid) {
             return;
         }
 
         try {
             // Try to kill the process group to ensure all child processes are terminated
             process.kill(-childProcess.pid, "SIGTERM");
-        } catch (error) {
-            // If killing the process group fails, try to kill just the process
+        } catch {
+            // Process group kill can fail (e.g., process already exited); fall back to direct kill
             try {
                 childProcess.kill("SIGTERM");
-            } catch (innerError) {
-                console.error("Failed to kill child process:", innerError);
+            } catch {
+                // Process already exited; nothing left to clean up
             }
         }
     }

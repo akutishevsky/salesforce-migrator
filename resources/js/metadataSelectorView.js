@@ -15,7 +15,7 @@ const selectMetadataItem = (item, metadataListItems) => {
 const findFolderChildrenContainer = (metadataType) => {
     const containers = document.querySelectorAll(".folder-children");
     for (const container of containers) {
-        if (container.getAttribute("data-metadata-type") === metadataType) {
+        if (container.dataset.metadataType === metadataType) {
             return container;
         }
     }
@@ -23,7 +23,7 @@ const findFolderChildrenContainer = (metadataType) => {
 };
 
 const toggleExpandableItem = (item) => {
-    const metadataType = item.getAttribute("data-metadata-type");
+    const metadataType = item.dataset.metadataType;
     const childrenContainer = findFolderChildrenContainer(metadataType);
 
     if (!childrenContainer) {

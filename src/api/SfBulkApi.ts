@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { SalesforceOrg } from "../services/OrgService";
-import { FieldDescription } from "./SfRestApi";
 
 export interface BulkQueryJobInfo {
     id: string;
@@ -201,65 +200,72 @@ export class SfBulkApi {
         this._validateJobId(jobId);
         const MAX_PAGES = 100;
         const resultChunks: string[] = [];
-        let hasMore = true;
         let queryLocator: string | null = null;
-        let isFirstRequest = true;
-        let pageCount = 0;
 
-        while (hasMore) {
-            if (++pageCount > MAX_PAGES) {
-                throw new Error(
-                    `Query exceeded maximum of ${MAX_PAGES} result pages`,
-                );
-            }
-            const basePath = `/jobs/query/${jobId}/results`;
-            const url: string = queryLocator
-                ? this._buildUrl(
-                      org,
-                      `${basePath}?locator=${encodeURIComponent(queryLocator)}`,
-                  )
-                : this._buildUrl(org, basePath);
+        for (let page = 1; page <= MAX_PAGES; page++) {
+            const csvData = await this._fetchQueryResultPage(
+                org,
+                jobId,
+                queryLocator,
+            );
+            const locator = csvData.locator;
 
-            const response: Response = await fetch(url, {
-                signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${org.accessToken}`,
-                    "Content-Type": "application/json",
-                    Accept: "text/csv",
-                },
-            });
-
-            if (!response.ok) {
-                return this.throwApiError(response);
-            }
-
-            const csvData: string = await response.text();
-            const nextRecordsUrl: string | null =
-                response.headers.get("Sforce-Locator");
-
-            // For the first request, include the entire response (including headers)
-            if (isFirstRequest) {
-                resultChunks.push(csvData);
-                isFirstRequest = false;
+            if (page === 1) {
+                resultChunks.push(csvData.text);
             } else {
-                // For subsequent requests, skip the header row and append data
-                const lines = csvData.split("\n");
+                const lines = csvData.text.split("\n");
                 if (lines.length > 1) {
                     resultChunks.push(lines.slice(1).join("\n"));
                 }
             }
 
-            // Check if there are more records to fetch
-            if (nextRecordsUrl && nextRecordsUrl !== "null") {
-                queryLocator = nextRecordsUrl;
-                hasMore = true;
-            } else {
-                hasMore = false;
+            if (!locator || locator === "null") {
+                break;
+            }
+
+            queryLocator = locator;
+
+            if (page === MAX_PAGES) {
+                throw new Error(
+                    `Query exceeded maximum of ${MAX_PAGES} result pages`,
+                );
             }
         }
 
         return resultChunks.join("\n");
+    }
+
+    private async _fetchQueryResultPage(
+        org: SalesforceOrg,
+        jobId: string,
+        queryLocator: string | null,
+    ): Promise<{ text: string; locator: string | null }> {
+        const basePath = `/jobs/query/${jobId}/results`;
+        const url = queryLocator
+            ? this._buildUrl(
+                  org,
+                  `${basePath}?locator=${encodeURIComponent(queryLocator)}`,
+              )
+            : this._buildUrl(org, basePath);
+
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${org.accessToken}`,
+                "Content-Type": "application/json",
+                Accept: "text/csv",
+            },
+        });
+
+        if (!response.ok) {
+            return this.throwApiError(response);
+        }
+
+        return {
+            text: await response.text(),
+            locator: response.headers.get("Sforce-Locator"),
+        };
     }
 
     /**
@@ -415,8 +421,8 @@ export class SfBulkApi {
         // 2. For Windows compatibility, aggressively normalize line endings to LF
         // First convert all CRLF to LF, then ensure no lone CR characters
         normalizedCsv = normalizedCsv
-            .replace(/\r\n/g, "\n")
-            .replace(/\r/g, "\n");
+            .replaceAll("\r\n", "\n")
+            .replaceAll("\r", "\n");
 
         // 3. Create buffer with explicit UTF-8 encoding
         const dataBuffer = Buffer.from(normalizedCsv, "utf-8");
@@ -518,9 +524,9 @@ export class SfBulkApi {
                 try {
                     const jobStatus = await this.getQueryJobInfo(org, jobId);
                     const statusMessage =
-                        jobStatus.numberRecordsProcessed !== undefined
-                            ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
-                            : `Current job state: ${jobStatus.state}`;
+                        jobStatus.numberRecordsProcessed === undefined
+                            ? `Current job state: ${jobStatus.state}`
+                            : `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`;
 
                     progress.report({
                         message: statusMessage,
@@ -738,14 +744,14 @@ export class SfBulkApi {
                 "Session expired or invalid. Please re-authenticate your org by running: sf org login web --alias <your-org-alias>",
             );
         }
+        const fallback = `HTTP ${response.status} ${response.statusText}`;
         let errorMessage: string;
         try {
             const error = (await response.json()) as { message?: string }[];
-            errorMessage =
-                error[0]?.message ||
-                `HTTP ${response.status} ${response.statusText}`;
-        } catch (e) {
-            errorMessage = `HTTP ${response.status} ${response.statusText}`;
+            errorMessage = error[0]?.message || fallback;
+        } catch {
+            // Response body was not valid JSON; fall back to HTTP status
+            errorMessage = fallback;
         }
         throw new Error(`API request failed: ${errorMessage}`);
     }

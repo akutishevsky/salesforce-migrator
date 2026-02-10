@@ -3,7 +3,7 @@ import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
-import path from "path";
+import path from "node:path";
 
 export class RecordsMigrationExport {
     private _extensionContext: vscode.ExtensionContext;
@@ -565,7 +565,7 @@ export class RecordsMigrationExport {
     private _composeDestinationFileSelectionHtml(): string {
         const now = new Date();
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+        const timeStr = now.toTimeString().split(" ")[0].replaceAll(":", "-"); // HH-MM-SS
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const workspacePath =

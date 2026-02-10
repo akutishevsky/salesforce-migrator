@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as path from "path";
+import * as path from "node:path";
 import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
@@ -580,7 +580,7 @@ export class RecordsMigrationDml {
 
         const now = new Date();
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+        const timeStr = now.toTimeString().split(" ")[0].replaceAll(":", "-"); // HH-MM-SS
 
         if (/[\/\\]|\.\./.test(this._customObject)) {
             throw new Error("Invalid object name");

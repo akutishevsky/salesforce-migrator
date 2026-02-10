@@ -15,7 +15,7 @@ export interface CustomObject {
 }
 
 export class ObjectService {
-    private _sfCommandService: SfCommandService;
+    private readonly _sfCommandService: SfCommandService;
 
     constructor() {
         this._sfCommandService = new SfCommandService();

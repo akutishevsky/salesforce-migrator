@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { OrgSelectorWebview } from "./views/OrgSelectorView";
 import { MetadataSelectorView } from "./views/MetadataSelectorView";
 import { MetadataSelectionView } from "./views/MetadataSelectionView";
@@ -192,4 +192,7 @@ export function activate(extensionContext: vscode.ExtensionContext) {
     }
 }
 
-export function deactivate() {}
+// VS Code requires a deactivate export; no cleanup needed for this extension.
+export function deactivate() {
+    /* intentionally empty */
+}

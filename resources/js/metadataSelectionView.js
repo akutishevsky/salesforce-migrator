@@ -27,8 +27,8 @@ const initialize = () => {
         btn.addEventListener("click", () => {
             vscode.postMessage({
                 command: "removeItem",
-                key: btn.getAttribute("data-key"),
-                item: btn.getAttribute("data-item"),
+                key: btn.dataset.key,
+                item: btn.dataset.item,
             });
         });
     });
