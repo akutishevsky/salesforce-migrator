@@ -39,6 +39,7 @@ export interface BulkDmlJobInfo {
 
 const INTERVAL = 1000;
 const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
+const REQUEST_TIMEOUT_MS = 60_000; // 60 seconds per individual request
 const SALESFORCE_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
 
 /**
@@ -84,6 +85,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -121,6 +123,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -152,6 +155,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, "/jobs/query");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "POST",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -200,6 +204,7 @@ export class SfBulkApi {
                 : this._buildUrl(org, basePath);
 
             const response: Response = await fetch(url, {
+                signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${org.accessToken}`,
@@ -254,6 +259,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -279,6 +285,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -306,6 +313,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -331,6 +339,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -354,6 +363,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -398,6 +408,7 @@ export class SfBulkApi {
         const dataBuffer = Buffer.from(normalizedCsv, "utf-8");
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -428,6 +439,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "PATCH",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -567,6 +579,7 @@ export class SfBulkApi {
         const url = this._buildUrl(org, `/jobs/ingest/${jobId}/failedResults/`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -599,6 +612,7 @@ export class SfBulkApi {
         );
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,

@@ -35,6 +35,7 @@ export class SfRestApi {
         const url = this._buildUrl(org, `/sobjects/${objectName}/describe/`);
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(60_000),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
@@ -79,6 +80,7 @@ export class SfRestApi {
         );
 
         const response = await fetch(url, {
+            signal: AbortSignal.timeout(60_000),
             method: "GET",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
