@@ -86,6 +86,12 @@ export class RecordsMigrationExport {
                         ) {
                             return;
                         }
+                        if (!this._validateQueryObject(message.query)) {
+                            vscode.window.showErrorMessage(
+                                `Query must select FROM ${this._customObject}. Querying other objects is not allowed.`,
+                            );
+                            return;
+                        }
                         await this._exportRecords(
                             message.query,
                             message.destinationFilePath,
@@ -137,6 +143,14 @@ export class RecordsMigrationExport {
                 value: this._fileUri.fsPath,
             });
         }
+    }
+
+    private _validateQueryObject(query: string): boolean {
+        const match = query.match(/\bFROM\s+(\S+)/i);
+        if (!match) {
+            return false;
+        }
+        return match[1].toLowerCase() === this._customObject.toLowerCase();
     }
 
     private async _exportRecords(
