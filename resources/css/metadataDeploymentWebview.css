@@ -40,6 +40,80 @@ button:active {
     background: var(--vscode-button-background);
 }
 
+/* Sticky search input */
+.search-container {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    padding: 0.75rem 0;
+    background-color: var(--vscode-editor-background);
+    display: flex;
+    justify-content: center;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 50%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+#search {
+    background-color: var(--vscode-input-background);
+    color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, transparent);
+    padding: 0.4rem 1.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: var(--vscode-font-family);
+    font-size: var(--vscode-font-size);
+    outline: none;
+    border-radius: 0.25rem;
+}
+
+#search:focus {
+    border-color: var(--vscode-focusBorder);
+}
+
+#search::placeholder {
+    color: var(--vscode-input-placeholderForeground);
+}
+
+.search-clear {
+    position: absolute;
+    right: 0.25rem;
+    background: none;
+    border: none;
+    color: var(--vscode-input-foreground);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.375rem;
+    min-width: auto;
+    margin: 0;
+    border-radius: 0.2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s;
+}
+
+.search-clear.visible {
+    opacity: 0.6;
+    pointer-events: auto;
+}
+
+.search-clear:hover {
+    opacity: 1;
+    background: var(--vscode-toolbar-hoverBackground, rgba(90, 93, 94, 0.31));
+}
+
 /* Responsive table styles */
 table {
     width: 100%;

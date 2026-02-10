@@ -175,6 +175,13 @@ export class MetadataDeploymentWebview {
         let html = "";
 
         html += `
+            <div class="search-container">
+                <div class="search-wrapper">
+                    <span class="search-icon">&#128269;</span>
+                    <input type="text" id="search" placeholder="Search..." />
+                    <button class="search-clear" id="search-clear" title="Clear search">&#10005;</button>
+                </div>
+            </div>
             <table>
                 <thead>
                     ${this._composeTableHeadHtml()}
