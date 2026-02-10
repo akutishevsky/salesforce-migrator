@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.3.1] 2026-02-10
+
+### Fixed
+
+- Fixed SOQL date literals (TODAY, YESTERDAY, LAST_N_DAYS:n, etc.) being rejected in WHERE clause builder
+- Fixed bare WHERE keyword appearing in query when all clauses are filtered as invalid
+
 ## [1.3.0] 2026-02-10
 
 ### Added
