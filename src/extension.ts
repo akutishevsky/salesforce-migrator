@@ -185,8 +185,9 @@ export function activate(extensionContext: vscode.ExtensionContext) {
         const commands = registerCommands(extensionContext, viewProviders);
         registerWebviewProviders(extensionContext, viewProviders, commands);
     } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
         vscode.window.showErrorMessage(
-            `Failed to activate the extension: ${error}`,
+            `Failed to activate the extension: ${message}`,
         );
     }
 }
