@@ -345,7 +345,8 @@ class Query {
                     clause.fieldType === "url" ||
                     clause.fieldType === "id"
                 ) {
-                    formattedValue = `'${clause.value.replace(/'/g, String.raw`\'`)}'`;
+                    const escaped = clause.value.replace(/'/g, String.raw`\'`);
+                    formattedValue = "'" + escaped + "'";
                 } else if (clause.fieldType === "date") {
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(clause.value)) {
                         return null;
