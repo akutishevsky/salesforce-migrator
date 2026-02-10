@@ -6,6 +6,7 @@ let fieldSelector;
 let fileSelector;
 let recordsExporter;
 let queryCopier;
+let exportedFilePath = null;
 
 class FieldSelector {
     fieldElements = [];
@@ -487,20 +488,46 @@ class RecordsExporter {
     }
 
     _disableButtons = () => {
-        const buttons = document.querySelectorAll("button");
+        const buttons = document.querySelectorAll(
+            "button:not(#dml-proceed-button)",
+        );
         buttons.forEach((button) => {
             button.setAttribute("disabled", "true");
             button.classList.add("disabled");
         });
+
+        exportedFilePath = null;
+        RecordsExporter._setDmlControlsEnabled(false);
     };
 
     enableButtons = () => {
-        const buttons = document.querySelectorAll("button");
+        const buttons = document.querySelectorAll(
+            "button:not(#dml-proceed-button)",
+        );
         buttons.forEach((button) => {
             button.removeAttribute("disabled");
             button.classList.remove("disabled");
         });
     };
+
+    static _setDmlControlsEnabled(enabled) {
+        const dmlSelect = document.querySelector("#dml-operation-select");
+        const dmlButton = document.querySelector("#dml-proceed-button");
+        if (dmlSelect) {
+            if (enabled) {
+                dmlSelect.removeAttribute("disabled");
+            } else {
+                dmlSelect.setAttribute("disabled", "true");
+            }
+        }
+        if (dmlButton) {
+            if (enabled) {
+                dmlButton.classList.remove("disabled");
+            } else {
+                dmlButton.classList.add("disabled");
+            }
+        }
+    }
 }
 
 class ErrorMessage {
@@ -528,6 +555,30 @@ class ErrorMessage {
             recordsExporter = new RecordsExporter();
             queryCopier = new QueryCopier();
 
+            const dmlProceedButton = document.querySelector(
+                "#dml-proceed-button",
+            );
+            if (dmlProceedButton) {
+                dmlProceedButton.addEventListener("click", () => {
+                    if (!exportedFilePath) {
+                        ErrorMessage.show(
+                            "Please export records first before proceeding to DML.",
+                        );
+                        return;
+                    }
+                    const operationSelect = document.querySelector(
+                        "#dml-operation-select",
+                    );
+                    if (operationSelect) {
+                        vscode.postMessage({
+                            command: "proceedToDml",
+                            operation: operationSelect.value,
+                            filePath: exportedFilePath,
+                        });
+                    }
+                });
+            }
+
             window.addEventListener("message", (event) => {
                 const { command, value } = event.data;
 
@@ -542,6 +593,10 @@ class ErrorMessage {
                         break;
                     case "exportComplete":
                         recordsExporter.enableButtons();
+                        if (event.data.filePath) {
+                            exportedFilePath = event.data.filePath;
+                            RecordsExporter._setDmlControlsEnabled(true);
+                        }
                         break;
                 }
             });

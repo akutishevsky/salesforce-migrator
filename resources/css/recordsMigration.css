@@ -539,6 +539,12 @@ p {
     margin: 1rem 0;
 }
 
+/* DML proceed controls */
+#dml-operation-select {
+    width: auto;
+    min-width: 8rem;
+}
+
 /* Utils */
 .sfm-hidden {
     display: none;
