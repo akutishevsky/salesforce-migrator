@@ -5,6 +5,7 @@ import { OrgSelectorWebview } from "./views/OrgSelectorView";
 import { MetadataSelectorView } from "./views/MetadataSelectorView";
 import { MetadataSelectionView } from "./views/MetadataSelectionView";
 import { RecordsSelectorView } from "./views/RecordsSelectorView";
+import { OrgService } from "./services/OrgService";
 
 function checkIsSfdxProject(): boolean {
     const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -184,6 +185,10 @@ export function activate(extensionContext: vscode.ExtensionContext) {
         const viewProviders = createViewProviders(extensionContext);
         const commands = registerCommands(extensionContext, viewProviders);
         registerWebviewProviders(extensionContext, viewProviders, commands);
+
+        extensionContext.subscriptions.push({
+            dispose: () => OrgService.disposeEvents(),
+        });
     } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         vscode.window.showErrorMessage(

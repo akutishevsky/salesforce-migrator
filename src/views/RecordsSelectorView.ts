@@ -11,11 +11,16 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _htmlService!: HtmlService;
     private readonly _orgService: OrgService;
     private readonly _objectService: ObjectService;
+    private readonly _orgChangeSubscription: vscode.Disposable;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
         this._orgService = new OrgService(extensionContext);
         this._objectService = new ObjectService();
+
+        this._orgChangeSubscription = OrgService.onSourceOrgChanged(() => {
+            this.refreshRecords();
+        });
     }
 
     public async resolveWebviewView(
@@ -208,7 +213,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
      * Dispose resources
      */
     public dispose(): void {
-        // Clear references to release resources
+        this._orgChangeSubscription.dispose();
         this._exportWebview = undefined;
         this._dmlWebview = undefined;
     }

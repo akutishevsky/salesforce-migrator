@@ -32,6 +32,17 @@ export interface SalesforceOrg {
  * Service for managing Salesforce org state
  */
 export class OrgService {
+    private static readonly _onSourceOrgChanged = new vscode.EventEmitter<
+        string | undefined
+    >();
+
+    public static readonly onSourceOrgChanged =
+        OrgService._onSourceOrgChanged.event;
+
+    public static disposeEvents(): void {
+        OrgService._onSourceOrgChanged.dispose();
+    }
+
     private readonly _extensionContext: vscode.ExtensionContext;
     private readonly _sourceOrgKey = "salesforceMigrator.sourceOrg";
     private readonly _targetOrgKey = "salesforceMigrator.targetOrg";
@@ -78,12 +89,13 @@ export class OrgService {
     /**
      * Set the source org
      */
-    public setSourceOrg(orgAlias: string): Thenable<void> {
+    public async setSourceOrg(orgAlias: string): Promise<void> {
         this._validateOrgAlias(orgAlias);
-        return this._extensionContext.workspaceState.update(
+        await this._extensionContext.workspaceState.update(
             this._sourceOrgKey,
             orgAlias,
         );
+        OrgService._onSourceOrgChanged.fire(orgAlias);
     }
 
     /**
@@ -126,11 +138,11 @@ export class OrgService {
     /**
      * Clear source and target org selections from workspace storage
      */
-    public clearOrgSelections(): Thenable<void> {
+    public async clearOrgSelections(): Promise<void> {
         vscode.window.showInformationMessage(
             "Cleared Salesforce Migrator workspace storage",
         );
-        return Promise.all([
+        await Promise.all([
             this._extensionContext.workspaceState.update(
                 this._sourceOrgKey,
                 undefined,
@@ -139,6 +151,7 @@ export class OrgService {
                 this._targetOrgKey,
                 undefined,
             ),
-        ]).then(() => {});
+        ]);
+        OrgService._onSourceOrgChanged.fire(undefined);
     }
 }
