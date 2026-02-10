@@ -11,16 +11,16 @@ export type SelectionChangedCallback = (
 ) => void;
 
 export class MetadataDeploymentWebview {
-    private _extensionContext: vscode.ExtensionContext;
-    private _webviewView: vscode.WebviewView;
-    private _htmlService: HtmlService;
+    private readonly _extensionContext: vscode.ExtensionContext;
+    private readonly _webviewView: vscode.WebviewView;
+    private readonly _htmlService: HtmlService;
     private _panel: vscode.WebviewPanel | undefined;
-    private _orgService!: OrgService;
-    private _sfCommandService!: SfCommandService;
-    private _metadataService!: MetadataService;
+    private readonly _orgService!: OrgService;
+    private readonly _sfCommandService!: SfCommandService;
+    private readonly _metadataService!: MetadataService;
     private _messageListener: vscode.Disposable | undefined;
     private _disposables: vscode.Disposable[] = [];
-    private _onSelectionChanged: SelectionChangedCallback | undefined;
+    private readonly _onSelectionChanged: SelectionChangedCallback | undefined;
     private _currentMetadataType: string | undefined;
     private _currentFolder: string | undefined;
 
