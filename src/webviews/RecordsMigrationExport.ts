@@ -565,7 +565,7 @@ export class RecordsMigrationExport {
     private _composeDestinationFileSelectionHtml(): string {
         const now = new Date();
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
-        const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "-"); // HH-MM-SS
+        const timeStr = now.toTimeString().split(" ")[0].replaceAll(":", "-"); // HH-MM-SS
 
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const workspacePath =

@@ -415,8 +415,8 @@ export class SfBulkApi {
         // 2. For Windows compatibility, aggressively normalize line endings to LF
         // First convert all CRLF to LF, then ensure no lone CR characters
         normalizedCsv = normalizedCsv
-            .replace(/\r\n/g, "\n")
-            .replace(/\r/g, "\n");
+            .replaceAll("\r\n", "\n")
+            .replaceAll("\r", "\n");
 
         // 3. Create buffer with explicit UTF-8 encoding
         const dataBuffer = Buffer.from(normalizedCsv, "utf-8");
