@@ -583,7 +583,7 @@ export class RecordsMigrationExport {
                                 type="text" 
                                 id="destination-file" 
                                 class="sfm-file-input" 
-                                value="${path.normalize(defaultPath)}" 
+                                value="${escapeHtml(path.normalize(defaultPath))}"
                                 placeholder="Enter file path or click Browse" 
                             />
                             <button id="browse-file-button" class="sfm-button">Browse</button>
