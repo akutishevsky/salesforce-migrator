@@ -1,8 +1,6 @@
-import { exec, ChildProcess } from "node:child_process";
-import { promisify } from "util";
+import { ChildProcess } from "node:child_process";
+import spawn from "cross-spawn";
 import * as vscode from "vscode";
-
-const execPromise = promisify(exec);
 
 /**
  * Interface representing the result of command execution
@@ -34,13 +32,14 @@ export class SfCommandService {
      */
     public async execute(
         command: string,
+        args: string[],
         token?: vscode.CancellationToken
     ): Promise<any> {
-        const commandWithJsonFlag = this._addJsonFlag(command);
+        const argsWithJsonFlag = this._addJsonFlag(args);
         let childProcess: ChildProcess | null = null;
 
         try {
-            childProcess = this._createChildProcess(commandWithJsonFlag);
+            childProcess = this._createChildProcess(command, argsWithJsonFlag);
 
             const { cancelled, disposable } = this._setupCancellationHandling(
                 childProcess,
@@ -68,9 +67,8 @@ export class SfCommandService {
      * @param command The command to execute
      * @returns The created child process
      */
-    private _createChildProcess(command: string): ChildProcess {
-        return exec(command, {
-            maxBuffer: 100 * 1024 * 1024, // 100MB buffer
+    private _createChildProcess(command: string, args: string[]): ChildProcess {
+        return spawn(command, args, {
             cwd: this._workspacePath,
         });
     }
@@ -189,8 +187,8 @@ export class SfCommandService {
      * @param command The command to process
      * @returns {string} A new command string with the `--json` flag
      */
-    private _addJsonFlag(command: string): string {
-        return command.includes("--json") ? command : `${command} --json`;
+    private _addJsonFlag(args: string[]): string[] {
+        return args.includes("--json") ? args : [...args, "--json"];
     }
 
     /**

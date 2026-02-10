@@ -100,12 +100,12 @@ export class OrgService {
      * Fetch orgs from Salesforce CLI
      */
     public async fetchOrgs(): Promise<Record<string, SalesforceOrg[]>> {
-        return await this._sfCommandService.execute("sf org list");
+        return await this._sfCommandService.execute("sf", ["org", "list"]);
     }
 
     public async fetchOrgDetails(orgAlias: string): Promise<SalesforceOrg> {
         const orgDetails = await this._sfCommandService.execute(
-            `sf org display --target-org ${orgAlias}`
+            "sf", ["org", "display", "--target-org", orgAlias]
         );
         return orgDetails;
     }

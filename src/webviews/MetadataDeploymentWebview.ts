@@ -298,9 +298,8 @@ export class MetadataDeploymentWebview {
                 progress.report({ increment: 0 });
 
                 try {
-                    const command = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
                     await this._sfCommandService.execute(
-                        command,
+                        "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
                         tokenSource.token
                     );
 
@@ -422,7 +421,7 @@ export class MetadataDeploymentWebview {
         // Step 1: Retrieve folder from source
         progress.report({ increment: 20 });
         await this._sfCommandService.execute(
-            `sf project retrieve start -m ${folderTypeName}:${folderName} --target-org ${sourceOrg}`,
+            "sf", ["project", "retrieve", "start", "-m", `${folderTypeName}:${folderName}`, "--target-org", sourceOrg],
             token
         );
 
@@ -433,7 +432,7 @@ export class MetadataDeploymentWebview {
         // Step 2: Deploy folder to target
         progress.report({ increment: 40 });
         await this._sfCommandService.execute(
-            `sf project deploy start -m ${folderTypeName}:${folderName} --target-org ${targetOrg}`,
+            "sf", ["project", "deploy", "start", "-m", `${folderTypeName}:${folderName}`, "--target-org", targetOrg],
             token
         );
 
@@ -444,7 +443,7 @@ export class MetadataDeploymentWebview {
         // Step 3: Retrieve item from source
         progress.report({ increment: 60 });
         await this._sfCommandService.execute(
-            `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`,
+            "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
             token
         );
 
@@ -471,8 +470,10 @@ export class MetadataDeploymentWebview {
         token?: vscode.CancellationToken
     ): Promise<void> {
         progress.report({ increment: 33 });
-        const retrieveCommand = `sf project retrieve start -m ${metadataType}:${metadataTypeName} --target-org ${sourceOrg}`;
-        await this._sfCommandService.execute(retrieveCommand, token);
+        await this._sfCommandService.execute(
+            "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
+            token
+        );
     }
 
     private async _deployToTargetOrg(
@@ -485,7 +486,7 @@ export class MetadataDeploymentWebview {
         progress.report({ increment: 66 });
         try {
             return await this._sfCommandService.execute(
-                `sf project deploy start -m ${metadataType}:${metadataTypeName} --target-org ${targetOrg}`,
+                "sf", ["project", "deploy", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", targetOrg],
                 token
             );
         } catch (error: any) {

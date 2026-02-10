@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
 import { HtmlService } from "../services/HtmlService";
-import { SfCommandService } from "../services/SfCommandService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
@@ -13,7 +12,6 @@ export class RecordsMigrationExport {
     private _panel: vscode.WebviewPanel | undefined;
     private _disposables: vscode.Disposable[] = [];
     private _customObject: string;
-    private _sfCommandService: SfCommandService;
     private _orgService: OrgService;
     private _sfBulkApi: SfBulkApi;
     private _sfRestApi: SfRestApi;
@@ -34,7 +32,6 @@ export class RecordsMigrationExport {
             view: this._webviewView,
             extensionUri: this._extensionContext.extensionUri,
         });
-        this._sfCommandService = new SfCommandService();
         this._orgService = new OrgService(this._extensionContext);
         this._sfBulkApi = new SfBulkApi();
         this._sfRestApi = new SfRestApi();

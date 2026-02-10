@@ -424,9 +424,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 });
 
                 try {
-                    const mFlags = metadataFlags.map((f) => `-m ${f}`).join(" ");
-                    const command = `sf project retrieve start ${mFlags} --target-org ${sourceOrg}`;
-                    await this._sfCommandService.execute(command, tokenSource.token);
+                    const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
+                    await this._sfCommandService.execute(
+                        "sf", ["project", "retrieve", "start", ...mFlagArgs, "--target-org", sourceOrg],
+                        tokenSource.token
+                    );
 
                     if (tokenSource.token.isCancellationRequested) {
                         return {};
@@ -511,9 +513,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                         progress.report({
                             message: `Step ${currentStep}/${totalSteps}: Retrieving folders from source...`,
                         });
-                        const folderMFlags = folderFlags.map((f) => `-m ${f}`).join(" ");
+                        const folderMFlagArgs = folderFlags.flatMap((f) => ["-m", f]);
                         await this._sfCommandService.execute(
-                            `sf project retrieve start ${folderMFlags} --target-org ${sourceOrg}`,
+                            "sf", ["project", "retrieve", "start", ...folderMFlagArgs, "--target-org", sourceOrg],
                             tokenSource.token
                         );
 
@@ -528,7 +530,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                             message: `Step ${currentStep}/${totalSteps}: Deploying folders to target...`,
                         });
                         await this._sfCommandService.execute(
-                            `sf project deploy start ${folderMFlags} --target-org ${targetOrg}`,
+                            "sf", ["project", "deploy", "start", ...folderMFlagArgs, "--target-org", targetOrg],
                             tokenSource.token
                         );
 
@@ -543,9 +545,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     progress.report({
                         message: `Step ${currentStep}/${totalSteps}: Retrieving items from source...`,
                     });
-                    const mFlags = metadataFlags.map((f) => `-m ${f}`).join(" ");
+                    const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
                     await this._sfCommandService.execute(
-                        `sf project retrieve start ${mFlags} --target-org ${sourceOrg}`,
+                        "sf", ["project", "retrieve", "start", ...mFlagArgs, "--target-org", sourceOrg],
                         tokenSource.token
                     );
 
@@ -560,7 +562,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                         message: `Step ${currentStep}/${totalSteps}: Deploying items to target...`,
                     });
                     const deployResult = await this._sfCommandService.execute(
-                        `sf project deploy start ${mFlags} --target-org ${targetOrg}`,
+                        "sf", ["project", "deploy", "start", ...mFlagArgs, "--target-org", targetOrg],
                         tokenSource.token
                     );
 

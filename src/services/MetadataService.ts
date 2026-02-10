@@ -40,7 +40,7 @@ export class MetadataService {
      */
     public async listMetadataTypes(targetOrg: string): Promise<Metadata> {
         const metadata = await this._sfCommandService.execute(
-            `sf org list metadata-types --target-org ${targetOrg}`
+            "sf", ["org", "list", "metadata-types", "--target-org", targetOrg]
         );
         return metadata;
     }
@@ -82,7 +82,7 @@ export class MetadataService {
         }
 
         const folders = await this._sfCommandService.execute(
-            `sf org list metadata --target-org ${targetOrg} --metadata-type ${folderType}`
+            "sf", ["org", "list", "metadata", "--target-org", targetOrg, "--metadata-type", folderType]
         );
         return folders;
     }
@@ -99,12 +99,12 @@ export class MetadataService {
         metadataType: string,
         folder?: string
     ): Promise<any[]> {
-        let command = `sf org list metadata --target-org ${targetOrg} --metadata-type ${metadataType}`;
+        const args = ["org", "list", "metadata", "--target-org", targetOrg, "--metadata-type", metadataType];
         if (folder) {
-            command += ` --folder ${folder}`;
+            args.push("--folder", folder);
         }
 
-        const metadata = await this._sfCommandService.execute(command);
+        const metadata = await this._sfCommandService.execute("sf", args);
         return metadata;
     }
 }
