@@ -163,7 +163,10 @@ export class SfBulkApi {
         while (hasMore) {
             const basePath = `/jobs/query/${jobId}/results`;
             const url: string = queryLocator
-                ? this._buildUrl(org, `${basePath}?locator=${queryLocator}`)
+                ? this._buildUrl(
+                      org,
+                      `${basePath}?locator=${encodeURIComponent(queryLocator)}`,
+                  )
                 : this._buildUrl(org, basePath);
 
             const response: Response = await fetch(url, {
