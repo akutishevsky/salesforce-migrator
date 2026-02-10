@@ -3,7 +3,7 @@ import { HtmlService } from "../services/HtmlService";
 
 export type BatchActionCallback = (
     action: "batchRetrieve" | "batchDeploy" | "clearSelections" | "removeItem",
-    data?: { key: string; item: string }
+    data?: { key: string; item: string },
 ) => void;
 
 export class MetadataSelectionView implements vscode.WebviewViewProvider {
@@ -24,7 +24,7 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         this._webviewView = webviewView;
         this._htmlService = new HtmlService({
@@ -145,7 +145,7 @@ export class MetadataSelectionView implements vscode.WebviewViewProvider {
                 }
             },
             undefined,
-            this._extensionContext.subscriptions
+            this._extensionContext.subscriptions,
         );
     }
 }

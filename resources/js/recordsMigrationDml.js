@@ -79,15 +79,16 @@ function renderMappingTable(csvHeaders, fields) {
             actionButton.addEventListener("click", () => {
                 const sourceFile = document.querySelector("#source-file").value;
                 const errorMessage = document.querySelector("#error-message");
-                
+
                 // Validate that a CSV file has been selected
                 if (!sourceFile) {
-                    errorMessage.textContent = "Please select a CSV file before proceeding.";
+                    errorMessage.textContent =
+                        "Please select a CSV file before proceeding.";
                     return;
                 }
-                
+
                 errorMessage.textContent = ""; // Clear any previous error
-                
+
                 const mapping = [];
                 const fieldSelects =
                     document.querySelectorAll(".sfm-field-mapping");
@@ -107,7 +108,7 @@ function renderMappingTable(csvHeaders, fields) {
                 vscode.postMessage({
                     command: "performDmlAction",
                     mapping: mapping,
-                    matchingField: matchingField ? matchingField.value : ""
+                    matchingField: matchingField ? matchingField.value : "",
                     // lineEnding is now detected automatically from the file
                 });
             });
@@ -128,12 +129,12 @@ function renderMappingTable(csvHeaders, fields) {
                 sfmMapping.classList.remove("sfm-hidden");
 
                 const mappingContainer = document.querySelector(
-                    ".sfm-mapping-container"
+                    ".sfm-mapping-container",
                 );
 
                 mappingContainer.innerHTML = renderMappingTable(
                     message.csvHeaders,
-                    message.fields
+                    message.fields,
                 );
 
                 break;

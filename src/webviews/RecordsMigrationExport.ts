@@ -22,7 +22,7 @@ export class RecordsMigrationExport {
     constructor(
         extensionContext: vscode.ExtensionContext,
         webviewView: vscode.WebviewView,
-        customObject: string
+        customObject: string,
     ) {
         this._extensionContext = extensionContext;
         this._webviewView = webviewView;
@@ -44,7 +44,7 @@ export class RecordsMigrationExport {
         this._sourceOrg = this._orgService.getSourceOrg();
         if (!this._sourceOrg) {
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -76,13 +76,13 @@ export class RecordsMigrationExport {
                     case "exportRecords":
                         await this._exportRecords(
                             message.query,
-                            message.destinationFilePath
+                            message.destinationFilePath,
                         );
                         break;
                     default:
                         break;
                 }
-            }
+            },
         );
 
         // Add to disposables for proper cleanup
@@ -91,7 +91,7 @@ export class RecordsMigrationExport {
 
     private _handlePicklistFieldValues(message: any): void {
         const field = this._fields.filter(
-            (f: any) => f.name === message.fieldApiName
+            (f: any) => f.name === message.fieldApiName,
         )[0];
         const picklistValues = field.picklistValues;
         this._panel!.webview.postMessage({
@@ -123,7 +123,7 @@ export class RecordsMigrationExport {
 
     private async _exportRecords(
         query: string,
-        destinationFilePath: string
+        destinationFilePath: string,
     ): Promise<void> {
         try {
             vscode.window.withProgress(
@@ -143,7 +143,7 @@ export class RecordsMigrationExport {
                     }
 
                     const orgDetails = await this._orgService.fetchOrgDetails(
-                        this._sourceOrg
+                        this._sourceOrg,
                     );
                     await this._createFile(destinationFilePath);
                     progress.report({
@@ -153,10 +153,11 @@ export class RecordsMigrationExport {
                     // First, get the expected record count using direct SOQL
                     let expectedRecordCount: number;
                     try {
-                        expectedRecordCount = await this._sfRestApi.queryRecordCount(
-                            orgDetails,
-                            query
-                        );
+                        expectedRecordCount =
+                            await this._sfRestApi.queryRecordCount(
+                                orgDetails,
+                                query,
+                            );
                         progress.report({
                             message: `Expected ${expectedRecordCount} records based on direct SOQL query.`,
                         });
@@ -168,7 +169,7 @@ export class RecordsMigrationExport {
                     try {
                         jobInfo = await this._sfBulkApi.createQueryJob(
                             orgDetails,
-                            query
+                            query,
                         );
                         progress.report({
                             message: `Created the job with ID: ${jobInfo.id}`,
@@ -190,61 +191,74 @@ export class RecordsMigrationExport {
                                 orgDetails,
                                 jobInfo.id,
                                 progress,
-                                token // Pass the cancellation token
+                                token, // Pass the cancellation token
                             );
 
                         const fileUri = this._fileUri!;
                         await vscode.workspace.fs.writeFile(
                             fileUri,
-                            Buffer.from(csvData)
+                            Buffer.from(csvData),
                         );
                         progress.report({
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
                         });
-                        
+
                         // Validate record count if we have an expected count
-                        const lines = csvData.split('\n').filter(line => line.trim().length > 0);
+                        const lines = csvData
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0);
                         const actualRecordCount = Math.max(0, lines.length - 1);
-                        
-                        if (expectedRecordCount >= 0 && actualRecordCount !== expectedRecordCount) {
+
+                        if (
+                            expectedRecordCount >= 0 &&
+                            actualRecordCount !== expectedRecordCount
+                        ) {
                             const message = `⚠️ Record count mismatch detected!\n\nExpected: ${expectedRecordCount} records\nActual: ${actualRecordCount} records\n\nThis may indicate missing records due to Salesforce Bulk API timing issues. Consider re-running the export or using a smaller date range.`;
-                            
+
                             vscode.window
                                 .showWarningMessage(
                                     message,
                                     { modal: true },
                                     "Show File",
-                                    "Re-run Export"
+                                    "Re-run Export",
                                 )
                                 .then((selection) => {
                                     if (selection === "Show File") {
                                         vscode.workspace
                                             .openTextDocument(fileUri)
                                             .then((doc) =>
-                                                vscode.window.showTextDocument(doc)
+                                                vscode.window.showTextDocument(
+                                                    doc,
+                                                ),
                                             );
                                     } else if (selection === "Re-run Export") {
                                         // Re-run the export by calling the same method again
-                                        this._exportRecords(query, fileUri.fsPath);
+                                        this._exportRecords(
+                                            query,
+                                            fileUri.fsPath,
+                                        );
                                     }
                                 });
                         } else {
-                            const successMessage = expectedRecordCount >= 0 
-                                ? `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records (matches expected count).`
-                                : `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records.`;
-                            
+                            const successMessage =
+                                expectedRecordCount >= 0
+                                    ? `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records (matches expected count).`
+                                    : `Records exported successfully to ${fileUri.fsPath}\n\nExported ${actualRecordCount} records.`;
+
                             vscode.window
                                 .showInformationMessage(
                                     successMessage,
                                     { modal: false },
-                                    "Show File"
+                                    "Show File",
                                 )
                                 .then((selection) => {
                                     if (selection === "Show File") {
                                         vscode.workspace
                                             .openTextDocument(fileUri)
                                             .then((doc) =>
-                                                vscode.window.showTextDocument(doc)
+                                                vscode.window.showTextDocument(
+                                                    doc,
+                                                ),
                                             );
                                     }
                                 });
@@ -254,19 +268,19 @@ export class RecordsMigrationExport {
                         if (error.message === "Operation cancelled by user") {
                             try {
                                 await vscode.workspace.fs.delete(
-                                    vscode.Uri.file(destinationFilePath)
+                                    vscode.Uri.file(destinationFilePath),
                                 );
                                 vscode.window.showInformationMessage(
-                                    `Record export operation cancelled. Deleted the ${destinationFilePath} file.`
+                                    `Record export operation cancelled. Deleted the ${destinationFilePath} file.`,
                                 );
                             } catch (error: any) {
                                 console.error(
-                                    `Failed to delete the file: ${error.message}`
+                                    `Failed to delete the file: ${error.message}`,
                                 );
                             }
                         } else {
                             vscode.window.showErrorMessage(
-                                `Failed to retrieve job results: ${error.message}`
+                                `Failed to retrieve job results: ${error.message}`,
                             );
                         }
                     } finally {
@@ -274,11 +288,11 @@ export class RecordsMigrationExport {
                             command: "exportComplete",
                         });
                     }
-                }
+                },
             );
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to export records: ${error.message}`
+                `Failed to export records: ${error.message}`,
             );
         }
     }
@@ -306,7 +320,7 @@ export class RecordsMigrationExport {
                 {
                     enableScripts: true,
                     localResourceRoots: [this._extensionContext.extensionUri],
-                }
+                },
             );
 
             // Register the panel's dispose event
@@ -330,11 +344,11 @@ export class RecordsMigrationExport {
 
         try {
             const orgDetails = await this._orgService.fetchOrgDetails(
-                this._sourceOrg
+                this._sourceOrg,
             );
             const objectDescription = await this._sfRestApi.describeObject(
                 orgDetails,
-                this._customObject
+                this._customObject,
             );
 
             this._fields = objectDescription.fields;
@@ -345,7 +359,7 @@ export class RecordsMigrationExport {
             });
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to retrieve object fields: ${error.message}`
+                `Failed to retrieve object fields: ${error.message}`,
             );
             throw error;
         }
@@ -358,8 +372,8 @@ export class RecordsMigrationExport {
             <div data-object-name="${this._customObject}" class="sfm-container">
                 <div class="sfm-header">
                     <h1>Export ${this._customObject} records from <span class="org-name">${
-            this._sourceOrg
-        }</span> org</h1>
+                        this._sourceOrg
+                    }</span> org</h1>
                 </div>
                 <div class="sfm-content">
                     ${this._composeFieldsToQueryHtml()}
@@ -503,7 +517,7 @@ export class RecordsMigrationExport {
 
         const defaultPath = path.join(
             workspacePath,
-            `salesforce-migrator/${this._customObject}/Export/${this._customObject}_${dateStr}_${timeStr}.csv`
+            `salesforce-migrator/${this._customObject}/Export/${this._customObject}_${dateStr}_${timeStr}.csv`,
         );
 
         let html = `

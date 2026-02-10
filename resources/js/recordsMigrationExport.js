@@ -16,7 +16,7 @@ class FieldSelector {
 
     constructor() {
         this.fieldElements = document.querySelectorAll(
-            ".sfm-field-item > input[type='checkbox']"
+            ".sfm-field-item > input[type='checkbox']",
         );
         this.addAllButton = document.querySelector("#add-all-fields");
         this.clearAllButton = document.querySelector("#clear-all-fields");
@@ -112,11 +112,11 @@ class WhereClausePopulator {
 
     _selectField() {
         const whereFieldSelector = document.querySelector(
-            "#where-field-selector"
+            "#where-field-selector",
         );
         whereFieldSelector.addEventListener("change", (e) => {
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
             whereValueSelect.innerHTML = "";
 
@@ -179,12 +179,12 @@ class WhereClausePopulator {
 
         addWhereClauseButton.addEventListener("click", () => {
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
             const whereValue = document.querySelector("#where-value");
             const whereOperation = document.querySelector("#where-operation");
             const fieldSelector = document.querySelector(
-                "#where-field-selector"
+                "#where-field-selector",
             );
 
             if (!this._selectedFieldApiName || !fieldSelector.value) {
@@ -208,7 +208,7 @@ class WhereClausePopulator {
                 (existingClause) =>
                     existingClause.fieldApiName === whereClause.fieldApiName &&
                     existingClause.operation === whereClause.operation &&
-                    existingClause.value === whereClause.value
+                    existingClause.value === whereClause.value,
             );
 
             if (!clauseExists) {
@@ -220,16 +220,16 @@ class WhereClausePopulator {
 
     _clearWhereClause() {
         const clearWhereClauseButton = document.querySelector(
-            "#clear-where-clause"
+            "#clear-where-clause",
         );
         clearWhereClauseButton.addEventListener("click", () => {
             const whereFieldSelector = document.querySelector(
-                "#where-field-selector"
+                "#where-field-selector",
             );
             const whereOperation = document.querySelector("#where-operation");
             const whereValue = document.querySelector("#where-value");
             const whereValueSelect = document.querySelector(
-                "#where-value-select"
+                "#where-value-select",
             );
             const actualWhereValue =
                 whereValueSelect.style.display === "block"
@@ -240,7 +240,7 @@ class WhereClausePopulator {
                 (clause) =>
                     clause.fieldApiName !== whereFieldSelector.value ||
                     clause.operation !== whereOperation.value ||
-                    clause.value !== actualWhereValue
+                    clause.value !== actualWhereValue,
             );
 
             query.update();
@@ -249,7 +249,7 @@ class WhereClausePopulator {
 
     _clearAllWhereClauses() {
         const clearAllWhereClausesButton = document.querySelector(
-            "#clear-all-where-clauses"
+            "#clear-all-where-clauses",
         );
         clearAllWhereClausesButton.addEventListener("click", () => {
             this.whereClauses = [];
@@ -300,7 +300,7 @@ class Query {
 
     _composeSelectFields() {
         const fieldCheckboxes = document.querySelectorAll(
-            ".sfm-field-item > input[type='checkbox']"
+            ".sfm-field-item > input[type='checkbox']",
         );
 
         const selectedFields = Array.from(fieldCheckboxes)
@@ -501,7 +501,7 @@ class ErrorMessage {
                 switch (command) {
                     case "populatePicklistFieldValues":
                         whereClausePopulator.showPicklistWhereValueSelect(
-                            value
+                            value,
                         );
                         break;
                     case "setDestinationFile":

@@ -40,7 +40,8 @@ const syncSelectAllState = () => {
         return;
     }
     const checkboxes = document.querySelectorAll(".item-checkbox");
-    const allChecked = checkboxes.length > 0 &&
+    const allChecked =
+        checkboxes.length > 0 &&
         Array.from(checkboxes).every((cb) => cb.checked);
     selectAllCheckbox.checked = allChecked;
 };

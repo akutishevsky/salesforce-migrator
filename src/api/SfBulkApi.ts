@@ -50,7 +50,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         operation: string,
         objectName: string,
-        lineEnding: string = "NONE"
+        lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -87,7 +87,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         objectName: string,
         externalIdFieldName: string,
-        lineEnding: string = "NONE"
+        lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
 
@@ -118,7 +118,7 @@ export class SfBulkApi {
      */
     public async createQueryJob(
         org: SalesforceOrg,
-        query: string
+        query: string,
     ): Promise<BulkQueryJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query`;
 
@@ -146,15 +146,15 @@ export class SfBulkApi {
      */
     public async getQueryJobResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
-        let allResults = '';
+        let allResults = "";
         let hasMore = true;
         let queryLocator: string | null = null;
         let isFirstRequest = true;
 
         while (hasMore) {
-            const url: string = queryLocator 
+            const url: string = queryLocator
                 ? `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results?locator=${queryLocator}`
                 : `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
 
@@ -172,23 +172,26 @@ export class SfBulkApi {
             }
 
             const csvData: string = await response.text();
-            const nextRecordsUrl: string | null = response.headers.get('Sforce-Locator');
-            const nextRecordsHeader: string | null = response.headers.get('Sforce-NumberOfRecords');
-            
+            const nextRecordsUrl: string | null =
+                response.headers.get("Sforce-Locator");
+            const nextRecordsHeader: string | null = response.headers.get(
+                "Sforce-NumberOfRecords",
+            );
+
             // For the first request, include the entire response (including headers)
             if (isFirstRequest) {
                 allResults = csvData;
                 isFirstRequest = false;
             } else {
                 // For subsequent requests, skip the header row and append data
-                const lines = csvData.split('\n');
+                const lines = csvData.split("\n");
                 if (lines.length > 1) {
-                    allResults += '\n' + lines.slice(1).join('\n');
+                    allResults += "\n" + lines.slice(1).join("\n");
                 }
             }
 
             // Check if there are more records to fetch
-            if (nextRecordsUrl && nextRecordsUrl !== 'null') {
+            if (nextRecordsUrl && nextRecordsUrl !== "null") {
                 queryLocator = nextRecordsUrl;
                 hasMore = true;
             } else {
@@ -204,7 +207,7 @@ export class SfBulkApi {
      */
     public async getQueryJobStatus(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkQueryJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
@@ -228,7 +231,7 @@ export class SfBulkApi {
      */
     public async getQueryJobInfo(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkQueryJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
@@ -245,7 +248,7 @@ export class SfBulkApi {
         }
 
         const jobInfo = (await response.json()) as BulkQueryJobInfo;
-        
+
         return jobInfo;
     }
 
@@ -254,7 +257,7 @@ export class SfBulkApi {
      */
     public async getDmlJobStatus(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
 
@@ -278,7 +281,7 @@ export class SfBulkApi {
      */
     public async abortQueryJob(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<void> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
 
@@ -331,26 +334,28 @@ export class SfBulkApi {
     public async uploadJobData(
         org: SalesforceOrg,
         jobId: string,
-        csvData: string
+        csvData: string,
     ): Promise<void> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/batches`;
 
         // 1. Remove BOM if present (Windows can add this)
-        let normalizedCsv = csvData.replace(/^\uFEFF/, '');
-        
+        let normalizedCsv = csvData.replace(/^\uFEFF/, "");
+
         // 2. For Windows compatibility, aggressively normalize line endings to LF
         // First convert all CRLF to LF, then ensure no lone CR characters
-        normalizedCsv = normalizedCsv.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        
+        normalizedCsv = normalizedCsv
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n");
+
         // 3. Create buffer with explicit UTF-8 encoding
-        const dataBuffer = Buffer.from(normalizedCsv, 'utf-8');
-        
+        const dataBuffer = Buffer.from(normalizedCsv, "utf-8");
+
         const response = await fetch(url, {
             method: "PUT",
             headers: {
                 Authorization: `Bearer ${org.accessToken}`,
                 "Content-Type": "text/csv",
-                "Accept": "application/json"
+                Accept: "application/json",
             },
             body: dataBuffer,
         });
@@ -372,7 +377,7 @@ export class SfBulkApi {
      */
     public async completeJobUpload(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<BulkDmlJobInfo> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
 
@@ -401,7 +406,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
         progress: vscode.Progress<{ message: string }>,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             // Set up cancellation handling
@@ -419,7 +424,7 @@ export class SfBulkApi {
                         reject(
                             error instanceof Error
                                 ? error
-                                : new Error(String(error))
+                                : new Error(String(error)),
                         );
                     }
                 });
@@ -433,10 +438,11 @@ export class SfBulkApi {
 
                 try {
                     const jobStatus = await this.getQueryJobInfo(org, jobId);
-                    const statusMessage = jobStatus.numberRecordsProcessed !== undefined 
-                        ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
-                        : `Current job state: ${jobStatus.state}`;
-                    
+                    const statusMessage =
+                        jobStatus.numberRecordsProcessed !== undefined
+                            ? `Current job state: ${jobStatus.state} (${jobStatus.numberRecordsProcessed} records processed)`
+                            : `Current job state: ${jobStatus.state}`;
+
                     progress.report({
                         message: statusMessage,
                     });
@@ -447,18 +453,19 @@ export class SfBulkApi {
                         });
                         const results = await this.getQueryJobResults(
                             org,
-                            jobId
+                            jobId,
                         );
-                        
+
                         // Count the number of records retrieved (excluding header row)
-                        const lines = results.split('\n').filter(line => line.trim().length > 0);
+                        const lines = results
+                            .split("\n")
+                            .filter((line) => line.trim().length > 0);
                         const recordCount = Math.max(0, lines.length - 1);
-                        
+
                         progress.report({
                             message: `Retrieved ${recordCount} records from the query job.`,
                         });
-                        
-                        
+
                         resolve(results);
                         return;
                     }
@@ -472,8 +479,8 @@ export class SfBulkApi {
                         });
                         reject(
                             new Error(
-                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`
-                            )
+                                `Job ${jobStatus.state.toLowerCase()}: ${jobId}`,
+                            ),
                         );
                         return;
                     }
@@ -483,7 +490,7 @@ export class SfBulkApi {
                     reject(
                         error instanceof Error
                             ? error
-                            : new Error(String(error))
+                            : new Error(String(error)),
                     );
                 }
             };
@@ -501,7 +508,7 @@ export class SfBulkApi {
      */
     public async getFailedResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/failedResults/`;
 
@@ -529,7 +536,7 @@ export class SfBulkApi {
      */
     public async getSuccessfulResults(
         org: SalesforceOrg,
-        jobId: string
+        jobId: string,
     ): Promise<string> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/successfulResults/`;
 
@@ -552,7 +559,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
         progress: vscode.Progress<{ message: string }>,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<BulkDmlJobInfo> {
         return new Promise<BulkDmlJobInfo>((resolve, reject) => {
             // Set up cancellation handling
@@ -570,7 +577,7 @@ export class SfBulkApi {
                         reject(
                             error instanceof Error
                                 ? error
-                                : new Error(String(error))
+                                : new Error(String(error)),
                         );
                     }
                 });
@@ -607,8 +614,8 @@ export class SfBulkApi {
                             new Error(
                                 `Job ${jobStatus.state.toLowerCase()}: ${jobId}. Error: ${
                                     jobStatus.errorMessage
-                                }`
-                            )
+                                }`,
+                            ),
                         );
                         return;
                     }
@@ -618,7 +625,7 @@ export class SfBulkApi {
                     reject(
                         error instanceof Error
                             ? error
-                            : new Error(String(error))
+                            : new Error(String(error)),
                     );
                 }
             };

@@ -27,7 +27,7 @@ export class RecordsMigrationDml {
         extensionContext: vscode.ExtensionContext,
         webviewView: vscode.WebviewView,
         customObject: string,
-        operation: string
+        operation: string,
     ) {
         this._extensionContext = extensionContext;
         this._customObject = customObject;
@@ -59,7 +59,7 @@ export class RecordsMigrationDml {
             this._panel!.reveal();
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to compose webview panel: ${error.message}`
+                `Failed to compose webview panel: ${error.message}`,
             );
             return;
         }
@@ -74,7 +74,7 @@ export class RecordsMigrationDml {
                 {
                     enableScripts: true,
                     localResourceRoots: [this._extensionContext.extensionUri],
-                }
+                },
             );
 
             // Register the panel's dispose event
@@ -90,7 +90,7 @@ export class RecordsMigrationDml {
     private _renderLoader(): void {
         if (!this._panel) {
             vscode.window.showErrorMessage(
-                "Webview panel is not initialized. Please try again."
+                "Webview panel is not initialized. Please try again.",
             );
             return;
         }
@@ -104,11 +104,11 @@ export class RecordsMigrationDml {
 
         try {
             const orgDetails = await this._orgService.fetchOrgDetails(
-                this._targetOrg
+                this._targetOrg,
             );
             const objectDescription = await this._sfRestApi.describeObject(
                 orgDetails,
-                this._customObject
+                this._customObject,
             );
 
             this._fields = objectDescription.fields;
@@ -119,7 +119,7 @@ export class RecordsMigrationDml {
             });
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to retrieve object fields: ${error.message}`
+                `Failed to retrieve object fields: ${error.message}`,
             );
             throw error;
         }
@@ -144,13 +144,13 @@ export class RecordsMigrationDml {
                     case "performDmlAction":
                         await this._performDmlAction(
                             message.mapping,
-                            message.matchingField
+                            message.matchingField,
                         );
                         break;
                     default:
                         break;
                 }
-            }
+            },
         );
 
         // Add to disposables for proper cleanup
@@ -166,7 +166,7 @@ export class RecordsMigrationDml {
 
         const defaultPath = path.join(
             workspacePath,
-            `salesforce-migrator/${this._customObject}`
+            `salesforce-migrator/${this._customObject}`,
         );
 
         const selectedSourceFile = await vscode.window.showOpenDialog({
@@ -186,7 +186,7 @@ export class RecordsMigrationDml {
 
             // read the file content and extract csv headers
             const fileContent = await vscode.workspace.fs.readFile(
-                this._selectedSourceFile
+                this._selectedSourceFile,
             );
             const fileContentString = fileContent.toString();
 
@@ -220,12 +220,12 @@ export class RecordsMigrationDml {
 
     private async _performDmlAction(
         mapping: [string, string][],
-        matchingField: string
+        matchingField: string,
     ): Promise<void> {
         // Validate that a CSV file was selected
         if (!this._selectedSourceFile) {
             vscode.window.showErrorMessage(
-                "Please select a CSV file before performing the DML action."
+                "Please select a CSV file before performing the DML action.",
             );
             return;
         }
@@ -251,11 +251,11 @@ export class RecordsMigrationDml {
                     }
 
                     const targetOrg = await this._orgService.fetchOrgDetails(
-                        this._targetOrg!
+                        this._targetOrg!,
                     );
                     if (!targetOrg) {
                         vscode.window.showErrorMessage(
-                            "Target org is not defined"
+                            "Target org is not defined",
                         );
                         return;
                     }
@@ -270,13 +270,13 @@ export class RecordsMigrationDml {
                                   targetOrg,
                                   this._customObject,
                                   matchingField,
-                                  "LF" // Force LF line ending for consistency
+                                  "LF", // Force LF line ending for consistency
                               )
                             : await this._sfBulkApi.createDmlJob(
                                   targetOrg,
                                   this._operation,
                                   this._customObject,
-                                  "LF" // Force LF line ending for consistency
+                                  "LF", // Force LF line ending for consistency
                               );
                     progress.report({
                         message: `Created the ${this._operation} job with Id: ${jobInfo.id}`,
@@ -285,7 +285,7 @@ export class RecordsMigrationDml {
                     if (token.isCancellationRequested) {
                         await this._sfBulkApi.abortDmlJob(
                             targetOrg,
-                            jobInfo.id
+                            jobInfo.id,
                         );
                         throw new Error("Operation cancelled by user");
                     }
@@ -293,7 +293,7 @@ export class RecordsMigrationDml {
                     await this._sfBulkApi.uploadJobData(
                         targetOrg,
                         jobInfo.id,
-                        this._mappedCsv
+                        this._mappedCsv,
                     );
                     progress.report({
                         message: `Started uploading ${this._operation} job data`,
@@ -301,14 +301,14 @@ export class RecordsMigrationDml {
                     if (token.isCancellationRequested) {
                         await this._sfBulkApi.abortDmlJob(
                             targetOrg,
-                            jobInfo.id
+                            jobInfo.id,
                         );
                         throw new Error("Operation cancelled by user");
                     }
 
                     await this._sfBulkApi.completeJobUpload(
                         targetOrg,
-                        jobInfo.id
+                        jobInfo.id,
                     );
                     progress.report({
                         message: `Completed uploading ${this._operation} job data`,
@@ -318,7 +318,7 @@ export class RecordsMigrationDml {
                     if (token.isCancellationRequested) {
                         await this._sfBulkApi.abortDmlJob(
                             targetOrg,
-                            jobInfo.id
+                            jobInfo.id,
                         );
                         throw new Error("Operation cancelled by user");
                     }
@@ -328,7 +328,7 @@ export class RecordsMigrationDml {
                             targetOrg,
                             jobInfo.id,
                             progress,
-                            token
+                            token,
                         );
 
                     await this._saveFailedRecords(jobInfo, targetOrg, progress);
@@ -336,21 +336,21 @@ export class RecordsMigrationDml {
                     await this._saveSuccessfulRecords(
                         jobInfo,
                         targetOrg,
-                        progress
+                        progress,
                     );
 
                     vscode.window.showInformationMessage(
-                        `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}.`
+                        `The ${this._operation} job is completed with state: ${jobResult.state}. Records processed: ${jobResult.numberRecordsProcessed}.`,
                     );
                 } catch (error: any) {
                     vscode.window.showErrorMessage(error.message);
                 }
-            }
+            },
         );
     }
 
     private async _applyCsvHeadersMapping(
-        mapping: [string, string][]
+        mapping: [string, string][],
     ): Promise<void> {
         const fileContentString = await this._validateAndLoadFile();
         this._detectAndSetLineEndings(fileContentString);
@@ -366,7 +366,7 @@ export class RecordsMigrationDml {
         const processedRows = this._processRowsWithMapping(
             parsedCsv,
             headerIndicesToKeep,
-            headerToFieldMap
+            headerToFieldMap,
         );
 
         // Always use LF line endings for consistency with job settings
@@ -378,12 +378,12 @@ export class RecordsMigrationDml {
     private async _validateAndLoadFile(): Promise<string> {
         if (!this._selectedSourceFile) {
             throw new Error(
-                "No source file selected. Please select a CSV file before proceeding."
+                "No source file selected. Please select a CSV file before proceeding.",
             );
         }
 
         const fileContent = await vscode.workspace.fs.readFile(
-            this._selectedSourceFile
+            this._selectedSourceFile,
         );
 
         return fileContent.toString();
@@ -410,7 +410,7 @@ export class RecordsMigrationDml {
 
     private _createMappingStructures(
         csvHeaders: string[],
-        mapping: [string, string][]
+        mapping: [string, string][],
     ): {
         headerToFieldMap: Map<string, string>;
         headerIndicesToKeep: number[];
@@ -437,7 +437,7 @@ export class RecordsMigrationDml {
     private _processRowsWithMapping(
         parsedCsv: string[][],
         headerIndicesToKeep: number[],
-        headerToFieldMap: Map<string, string>
+        headerToFieldMap: Map<string, string>,
     ): string[][] {
         // Process each row to keep only mapped columns
         const processedRows = parsedCsv.map((row: string[]) => {
@@ -460,7 +460,7 @@ export class RecordsMigrationDml {
     private async _saveFailedRecords(
         jobInfo: BulkDmlJobInfo,
         targetOrg: SalesforceOrg,
-        progress: vscode.Progress<{ message: string }>
+        progress: vscode.Progress<{ message: string }>,
     ): Promise<void> {
         progress.report({
             message: `Getting failed results for job ${jobInfo.id}...`,
@@ -469,19 +469,19 @@ export class RecordsMigrationDml {
         try {
             const failedResults = await this._sfBulkApi.getFailedResults(
                 targetOrg,
-                jobInfo.id
+                jobInfo.id,
             );
 
             const filePath = await this._saveRecordsToFile(
                 failedResults,
-                "Failed"
+                "Failed",
             );
 
             vscode.window
                 .showInformationMessage(
                     `Failed records saved to ${filePath}`,
                     { modal: false },
-                    "Show File"
+                    "Show File",
                 )
                 .then((selection) => {
                     if (selection === "Show File") {
@@ -492,7 +492,7 @@ export class RecordsMigrationDml {
                 });
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Job completed but failed to retrieve failed records: ${error.message}`
+                `Job completed but failed to retrieve failed records: ${error.message}`,
             );
         }
     }
@@ -500,7 +500,7 @@ export class RecordsMigrationDml {
     private async _saveSuccessfulRecords(
         jobInfo: BulkDmlJobInfo,
         targetOrg: SalesforceOrg,
-        progress: vscode.Progress<{ message: string }>
+        progress: vscode.Progress<{ message: string }>,
     ): Promise<void> {
         try {
             progress.report({
@@ -510,19 +510,19 @@ export class RecordsMigrationDml {
             const successfulResults =
                 await this._sfBulkApi.getSuccessfulResults(
                     targetOrg,
-                    jobInfo.id
+                    jobInfo.id,
                 );
 
             const filePath = await this._saveRecordsToFile(
                 successfulResults,
-                "Succeeded"
+                "Succeeded",
             );
 
             vscode.window
                 .showInformationMessage(
                     `Successful records saved to ${filePath}`,
                     { modal: false },
-                    "Show File"
+                    "Show File",
                 )
                 .then((selection) => {
                     if (selection === "Show File") {
@@ -533,14 +533,14 @@ export class RecordsMigrationDml {
                 });
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Job completed but failed to retrieve successful records: ${error.message}`
+                `Job completed but failed to retrieve successful records: ${error.message}`,
             );
         }
     }
 
     private async _saveRecordsToFile(
         content: string,
-        status: "Failed" | "Succeeded"
+        status: "Failed" | "Succeeded",
     ): Promise<string> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const workspacePath =
@@ -554,19 +554,19 @@ export class RecordsMigrationDml {
 
         const dirPath = path.join(
             workspacePath,
-            `salesforce-migrator/${this._customObject}/${this._operation}/${status}`
+            `salesforce-migrator/${this._customObject}/${this._operation}/${status}`,
         );
 
         await vscode.workspace.fs.createDirectory(vscode.Uri.file(dirPath));
 
         const filePath = path.join(
             dirPath,
-            `${this._customObject}_${dateStr}_${timeStr}.csv`
+            `${this._customObject}_${dateStr}_${timeStr}.csv`,
         );
 
         await vscode.workspace.fs.writeFile(
             vscode.Uri.file(filePath),
-            Buffer.from(content)
+            Buffer.from(content),
         );
 
         return filePath;
@@ -582,8 +582,8 @@ export class RecordsMigrationDml {
 
         html += `
             <div data-object-name="${this._customObject}" data-dml-operation="${
-            this._operation
-        }" class="sfm-container">
+                this._operation
+            }" class="sfm-container">
                 <div class="sfm-header">
                     <h1>${heading}</h1>
                 </div>
@@ -650,7 +650,7 @@ export class RecordsMigrationDml {
         let optionsHtml = "";
 
         const idLookupFields = this._fields.filter(
-            (field: any) => field.idLookup === true && field.name !== "Id"
+            (field: any) => field.idLookup === true && field.name !== "Id",
         );
 
         idLookupFields.forEach((field: any) => {

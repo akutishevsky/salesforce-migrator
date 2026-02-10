@@ -21,7 +21,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         this._webviewView = webviewView;
         this._htmlService = new HtmlService({
@@ -40,7 +40,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         if (!sourceOrg) {
             this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -123,7 +123,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this),
             undefined,
-            this._extensionContext.subscriptions
+            this._extensionContext.subscriptions,
         );
     }
 
@@ -144,7 +144,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                     {
                         placeHolder: `Select migration operation for ${customObject}`,
                         canPickMany: false,
-                    }
+                    },
                 );
 
                 if (selectedOperation) {
@@ -156,7 +156,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
 
     private _openMigrationWebview(
         customObject: string,
-        operation: string
+        operation: string,
     ): void {
         if (operation === "Export") {
             this._openExportWebview(customObject);
@@ -172,16 +172,16 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
 
     private _exportWebview: RecordsMigrationExport | undefined;
     private _dmlWebview: RecordsMigrationDml | undefined;
-    
+
     private _openExportWebview(customObject: string): void {
         // Dispose any existing export webview
         this._exportWebview = undefined;
-        
+
         // Create new export webview
         this._exportWebview = new RecordsMigrationExport(
             this._extensionContext,
             this._webviewView!,
-            customObject
+            customObject,
         );
         this._exportWebview.reveal();
     }
@@ -189,13 +189,13 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private _openDmlWebview(customObject: string, operation: string): void {
         // Dispose any existing DML webview
         this._dmlWebview = undefined;
-        
+
         // Create new DML webview
         this._dmlWebview = new RecordsMigrationDml(
             this._extensionContext,
             this._webviewView!,
             customObject,
-            operation
+            operation,
         );
         this._dmlWebview.reveal();
     }
@@ -211,7 +211,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         this._exportWebview = undefined;
         this._dmlWebview = undefined;
     }
-    
+
     public async refreshRecords(): Promise<void> {
         if (!this._webviewView) {
             return;
@@ -221,7 +221,7 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
         if (!sourceOrg) {
             this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -239,16 +239,16 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
                         await this._objectService.getCustomObjects(sourceOrg);
                     this._composeWebviewHtml(customObjects);
                     vscode.window.showInformationMessage(
-                        "Custom objects refreshed successfully."
+                        "Custom objects refreshed successfully.",
                     );
                 } catch (error: any) {
                     vscode.window.showErrorMessage(
                         `Failed to refresh custom objects: ${
                             error.message || error
-                        }`
+                        }`,
                     );
                 }
-            }
+            },
         );
     }
 }

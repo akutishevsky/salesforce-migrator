@@ -30,13 +30,12 @@ export class HtmlService {
             this._extensionUri,
             "resources",
             "html",
-            LOADING_HTML_PATH
+            LOADING_HTML_PATH,
         );
         const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
         return htmlContent;
     }
 
-    
     /**
      * @returns {string} The `HTML` string for the specified file.
      */
@@ -45,7 +44,7 @@ export class HtmlService {
             this._extensionUri,
             "resources",
             "html",
-            NO_SOURCE_ORG_HTML_PATH
+            NO_SOURCE_ORG_HTML_PATH,
         );
         const htmlContent = fs.readFileSync(htmlFilePath.fsPath, "utf8");
         return htmlContent;
@@ -97,7 +96,7 @@ export class HtmlService {
                     rel="stylesheet" 
                     href="
                         ${this._webviewView?.webview.asWebviewUri(
-                            vscode.Uri.joinPath(this._extensionUri, style)
+                            vscode.Uri.joinPath(this._extensionUri, style),
                         )}" 
                 />`;
         }
@@ -113,7 +112,7 @@ export class HtmlService {
                 <script 
                     src="
                         ${this._webviewView?.webview.asWebviewUri(
-                            vscode.Uri.joinPath(this._extensionUri, script)
+                            vscode.Uri.joinPath(this._extensionUri, script),
                         )}" 
                 ></script>`;
         }

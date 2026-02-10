@@ -33,7 +33,7 @@ export class SfCommandService {
     public async execute(
         command: string,
         args: string[],
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<any> {
         const argsWithJsonFlag = this._addJsonFlag(args);
         let childProcess: ChildProcess | null = null;
@@ -43,13 +43,13 @@ export class SfCommandService {
 
             const { cancelled, disposable } = this._setupCancellationHandling(
                 childProcess,
-                token
+                token,
             );
 
             const { stdout, stderr } = await this._executeChildProcess(
                 childProcess,
                 disposable,
-                cancelled
+                cancelled,
             );
 
             return this._parseCommandOutput(stdout, stderr);
@@ -81,7 +81,7 @@ export class SfCommandService {
      */
     private _setupCancellationHandling(
         childProcess: ChildProcess,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): { cancelled: boolean; disposable: vscode.Disposable | undefined } {
         let cancelled = false;
         const disposable = token?.onCancellationRequested(() => {
@@ -104,7 +104,7 @@ export class SfCommandService {
     private _executeChildProcess(
         childProcess: ChildProcess,
         disposable: vscode.Disposable | undefined,
-        cancelled: boolean
+        cancelled: boolean,
     ): Promise<CommandOutput> {
         return new Promise((resolve, reject) => {
             let stdout = "";
@@ -198,7 +198,7 @@ export class SfCommandService {
      */
     private _isSalesforceCLIUpdateWarning(message: string): boolean {
         return message.includes(
-            "Warning: @salesforce/cli update available from"
+            "Warning: @salesforce/cli update available from",
         );
     }
 }

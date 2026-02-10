@@ -7,7 +7,7 @@ import { SfCommandService } from "../services/SfCommandService";
 export type SelectionChangedCallback = (
     metadataType: string,
     folder: string | undefined,
-    selectedItems: string[]
+    selectedItems: string[],
 ) => void;
 
 export class MetadataDeploymentWebview {
@@ -27,7 +27,7 @@ export class MetadataDeploymentWebview {
     constructor(
         extensionContext: vscode.ExtensionContext,
         webviewView: vscode.WebviewView,
-        onSelectionChanged?: SelectionChangedCallback
+        onSelectionChanged?: SelectionChangedCallback,
     ) {
         this._extensionContext = extensionContext;
         this._webviewView = webviewView;
@@ -58,7 +58,11 @@ export class MetadataDeploymentWebview {
         }
     }
 
-    public async reveal(metadataType?: string, folder?: string, selectedItems?: string[]): Promise<void> {
+    public async reveal(
+        metadataType?: string,
+        folder?: string,
+        selectedItems?: string[],
+    ): Promise<void> {
         this._currentMetadataType = metadataType;
         this._currentFolder = folder;
 
@@ -69,7 +73,7 @@ export class MetadataDeploymentWebview {
             const sourceOrg = this._orgService.getSourceOrg();
             if (!sourceOrg) {
                 vscode.window.showErrorMessage(
-                    "No source org selected. Please select a source org first."
+                    "No source org selected. Please select a source org first.",
                 );
                 this._disposePanel();
                 return;
@@ -78,7 +82,7 @@ export class MetadataDeploymentWebview {
             const targetOrg = this._orgService.getTargetOrg();
             if (!targetOrg) {
                 vscode.window.showErrorMessage(
-                    "No target org selected. Please select a target org first."
+                    "No target org selected. Please select a target org first.",
                 );
                 this._panel!.webview.html = this._htmlService.composeHtml({
                     body: `
@@ -96,7 +100,7 @@ export class MetadataDeploymentWebview {
             const metadata = await this._metadataService.listMetadataByType(
                 sourceOrg,
                 metadataType!,
-                folder
+                folder,
             );
 
             this._panel!.webview.html = this._htmlService.composeHtml({
@@ -109,7 +113,7 @@ export class MetadataDeploymentWebview {
                 this._panel!.webview,
                 metadataType!,
                 sourceOrg,
-                folder
+                folder,
             );
 
             this._panel!.reveal();
@@ -127,7 +131,7 @@ export class MetadataDeploymentWebview {
                 });
             }
             vscode.window.showErrorMessage(
-                `Error while retrieving metadata: ${error}`
+                `Error while retrieving metadata: ${error}`,
             );
         }
     }
@@ -145,7 +149,7 @@ export class MetadataDeploymentWebview {
                 {
                     enableScripts: true,
                     localResourceRoots: [this._extensionContext.extensionUri],
-                }
+                },
             );
 
             // Register the panel's dispose event
@@ -164,7 +168,10 @@ export class MetadataDeploymentWebview {
         this._panel!.webview.html = this._htmlService.getLoaderHtml();
     }
 
-    private _composeWebviewHtml(metadata: any, selectedItems: string[]): string {
+    private _composeWebviewHtml(
+        metadata: any,
+        selectedItems: string[],
+    ): string {
         let html = "";
 
         html += `
@@ -195,7 +202,10 @@ export class MetadataDeploymentWebview {
         `;
     }
 
-    private _composeTableBodyHtml(metadata: any, selectedItems: string[]): string {
+    private _composeTableBodyHtml(
+        metadata: any,
+        selectedItems: string[],
+    ): string {
         let html = "";
 
         metadata.sort((a: any, b: any) => {
@@ -203,7 +213,9 @@ export class MetadataDeploymentWebview {
         });
 
         for (const item of metadata) {
-            const isChecked = selectedItems.includes(item.fullName) ? "checked" : "";
+            const isChecked = selectedItems.includes(item.fullName)
+                ? "checked"
+                : "";
             html += `
                 <tr>
                     <td class="col-select" data-label="Select">
@@ -238,7 +250,7 @@ export class MetadataDeploymentWebview {
         webview: vscode.Webview,
         metadataType: string,
         sourceOrg: string,
-        folder?: string
+        folder?: string,
     ): void {
         // Clean up previous listener if it exists
         this._clearMessageListener();
@@ -250,14 +262,14 @@ export class MetadataDeploymentWebview {
                     await this._retrieveMetadata(
                         metadataType,
                         message.metadataTypeName,
-                        sourceOrg
+                        sourceOrg,
                     );
                     break;
                 case "deploy":
                     this._deployMetadata(
                         metadataType,
                         message.metadataTypeName,
-                        sourceOrg
+                        sourceOrg,
                     );
                     break;
                 case "selectionChanged":
@@ -265,7 +277,7 @@ export class MetadataDeploymentWebview {
                         this._onSelectionChanged(
                             metadataType,
                             folder,
-                            message.selectedItems
+                            message.selectedItems,
                         );
                     }
                     break;
@@ -279,7 +291,7 @@ export class MetadataDeploymentWebview {
     private async _retrieveMetadata(
         metadataType: string,
         metadataTypeName: string,
-        sourceOrg: string
+        sourceOrg: string,
     ): Promise<void> {
         const tokenSource = new vscode.CancellationTokenSource();
 
@@ -299,36 +311,45 @@ export class MetadataDeploymentWebview {
 
                 try {
                     await this._sfCommandService.execute(
-                        "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
-                        tokenSource.token
+                        "sf",
+                        [
+                            "project",
+                            "retrieve",
+                            "start",
+                            "-m",
+                            `${metadataType}:${metadataTypeName}`,
+                            "--target-org",
+                            sourceOrg,
+                        ],
+                        tokenSource.token,
                     );
 
                     if (!tokenSource.token.isCancellationRequested) {
                         vscode.window.showInformationMessage(
-                            `Metadata of type ${metadataTypeName} retrieved successfully.`
+                            `Metadata of type ${metadataTypeName} retrieved successfully.`,
                         );
                     }
                 } catch (error: any) {
                     if (error.message === "Operation cancelled") {
                         vscode.window.showInformationMessage(
-                            `Retrieval of ${metadataTypeName} was cancelled.`
+                            `Retrieval of ${metadataTypeName} was cancelled.`,
                         );
                     } else {
                         vscode.window.showErrorMessage(
-                            `Error retrieving ${metadataTypeName}: ${error}`
+                            `Error retrieving ${metadataTypeName}: ${error}`,
                         );
                     }
                 } finally {
                     tokenSource.dispose();
                 }
-            }
+            },
         );
     }
 
     public async _deployMetadata(
         metadataType: string,
         metadataTypeName: string,
-        sourceOrg: string
+        sourceOrg: string,
     ): Promise<void> {
         const tokenSource = new vscode.CancellationTokenSource();
 
@@ -347,38 +368,48 @@ export class MetadataDeploymentWebview {
                 const targetOrg = this._orgService.getTargetOrg();
                 if (!targetOrg) {
                     vscode.window.showErrorMessage(
-                        "No target org selected. Please select a target org first."
+                        "No target org selected. Please select a target org first.",
                     );
                     return;
                 }
 
                 try {
-                    const folderTypeName = this._metadataService.getFolderTypeName(metadataType);
+                    const folderTypeName =
+                        this._metadataService.getFolderTypeName(metadataType);
                     if (folderTypeName && metadataTypeName.includes("/")) {
                         await this._deployFolderBasedMetadata(
-                            progress, metadataType, metadataTypeName,
-                            folderTypeName, sourceOrg, targetOrg, tokenSource.token
+                            progress,
+                            metadataType,
+                            metadataTypeName,
+                            folderTypeName,
+                            sourceOrg,
+                            targetOrg,
+                            tokenSource.token,
                         );
                     } else {
                         await this._deployStandardMetadata(
-                            progress, metadataType, metadataTypeName,
-                            sourceOrg, targetOrg, tokenSource.token
+                            progress,
+                            metadataType,
+                            metadataTypeName,
+                            sourceOrg,
+                            targetOrg,
+                            tokenSource.token,
                         );
                     }
                 } catch (error: any) {
                     if (error.message === "Operation cancelled") {
                         vscode.window.showInformationMessage(
-                            `Deployment of ${metadataTypeName} was cancelled.`
+                            `Deployment of ${metadataTypeName} was cancelled.`,
                         );
                     } else {
                         vscode.window.showErrorMessage(
-                            `Error deploying ${metadataTypeName}: ${error}`
+                            `Error deploying ${metadataTypeName}: ${error}`,
                         );
                     }
                 } finally {
                     tokenSource.dispose();
                 }
-            }
+            },
         );
     }
 
@@ -388,10 +419,14 @@ export class MetadataDeploymentWebview {
         metadataTypeName: string,
         sourceOrg: string,
         targetOrg: string,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         await this._retrieveMetadataWithProgress(
-            progress, metadataType, metadataTypeName, sourceOrg, token
+            progress,
+            metadataType,
+            metadataTypeName,
+            sourceOrg,
+            token,
         );
 
         if (token.isCancellationRequested) {
@@ -399,11 +434,19 @@ export class MetadataDeploymentWebview {
         }
 
         const deployResult = await this._deployToTargetOrg(
-            progress, metadataType, metadataTypeName, targetOrg, token
+            progress,
+            metadataType,
+            metadataTypeName,
+            targetOrg,
+            token,
         );
 
         if (!token.isCancellationRequested) {
-            await this._showDeploymentResult(deployResult, metadataTypeName, progress);
+            await this._showDeploymentResult(
+                deployResult,
+                metadataTypeName,
+                progress,
+            );
         }
     }
 
@@ -414,15 +457,24 @@ export class MetadataDeploymentWebview {
         folderTypeName: string,
         sourceOrg: string,
         targetOrg: string,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         const folderName = metadataTypeName.split("/")[0];
 
         // Step 1: Retrieve folder from source
         progress.report({ increment: 20 });
         await this._sfCommandService.execute(
-            "sf", ["project", "retrieve", "start", "-m", `${folderTypeName}:${folderName}`, "--target-org", sourceOrg],
-            token
+            "sf",
+            [
+                "project",
+                "retrieve",
+                "start",
+                "-m",
+                `${folderTypeName}:${folderName}`,
+                "--target-org",
+                sourceOrg,
+            ],
+            token,
         );
 
         if (token.isCancellationRequested) {
@@ -432,8 +484,17 @@ export class MetadataDeploymentWebview {
         // Step 2: Deploy folder to target
         progress.report({ increment: 40 });
         await this._sfCommandService.execute(
-            "sf", ["project", "deploy", "start", "-m", `${folderTypeName}:${folderName}`, "--target-org", targetOrg],
-            token
+            "sf",
+            [
+                "project",
+                "deploy",
+                "start",
+                "-m",
+                `${folderTypeName}:${folderName}`,
+                "--target-org",
+                targetOrg,
+            ],
+            token,
         );
 
         if (token.isCancellationRequested) {
@@ -443,8 +504,17 @@ export class MetadataDeploymentWebview {
         // Step 3: Retrieve item from source
         progress.report({ increment: 60 });
         await this._sfCommandService.execute(
-            "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
-            token
+            "sf",
+            [
+                "project",
+                "retrieve",
+                "start",
+                "-m",
+                `${metadataType}:${metadataTypeName}`,
+                "--target-org",
+                sourceOrg,
+            ],
+            token,
         );
 
         if (token.isCancellationRequested) {
@@ -454,11 +524,19 @@ export class MetadataDeploymentWebview {
         // Step 4: Deploy item to target
         progress.report({ increment: 80 });
         const deployResult = await this._deployToTargetOrg(
-            progress, metadataType, metadataTypeName, targetOrg, token
+            progress,
+            metadataType,
+            metadataTypeName,
+            targetOrg,
+            token,
         );
 
         if (!token.isCancellationRequested) {
-            await this._showDeploymentResult(deployResult, metadataTypeName, progress);
+            await this._showDeploymentResult(
+                deployResult,
+                metadataTypeName,
+                progress,
+            );
         }
     }
 
@@ -467,12 +545,21 @@ export class MetadataDeploymentWebview {
         metadataType: string,
         metadataTypeName: string,
         sourceOrg: string,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<void> {
         progress.report({ increment: 33 });
         await this._sfCommandService.execute(
-            "sf", ["project", "retrieve", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", sourceOrg],
-            token
+            "sf",
+            [
+                "project",
+                "retrieve",
+                "start",
+                "-m",
+                `${metadataType}:${metadataTypeName}`,
+                "--target-org",
+                sourceOrg,
+            ],
+            token,
         );
     }
 
@@ -481,13 +568,22 @@ export class MetadataDeploymentWebview {
         metadataType: string,
         metadataTypeName: string,
         targetOrg: string,
-        token?: vscode.CancellationToken
+        token?: vscode.CancellationToken,
     ): Promise<any> {
         progress.report({ increment: 66 });
         try {
             return await this._sfCommandService.execute(
-                "sf", ["project", "deploy", "start", "-m", `${metadataType}:${metadataTypeName}`, "--target-org", targetOrg],
-                token
+                "sf",
+                [
+                    "project",
+                    "deploy",
+                    "start",
+                    "-m",
+                    `${metadataType}:${metadataTypeName}`,
+                    "--target-org",
+                    targetOrg,
+                ],
+                token,
             );
         } catch (error: any) {
             if (error.message === "Operation cancelled") {
@@ -500,7 +596,7 @@ export class MetadataDeploymentWebview {
     private async _showDeploymentResult(
         deployResult: any,
         metadataTypeName: string,
-        progress: vscode.Progress<{ increment?: number }>
+        progress: vscode.Progress<{ increment?: number }>,
     ): Promise<void> {
         progress.report({ increment: 100 });
         if (deployResult.success) {
@@ -512,12 +608,12 @@ export class MetadataDeploymentWebview {
 
     private async _showSuccessNotification(
         deployResult: any,
-        metadataTypeName: string
+        metadataTypeName: string,
     ): Promise<void> {
         const deployMessage = `${metadataTypeName} successfully deployed.`;
         const selection = await vscode.window.showInformationMessage(
             deployMessage,
-            "View Deploy URL"
+            "View Deploy URL",
         );
 
         if (selection === "View Deploy URL") {
@@ -528,13 +624,13 @@ export class MetadataDeploymentWebview {
     private async _showErrorNotification(deployResult: any): Promise<void> {
         const componentFailures = deployResult?.details?.componentFailures;
         const problems = componentFailures.map(
-            (failure: any) => failure.problem
+            (failure: any) => failure.problem,
         );
         const deployMessage = `Failed. Problems: ${problems.join(" • ")}`;
 
         const selection = await vscode.window.showErrorMessage(
             deployMessage,
-            "View Deploy URL"
+            "View Deploy URL",
         );
 
         if (selection === "View Deploy URL") {

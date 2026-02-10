@@ -62,7 +62,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         if (!sourceOrg) {
             this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -77,25 +77,25 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 try {
                     this._metadataObjects =
                         await this._metadataService.fetchMetadataObjects(
-                            sourceOrg
+                            sourceOrg,
                         );
                     this._composeWebviewHtml(this._metadataObjects);
                     vscode.window.showInformationMessage(
-                        "Metadata refreshed successfully."
+                        "Metadata refreshed successfully.",
                     );
                 } catch (error: any) {
                     vscode.window.showErrorMessage(
-                        `Failed to refresh metadata: ${error.message || error}`
+                        `Failed to refresh metadata: ${error.message || error}`,
                     );
                 }
-            }
+            },
         );
     }
 
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         context: vscode.WebviewViewResolveContext,
-        token: vscode.CancellationToken
+        token: vscode.CancellationToken,
     ): Promise<void> {
         this._webviewView = webviewView;
         this._htmlService = new HtmlService({
@@ -113,14 +113,14 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         this._deploymentWebview = new MetadataDeploymentWebview(
             this._extensionContext,
             this._webviewView,
-            this._onSelectionChanged.bind(this)
+            this._onSelectionChanged.bind(this),
         );
 
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
             this._renderNoSourceOrg();
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -133,7 +133,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             this._setupMessageListener(webviewView);
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to load metadata: ${error.message || error}`
+                `Failed to load metadata: ${error.message || error}`,
             );
             this._showErrorState();
         }
@@ -197,7 +197,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     }
 
     private _composeMetadataListHtml(
-        metadataObjects: MetadataObject[]
+        metadataObjects: MetadataObject[],
     ): string {
         let html = `<div class="list">`;
         for (const metadataObject of metadataObjects) {
@@ -222,7 +222,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _onSelectionChanged(
         metadataType: string,
         folder: string | undefined,
-        selectedItems: string[]
+        selectedItems: string[],
     ): void {
         const key = this._getSelectionKey(metadataType, folder);
 
@@ -268,7 +268,10 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             return;
         }
 
-        const key = this._getSelectionKey(currentType, this._deploymentWebview.currentFolder);
+        const key = this._getSelectionKey(
+            currentType,
+            this._deploymentWebview.currentFolder,
+        );
         const selected = this._selectedItems.get(key) || [];
         this._deploymentWebview.updateCheckboxSelections(selected);
     }
@@ -277,7 +280,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(
             this._processWebviewMessage.bind(this),
             undefined,
-            this._extensionContext.subscriptions
+            this._extensionContext.subscriptions,
         );
     }
 
@@ -295,14 +298,18 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             case "metadataSelected":
                 if (!this._deploymentWebview) {
                     vscode.window.showErrorMessage(
-                        "Deployment webview is not initialized."
+                        "Deployment webview is not initialized.",
                     );
                     return;
                 }
                 {
                     const key = this._getSelectionKey(message.metadata);
                     const selected = this._selectedItems.get(key) || [];
-                    this._deploymentWebview.reveal(message.metadata, undefined, selected);
+                    this._deploymentWebview.reveal(
+                        message.metadata,
+                        undefined,
+                        selected,
+                    );
                 }
                 break;
             case "expandFolders":
@@ -311,14 +318,21 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             case "folderSelected":
                 if (!this._deploymentWebview) {
                     vscode.window.showErrorMessage(
-                        "Deployment webview is not initialized."
+                        "Deployment webview is not initialized.",
                     );
                     return;
                 }
                 {
-                    const key = this._getSelectionKey(message.metadataType, message.folder);
+                    const key = this._getSelectionKey(
+                        message.metadataType,
+                        message.folder,
+                    );
                     const selected = this._selectedItems.get(key) || [];
-                    this._deploymentWebview.reveal(message.metadataType, message.folder, selected);
+                    this._deploymentWebview.reveal(
+                        message.metadataType,
+                        message.folder,
+                        selected,
+                    );
                 }
                 break;
         }
@@ -337,10 +351,12 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         try {
             const folders = await this._metadataService.listMetadataFolders(
                 sourceOrg,
-                metadataType
+                metadataType,
             );
 
-            folders.sort((a: any, b: any) => a.fullName.localeCompare(b.fullName));
+            folders.sort((a: any, b: any) =>
+                a.fullName.localeCompare(b.fullName),
+            );
 
             this._webviewView.webview.postMessage({
                 command: "foldersLoaded",
@@ -349,7 +365,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             });
         } catch (error: any) {
             vscode.window.showErrorMessage(
-                `Failed to load folders: ${error.message || error}`
+                `Failed to load folders: ${error.message || error}`,
             );
             this._webviewView.webview.postMessage({
                 command: "foldersLoaded",
@@ -364,7 +380,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         const flags: string[] = [];
         for (const [key, items] of this._selectedItems.entries()) {
             const metadataType = key.includes("/") ? key.split("/")[0] : key;
-            const folder = key.includes("/") ? key.split("/").slice(1).join("/") : undefined;
+            const folder = key.includes("/")
+                ? key.split("/").slice(1).join("/")
+                : undefined;
 
             for (const item of items) {
                 const fullName = folder ? `${folder}/${item}` : item;
@@ -383,7 +401,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             }
             const metadataType = key.split("/")[0];
             const folder = key.split("/").slice(1).join("/");
-            const folderTypeName = this._metadataService.getFolderTypeName(metadataType);
+            const folderTypeName =
+                this._metadataService.getFolderTypeName(metadataType);
             if (folderTypeName) {
                 const folderFlag = `${folderTypeName}:${folder}`;
                 if (!folderFlags.includes(folderFlag)) {
@@ -399,7 +418,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -418,7 +437,10 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 title: `Retrieving ${metadataFlags.length} metadata item(s)...`,
                 cancellable: true,
             },
-            async (progress, token): Promise<{ success?: boolean; error?: any }> => {
+            async (
+                progress,
+                token,
+            ): Promise<{ success?: boolean; error?: any }> => {
                 token.onCancellationRequested(() => {
                     tokenSource.cancel();
                 });
@@ -426,8 +448,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 try {
                     const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
                     await this._sfCommandService.execute(
-                        "sf", ["project", "retrieve", "start", ...mFlagArgs, "--target-org", sourceOrg],
-                        tokenSource.token
+                        "sf",
+                        [
+                            "project",
+                            "retrieve",
+                            "start",
+                            ...mFlagArgs,
+                            "--target-org",
+                            sourceOrg,
+                        ],
+                        tokenSource.token,
                     );
 
                     if (tokenSource.token.isCancellationRequested) {
@@ -440,17 +470,17 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 } finally {
                     tokenSource.dispose();
                 }
-            }
+            },
         );
 
         if (result.error) {
             if (result.error.message === "Operation cancelled") {
                 vscode.window.showInformationMessage(
-                    "Batch retrieval was cancelled."
+                    "Batch retrieval was cancelled.",
                 );
             } else {
                 vscode.window.showErrorMessage(
-                    `Error during batch retrieval: ${result.error.message || result.error}`
+                    `Error during batch retrieval: ${result.error.message || result.error}`,
                 );
             }
             return;
@@ -460,7 +490,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
             this._selectedItems.clear();
             this._updateSelectionView();
             vscode.window.showInformationMessage(
-                `Successfully retrieved ${metadataFlags.length} metadata item(s).`
+                `Successfully retrieved ${metadataFlags.length} metadata item(s).`,
             );
         }
     }
@@ -469,7 +499,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         const sourceOrg = this._orgService.getSourceOrg();
         if (!sourceOrg) {
             vscode.window.showErrorMessage(
-                "No source org selected. Please select a source org first."
+                "No source org selected. Please select a source org first.",
             );
             return;
         }
@@ -477,7 +507,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         const targetOrg = this._orgService.getTargetOrg();
         if (!targetOrg) {
             vscode.window.showErrorMessage(
-                "No target org selected. Please select a target org first."
+                "No target org selected. Please select a target org first.",
             );
             return;
         }
@@ -500,7 +530,14 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 title: `Deploying ${metadataFlags.length} metadata item(s)...`,
                 cancellable: true,
             },
-            async (progress, token): Promise<{ deployResult?: any; cancelled?: boolean; error?: any }> => {
+            async (
+                progress,
+                token,
+            ): Promise<{
+                deployResult?: any;
+                cancelled?: boolean;
+                error?: any;
+            }> => {
                 token.onCancellationRequested(() => {
                     tokenSource.cancel();
                 });
@@ -513,10 +550,21 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                         progress.report({
                             message: `Step ${currentStep}/${totalSteps}: Retrieving folders from source...`,
                         });
-                        const folderMFlagArgs = folderFlags.flatMap((f) => ["-m", f]);
+                        const folderMFlagArgs = folderFlags.flatMap((f) => [
+                            "-m",
+                            f,
+                        ]);
                         await this._sfCommandService.execute(
-                            "sf", ["project", "retrieve", "start", ...folderMFlagArgs, "--target-org", sourceOrg],
-                            tokenSource.token
+                            "sf",
+                            [
+                                "project",
+                                "retrieve",
+                                "start",
+                                ...folderMFlagArgs,
+                                "--target-org",
+                                sourceOrg,
+                            ],
+                            tokenSource.token,
                         );
 
                         if (tokenSource.token.isCancellationRequested) {
@@ -530,8 +578,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                             message: `Step ${currentStep}/${totalSteps}: Deploying folders to target...`,
                         });
                         await this._sfCommandService.execute(
-                            "sf", ["project", "deploy", "start", ...folderMFlagArgs, "--target-org", targetOrg],
-                            tokenSource.token
+                            "sf",
+                            [
+                                "project",
+                                "deploy",
+                                "start",
+                                ...folderMFlagArgs,
+                                "--target-org",
+                                targetOrg,
+                            ],
+                            tokenSource.token,
                         );
 
                         if (tokenSource.token.isCancellationRequested) {
@@ -547,8 +603,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                     });
                     const mFlagArgs = metadataFlags.flatMap((f) => ["-m", f]);
                     await this._sfCommandService.execute(
-                        "sf", ["project", "retrieve", "start", ...mFlagArgs, "--target-org", sourceOrg],
-                        tokenSource.token
+                        "sf",
+                        [
+                            "project",
+                            "retrieve",
+                            "start",
+                            ...mFlagArgs,
+                            "--target-org",
+                            sourceOrg,
+                        ],
+                        tokenSource.token,
                     );
 
                     if (tokenSource.token.isCancellationRequested) {
@@ -562,8 +626,16 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                         message: `Step ${currentStep}/${totalSteps}: Deploying items to target...`,
                     });
                     const deployResult = await this._sfCommandService.execute(
-                        "sf", ["project", "deploy", "start", ...mFlagArgs, "--target-org", targetOrg],
-                        tokenSource.token
+                        "sf",
+                        [
+                            "project",
+                            "deploy",
+                            "start",
+                            ...mFlagArgs,
+                            "--target-org",
+                            targetOrg,
+                        ],
+                        tokenSource.token,
                     );
 
                     if (tokenSource.token.isCancellationRequested) {
@@ -576,12 +648,12 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 } finally {
                     tokenSource.dispose();
                 }
-            }
+            },
         );
 
         if (result.cancelled) {
             vscode.window.showInformationMessage(
-                "Batch deployment was cancelled."
+                "Batch deployment was cancelled.",
             );
             return;
         }
@@ -589,11 +661,11 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         if (result.error) {
             if (result.error.message === "Operation cancelled") {
                 vscode.window.showInformationMessage(
-                    "Batch deployment was cancelled."
+                    "Batch deployment was cancelled.",
                 );
             } else {
                 vscode.window.showErrorMessage(
-                    `Error during batch deployment: ${result.error.message || result.error}`
+                    `Error during batch deployment: ${result.error.message || result.error}`,
                 );
             }
             return;
@@ -605,19 +677,19 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         if (result.deployResult?.success) {
             const selection = await vscode.window.showInformationMessage(
                 `Successfully deployed ${metadataFlags.length} metadata item(s).`,
-                "View Deploy URL"
+                "View Deploy URL",
             );
             if (selection === "View Deploy URL") {
                 vscode.env.openExternal(result.deployResult?.deployUrl);
             }
         } else {
-            const componentFailures = result.deployResult?.details?.componentFailures;
-            const problems = componentFailures?.map(
-                (failure: any) => failure.problem
-            ) || [];
+            const componentFailures =
+                result.deployResult?.details?.componentFailures;
+            const problems =
+                componentFailures?.map((failure: any) => failure.problem) || [];
             const selection = await vscode.window.showErrorMessage(
                 `Deployment failed. Problems: ${problems.join(" • ")}`,
-                "View Deploy URL"
+                "View Deploy URL",
             );
             if (selection === "View Deploy URL") {
                 vscode.env.openExternal(result.deployResult?.deployUrl);

@@ -15,7 +15,7 @@ const selectMetadataItem = (item, metadataListItems) => {
 const toggleExpandableItem = (item) => {
     const metadataType = item.getAttribute("data-metadata-type");
     const childrenContainer = document.querySelector(
-        `.folder-children[data-metadata-type="${metadataType}"]`
+        `.folder-children[data-metadata-type="${metadataType}"]`,
     );
 
     if (!childrenContainer) {
@@ -44,7 +44,7 @@ const toggleExpandableItem = (item) => {
 
 const setupMetadataItemListeners = () => {
     const regularItems = document.querySelectorAll(
-        ".list-item:not(.list-item-expandable)"
+        ".list-item:not(.list-item-expandable)",
     );
     regularItems.forEach((item) => {
         item.addEventListener("click", () => {
@@ -62,7 +62,7 @@ const setupMetadataItemListeners = () => {
 
 const handleFoldersLoaded = (message) => {
     const container = document.querySelector(
-        `.folder-children[data-metadata-type="${message.metadataType}"]`
+        `.folder-children[data-metadata-type="${message.metadataType}"]`,
     );
 
     if (!container) {

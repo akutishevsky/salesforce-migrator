@@ -17,7 +17,7 @@ export class SfRestApi {
      */
     public async describeObject(
         org: SalesforceOrg,
-        objectName: string
+        objectName: string,
     ): Promise<{ fields: FieldDescription[] }> {
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/sobjects/${objectName}/describe/`;
 
@@ -34,7 +34,7 @@ export class SfRestApi {
             throw new Error(
                 `Failed to describe object: ${
                     error[0]?.message || JSON.stringify(error)
-                }`
+                }`,
             );
         }
 
@@ -46,11 +46,14 @@ export class SfRestApi {
      */
     public async queryRecordCount(
         org: SalesforceOrg,
-        query: string
+        query: string,
     ): Promise<number> {
         // Convert the query to a COUNT query
-        const countQuery = query.replace(/^SELECT\s+.*?\s+FROM/i, 'SELECT COUNT() FROM');
-        
+        const countQuery = query.replace(
+            /^SELECT\s+.*?\s+FROM/i,
+            "SELECT COUNT() FROM",
+        );
+
         const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/query?q=${encodeURIComponent(countQuery)}`;
 
         const response = await fetch(url, {
@@ -66,7 +69,7 @@ export class SfRestApi {
             throw new Error(
                 `Failed to count records: ${
                     error[0]?.message || JSON.stringify(error)
-                }`
+                }`,
             );
         }
 
