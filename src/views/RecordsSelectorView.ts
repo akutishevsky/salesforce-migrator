@@ -6,11 +6,11 @@ import { RecordsMigrationExport } from "../webviews/RecordsMigrationExport";
 import { RecordsMigrationDml } from "../webviews/RecordsMigrationDml";
 
 export class RecordsSelectorView implements vscode.WebviewViewProvider {
-    private _extensionContext: vscode.ExtensionContext;
+    private readonly _extensionContext: vscode.ExtensionContext;
     private _webviewView: vscode.WebviewView | undefined;
     private _htmlService!: HtmlService;
-    private _orgService: OrgService;
-    private _objectService: ObjectService;
+    private readonly _orgService: OrgService;
+    private readonly _objectService: ObjectService;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
@@ -128,35 +128,30 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     }
 
     private async _processWebviewMessage(message: any): Promise<void> {
-        switch (message.command) {
-            case "customObjectSelected":
-                if (
-                    typeof message.customObject !== "string" ||
-                    !message.customObject.trim()
-                ) {
-                    return;
-                }
-                const customObject = message.customObject;
-                const operations = [
-                    "Export",
-                    "Insert",
-                    "Update",
-                    "Upsert",
-                    "Delete",
-                ];
+        if (message.command !== "customObjectSelected") {
+            return;
+        }
 
-                const selectedOperation = await vscode.window.showQuickPick(
-                    operations,
-                    {
-                        placeHolder: `Select migration operation for ${customObject}`,
-                        canPickMany: false,
-                    },
-                );
+        if (
+            typeof message.customObject !== "string" ||
+            !message.customObject.trim()
+        ) {
+            return;
+        }
 
-                if (selectedOperation) {
-                    this._openMigrationWebview(customObject, selectedOperation);
-                }
-                break;
+        const customObject = message.customObject;
+        const operations = ["Export", "Insert", "Update", "Upsert", "Delete"];
+
+        const selectedOperation = await vscode.window.showQuickPick(
+            operations,
+            {
+                placeHolder: `Select migration operation for ${customObject}`,
+                canPickMany: false,
+            },
+        );
+
+        if (selectedOperation) {
+            this._openMigrationWebview(customObject, selectedOperation);
         }
     }
 
