@@ -68,3 +68,7 @@ Extension Entry Point (src/extension.ts)
 - TypeScript strict mode with 4-space indentation
 - Semicolons required, strict equality (`===`), curly braces required
 - camelCase for variables/functions, PascalCase for classes and type imports
+
+## Workflow
+
+- Always execute tasks in parallel when possible. If multiple independent operations need to be performed (e.g., reading files, running searches, editing unrelated files, running builds), do them simultaneously rather than sequentially. Only run tasks sequentially when there is a dependency between them.
