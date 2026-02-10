@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import crypto from "crypto";
 import fs from "fs";
 
 const LOADING_HTML_PATH = "loading.html";
@@ -82,18 +83,21 @@ export class HtmlService {
         styles?: string[];
         scripts?: string[];
     }): string {
+        const nonce = crypto.randomBytes(16).toString("base64");
+        const cspSource = this._webviewView?.webview.cspSource;
         const html = `
             <!DOCTYPE html>
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource}; script-src 'nonce-${nonce}'; img-src ${cspSource} https:; font-src ${cspSource};">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>${title}</title>
                 ${this._composeStyles(styles)}
             </head>
                 <body>
                     ${body}
-                    ${this._composeScripts(scripts)}
+                    ${this._composeScripts(scripts, nonce)}
                 </body>
             </html>`;
         return html;
@@ -116,16 +120,17 @@ export class HtmlService {
         return stylesHtml;
     }
 
-    private _composeScripts(scripts: string[]): string {
+    private _composeScripts(scripts: string[], nonce: string): string {
         let scriptsHtml = "";
 
         for (const script of scripts) {
             scriptsHtml += `
-                <script 
+                <script
+                    nonce="${nonce}"
                     src="
                         ${this._webviewView?.webview.asWebviewUri(
                             vscode.Uri.joinPath(this._extensionUri, script),
-                        )}" 
+                        )}"
                 ></script>`;
         }
 
