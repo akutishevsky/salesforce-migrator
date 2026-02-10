@@ -17,12 +17,22 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _metadataObjects: MetadataObject[] = [];
     private readonly _selectedItems: Map<string, string[]> = new Map();
     private _selectionView: MetadataSelectionView | undefined;
+    private readonly _orgChangeSubscription: vscode.Disposable;
 
     constructor(extensionContext: vscode.ExtensionContext) {
         this._extensionContext = extensionContext;
         this._metadataService = new MetadataService();
         this._orgService = new OrgService(extensionContext);
         this._sfCommandService = new SfCommandService();
+
+        this._orgChangeSubscription = OrgService.onSourceOrgChanged(() => {
+            this._selectedItems.clear();
+            this._updateSelectionView();
+            if (this._deploymentWebview) {
+                this._deploymentWebview.dispose();
+            }
+            this.refreshMetadata();
+        });
     }
 
     public setSelectionView(selectionView: MetadataSelectionView): void {
@@ -289,6 +299,7 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
      * Dispose the deployment webview
      */
     public dispose(): void {
+        this._orgChangeSubscription.dispose();
         if (this._deploymentWebview) {
             this._deploymentWebview = undefined;
         }
