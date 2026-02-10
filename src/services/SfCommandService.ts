@@ -109,16 +109,33 @@ export class SfCommandService {
         disposable: vscode.Disposable | undefined,
         state: { cancelled: boolean },
     ): Promise<CommandOutput> {
+        const MAX_BUFFER_SIZE = 100 * 1024 * 1024; // 100 MB
         return new Promise((resolve, reject) => {
             let stdout = "";
             let stderr = "";
 
             childProcess.stdout?.on("data", (data) => {
                 stdout += data;
+                if (stdout.length > MAX_BUFFER_SIZE) {
+                    this._killChildProcess(childProcess);
+                    reject(
+                        new Error(
+                            "Command output exceeded maximum buffer size (100 MB)",
+                        ),
+                    );
+                }
             });
 
             childProcess.stderr?.on("data", (data) => {
                 stderr += data;
+                if (stderr.length > MAX_BUFFER_SIZE) {
+                    this._killChildProcess(childProcess);
+                    reject(
+                        new Error(
+                            "Command error output exceeded maximum buffer size (100 MB)",
+                        ),
+                    );
+                }
             });
 
             childProcess.on("error", (error) => {
