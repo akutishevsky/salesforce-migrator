@@ -655,9 +655,11 @@ export class RecordsMigrationDml {
         );
 
         idLookupFields.forEach((field: any) => {
+            const safeName = escapeHtml(field.name);
+            const safeLabel = escapeHtml(field.label);
             optionsHtml += `
-                <option value="${field.name}">
-                    ${field.label} (${field.name})
+                <option value="${safeName}">
+                    ${safeLabel} (${safeName})
                 </option>
             `;
         });
@@ -665,9 +667,11 @@ export class RecordsMigrationDml {
         const idField = this._fields.find((field: any) => field.name === "Id");
         if (idField) {
             const selected = idLookupFields.length === 0 ? "selected" : "";
+            const safeName = escapeHtml(idField.name);
+            const safeLabel = escapeHtml(idField.label);
             optionsHtml += `
-                <option value="${idField.name}" ${selected}>
-                    ${idField.label} (${idField.name})
+                <option value="${safeName}" ${selected}>
+                    ${safeLabel} (${safeName})
                 </option>
             `;
         }
