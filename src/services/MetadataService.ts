@@ -27,7 +27,7 @@ const FOLDER_TYPE_MAP: Record<string, string> = {
  * Service for fetching and managing Salesforce metadata
  */
 export class MetadataService {
-    private _sfCommandService: SfCommandService;
+    private readonly _sfCommandService: SfCommandService;
 
     constructor() {
         this._sfCommandService = new SfCommandService();
