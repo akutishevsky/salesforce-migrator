@@ -189,14 +189,12 @@ export class SfCommandService {
         try {
             // Try to kill the process group to ensure all child processes are terminated
             process.kill(-childProcess.pid, "SIGTERM");
-        } catch (error_: unknown) {
+        } catch {
             // Process group kill can fail (e.g., process already exited); fall back to direct kill
-            void error_;
             try {
                 childProcess.kill("SIGTERM");
-            } catch (error_: unknown) {
+            } catch {
                 // Process already exited; nothing left to clean up
-                void error_;
             }
         }
     }

@@ -749,9 +749,8 @@ export class SfBulkApi {
         try {
             const error = (await response.json()) as { message?: string }[];
             errorMessage = error[0]?.message || fallback;
-        } catch (error_: unknown) {
+        } catch {
             // Response body was not valid JSON; fall back to HTTP status
-            void error_;
             errorMessage = fallback;
         }
         throw new Error(`API request failed: ${errorMessage}`);
