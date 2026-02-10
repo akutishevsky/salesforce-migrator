@@ -38,6 +38,7 @@ export interface BulkDmlJobInfo {
 }
 
 const INTERVAL = 1000;
+const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 const SALESFORCE_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
 
 /**
@@ -446,6 +447,7 @@ export class SfBulkApi {
         return new Promise<string>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
+            const startTime = Date.now();
             if (token) {
                 token.onCancellationRequested(async () => {
                     isCancelled = true;
@@ -468,6 +470,11 @@ export class SfBulkApi {
             const checkJobStatus = async () => {
                 // If already cancelled, don't continue checking
                 if (isCancelled) {
+                    return;
+                }
+
+                if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+                    reject(new Error("Job polling timed out after 30 minutes"));
                     return;
                 }
 
@@ -605,6 +612,7 @@ export class SfBulkApi {
         return new Promise<BulkDmlJobInfo>((resolve, reject) => {
             // Set up cancellation handling
             let isCancelled = false;
+            const startTime = Date.now();
             if (token) {
                 token.onCancellationRequested(async () => {
                     isCancelled = true;
@@ -627,6 +635,11 @@ export class SfBulkApi {
             const checkJobStatus = async () => {
                 // If already cancelled, don't continue checking
                 if (isCancelled) {
+                    return;
+                }
+
+                if (Date.now() - startTime > MAX_POLL_DURATION_MS) {
+                    reject(new Error("Job polling timed out after 30 minutes"));
                     return;
                 }
 
