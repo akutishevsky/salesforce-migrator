@@ -202,6 +202,18 @@ export class RecordsMigrationDml {
         if (selectedSourceFile) {
             this._selectedSourceFile = selectedSourceFile[0];
 
+            const MAX_CSV_SIZE = 150 * 1024 * 1024; // 150 MB (Salesforce Bulk API 2.0 limit)
+            const fileStat = await vscode.workspace.fs.stat(
+                this._selectedSourceFile,
+            );
+            if (fileStat.size > MAX_CSV_SIZE) {
+                vscode.window.showErrorMessage(
+                    `CSV file exceeds the 150 MB Salesforce Bulk API limit (${(fileStat.size / 1024 / 1024).toFixed(1)} MB).`,
+                );
+                this._selectedSourceFile = undefined;
+                return;
+            }
+
             // read the file content and extract csv headers
             const fileContent = await vscode.workspace.fs.readFile(
                 this._selectedSourceFile,
