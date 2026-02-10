@@ -1,5 +1,17 @@
 # Change Log
 
+## [1.3.0] 2026-02-10
+
+### Added
+
+- Added "Proceed to DML" button to records export view for quicker DML workflow
+- Added sticky search input to metadata deployment view for filtering metadata items
+- Added auto-refresh of metadata and records views when source org changes
+
+### Fixed
+
+- Fixed deployment panel not closing when source org changes
+
 ## [1.2.1] 2026-02-10
 
 ### Security
