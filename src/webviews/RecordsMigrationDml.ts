@@ -175,6 +175,32 @@ export class RecordsMigrationDml {
         this._disposables.push(messageHandler);
     }
 
+    public async revealWithFile(filePath: string): Promise<void> {
+        try {
+            this._initializePanel();
+            this._renderLoader();
+
+            this._targetOrg = this._orgService.getTargetOrg();
+            if (!this._targetOrg) {
+                this._panel!.dispose();
+                throw new Error("Target org is not defined");
+            }
+
+            await this._retrieveFields();
+
+            this._renderWebview();
+            this._setupMessageHandlers();
+            this._panel!.reveal();
+
+            await this._loadSourceFile(filePath);
+        } catch (error: any) {
+            vscode.window.showErrorMessage(
+                `Failed to compose webview panel: ${error.message}`,
+            );
+            return;
+        }
+    }
+
     private async _selectSourceFile(): Promise<void> {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         const workspacePath =
@@ -200,52 +226,56 @@ export class RecordsMigrationDml {
         });
 
         if (selectedSourceFile) {
-            this._selectedSourceFile = selectedSourceFile[0];
-
-            const MAX_CSV_SIZE = 150 * 1024 * 1024; // 150 MB (Salesforce Bulk API 2.0 limit)
-            const fileStat = await vscode.workspace.fs.stat(
-                this._selectedSourceFile,
-            );
-            if (fileStat.size > MAX_CSV_SIZE) {
-                vscode.window.showErrorMessage(
-                    `CSV file exceeds the 150 MB Salesforce Bulk API limit (${(fileStat.size / 1024 / 1024).toFixed(1)} MB).`,
-                );
-                this._selectedSourceFile = undefined;
-                return;
-            }
-
-            // read the file content and extract csv headers
-            const fileContent = await vscode.workspace.fs.readFile(
-                this._selectedSourceFile,
-            );
-            const fileContentString = fileContent.toString();
-
-            // Use the csv-parse library to properly parse the CSV
-            const parsedCsv = csvParse(fileContentString, {
-                columns: false,
-                skip_empty_lines: true,
-                relax_quotes: true,
-            });
-
-            // Extract the first row which contains headers
-            const csvHeaders = parsedCsv.length > 0 ? parsedCsv[0] : [];
-
-            const fieldLabels = this._fields.map((field: any) => field.label);
-            const fieldNames = this._fields.map((field: any) => field.name);
-            const fields = fieldLabels.map((label: string, index: number) => {
-                return {
-                    label: label,
-                    name: fieldNames[index],
-                };
-            });
-
-            this._panel!.webview.postMessage({
-                command: "setSourceFile",
-                filePath: this._selectedSourceFile.fsPath,
-                csvHeaders: csvHeaders,
-                fields: fields,
-            });
+            await this._loadSourceFile(selectedSourceFile[0].fsPath);
         }
+    }
+
+    private async _loadSourceFile(filePath: string): Promise<void> {
+        this._selectedSourceFile = vscode.Uri.file(filePath);
+
+        const MAX_CSV_SIZE = 150 * 1024 * 1024; // 150 MB (Salesforce Bulk API 2.0 limit)
+        const fileStat = await vscode.workspace.fs.stat(
+            this._selectedSourceFile,
+        );
+        if (fileStat.size > MAX_CSV_SIZE) {
+            vscode.window.showErrorMessage(
+                `CSV file exceeds the 150 MB Salesforce Bulk API limit (${(fileStat.size / 1024 / 1024).toFixed(1)} MB).`,
+            );
+            this._selectedSourceFile = undefined;
+            return;
+        }
+
+        // read the file content and extract csv headers
+        const fileContent = await vscode.workspace.fs.readFile(
+            this._selectedSourceFile,
+        );
+        const fileContentString = fileContent.toString();
+
+        // Use the csv-parse library to properly parse the CSV
+        const parsedCsv = csvParse(fileContentString, {
+            columns: false,
+            skip_empty_lines: true,
+            relax_quotes: true,
+        });
+
+        // Extract the first row which contains headers
+        const csvHeaders = parsedCsv.length > 0 ? parsedCsv[0] : [];
+
+        const fieldLabels = this._fields.map((field: any) => field.label);
+        const fieldNames = this._fields.map((field: any) => field.name);
+        const fields = fieldLabels.map((label: string, index: number) => {
+            return {
+                label: label,
+                name: fieldNames[index],
+            };
+        });
+
+        this._panel!.webview.postMessage({
+            command: "setSourceFile",
+            filePath: this._selectedSourceFile.fsPath,
+            csvHeaders: csvHeaders,
+            fields: fields,
+        });
     }
 
     private async _performDmlAction(

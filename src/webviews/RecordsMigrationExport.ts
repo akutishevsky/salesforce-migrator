@@ -4,6 +4,7 @@ import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
 import path from "node:path";
+import { RecordsMigrationDml } from "./RecordsMigrationDml";
 
 export class RecordsMigrationExport {
     private _extensionContext: vscode.ExtensionContext;
@@ -97,6 +98,24 @@ export class RecordsMigrationExport {
                             message.destinationFilePath,
                         );
                         break;
+                    case "proceedToDml":
+                        if (
+                            typeof message.operation !== "string" ||
+                            !message.operation.trim()
+                        ) {
+                            return;
+                        }
+                        if (
+                            typeof message.filePath !== "string" ||
+                            !message.filePath.trim()
+                        ) {
+                            return;
+                        }
+                        await this._proceedToDml(
+                            message.operation,
+                            message.filePath,
+                        );
+                        break;
                     default:
                         break;
                 }
@@ -169,6 +188,8 @@ export class RecordsMigrationExport {
                     cancellable: true,
                 },
                 async (progress, token) => {
+                    let exportedFilePath: string | undefined;
+
                     await this._createFile(destinationFilePath);
                     progress.report({
                         message: `Created the ${destinationFilePath} file.`,
@@ -237,6 +258,7 @@ export class RecordsMigrationExport {
                             fileUri,
                             Buffer.from(sanitizedCsvData),
                         );
+                        exportedFilePath = fileUri.fsPath;
                         progress.report({
                             message: `Saved the result to the ${fileUri.fsPath} file.`,
                         });
@@ -324,6 +346,7 @@ export class RecordsMigrationExport {
                     } finally {
                         this._panel!.webview.postMessage({
                             command: "exportComplete",
+                            filePath: exportedFilePath,
                         });
                     }
                 },
@@ -609,11 +632,31 @@ export class RecordsMigrationExport {
                 <div class="sfm-action-container">
                     <div id="error-message" class="sfm-error-message"></div>
                     <button id="action-button" class="sfm-button sfm-button-primary">Export</button>
+                    <select id="dml-operation-select" class="sfm-select" disabled>
+                        <option value="Insert">Insert</option>
+                        <option value="Update">Update</option>
+                        <option value="Upsert">Upsert</option>
+                        <option value="Delete">Delete</option>
+                    </select>
+                    <button id="dml-proceed-button" class="sfm-button sfm-button-primary disabled">Proceed to DML</button>
                 </div>
             </div>
         `;
 
         return html;
+    }
+
+    private async _proceedToDml(
+        operation: string,
+        filePath: string,
+    ): Promise<void> {
+        const dmlWebview = new RecordsMigrationDml(
+            this._extensionContext,
+            this._webviewView,
+            this._customObject,
+            operation,
+        );
+        await dmlWebview.revealWithFile(filePath);
     }
 
     /**
