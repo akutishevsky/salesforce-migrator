@@ -43,6 +43,13 @@ const INTERVAL = 1000;
  * Service for interacting with Salesforce Bulk API
  */
 export class SfBulkApi {
+    private _buildUrl(org: SalesforceOrg, path: string): string {
+        if (!org.instanceUrl.startsWith("https://")) {
+            throw new Error("Instance URL must use HTTPS");
+        }
+        return `${org.instanceUrl}/services/data/v${org.apiVersion}${path}`;
+    }
+
     /**
      * Creates a new Bulk API DML job
      */
@@ -52,7 +59,7 @@ export class SfBulkApi {
         objectName: string,
         lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+        const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
             method: "POST",
@@ -89,7 +96,7 @@ export class SfBulkApi {
         externalIdFieldName: string,
         lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest`;
+        const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
             method: "POST",
@@ -120,7 +127,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         query: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query`;
+        const url = this._buildUrl(org, "/jobs/query");
 
         const response = await fetch(url, {
             method: "POST",
@@ -154,9 +161,10 @@ export class SfBulkApi {
         let isFirstRequest = true;
 
         while (hasMore) {
+            const basePath = `/jobs/query/${jobId}/results`;
             const url: string = queryLocator
-                ? `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results?locator=${queryLocator}`
-                : `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}/results`;
+                ? this._buildUrl(org, `${basePath}?locator=${queryLocator}`)
+                : this._buildUrl(org, basePath);
 
             const response: Response = await fetch(url, {
                 method: "GET",
@@ -209,7 +217,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
             method: "GET",
@@ -233,7 +241,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkQueryJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
             method: "GET",
@@ -259,7 +267,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
             method: "GET",
@@ -283,7 +291,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/query/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/query/${jobId}`);
 
         const response = await fetch(url, {
             method: "PATCH",
@@ -305,7 +313,7 @@ export class SfBulkApi {
      * Aborts a Bulk API DML job
      */
     public async abortDmlJob(org: SalesforceOrg, jobId: string): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
             method: "PATCH",
@@ -336,7 +344,7 @@ export class SfBulkApi {
         jobId: string,
         csvData: string,
     ): Promise<void> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/batches`;
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}/batches`);
 
         // 1. Remove BOM if present (Windows can add this)
         let normalizedCsv = csvData.replace(/^\uFEFF/, "");
@@ -379,7 +387,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<BulkDmlJobInfo> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}`;
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}`);
 
         const response = await fetch(url, {
             method: "PATCH",
@@ -510,7 +518,7 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/failedResults/`;
+        const url = this._buildUrl(org, `/jobs/ingest/${jobId}/failedResults/`);
 
         const response = await fetch(url, {
             method: "GET",
@@ -538,7 +546,10 @@ export class SfBulkApi {
         org: SalesforceOrg,
         jobId: string,
     ): Promise<string> {
-        const url = `${org.instanceUrl}/services/data/v${org.apiVersion}/jobs/ingest/${jobId}/successfulResults/`;
+        const url = this._buildUrl(
+            org,
+            `/jobs/ingest/${jobId}/successfulResults/`,
+        );
 
         const response = await fetch(url, {
             method: "GET",
