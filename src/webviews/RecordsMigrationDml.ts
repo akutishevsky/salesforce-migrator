@@ -637,7 +637,7 @@ export class RecordsMigrationDml {
                             <button id="browse-file-button" class="sfm-button">Browse</button>
                         </div>
                         <p class="sfm-file-hint">
-                            Select a CSV file containing the records to ${this._operation.toLowerCase()}.
+                            Select a CSV file containing the records to ${escapeHtml(this._operation.toLowerCase())}.
                         </p>
                     </div>
                 </div>
