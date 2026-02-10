@@ -346,19 +346,42 @@ class Query {
                     clause.fieldType === "id"
                 ) {
                     formattedValue = `'${clause.value.replace(/'/g, "\\'")}'`;
-                } else if (
-                    clause.fieldType === "date" ||
-                    clause.fieldType === "datetime"
-                ) {
-                    formattedValue = `${clause.value}`;
+                } else if (clause.fieldType === "date") {
+                    if (!/^\d{4}-\d{2}-\d{2}$/.test(clause.value)) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
+                } else if (clause.fieldType === "datetime") {
+                    if (
+                        !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?Z?)?$/.test(
+                            clause.value,
+                        )
+                    ) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
                 } else if (clause.fieldType === "boolean") {
-                    formattedValue = clause.value.toLowerCase();
+                    formattedValue =
+                        clause.value.toLowerCase() === "true"
+                            ? "true"
+                            : "false";
+                } else if (
+                    clause.fieldType === "int" ||
+                    clause.fieldType === "double" ||
+                    clause.fieldType === "currency" ||
+                    clause.fieldType === "percent"
+                ) {
+                    if (!/^-?\d+(\.\d+)?$/.test(clause.value)) {
+                        return null;
+                    }
+                    formattedValue = clause.value;
                 } else {
                     formattedValue = `''`;
                 }
 
                 return `${clause.fieldApiName} ${clause.operation} ${formattedValue}`;
             })
+            .filter((clause) => clause !== null)
             .join(" AND ");
 
         return `\nWHERE ${whereClause}`;
