@@ -118,7 +118,9 @@ class WhereClausePopulator {
             const whereValueSelect = document.querySelector(
                 "#where-value-select",
             );
-            whereValueSelect.innerHTML = "";
+            while (whereValueSelect.firstChild) {
+                whereValueSelect.removeChild(whereValueSelect.firstChild);
+            }
 
             const selectedOption =
                 e.currentTarget.options[e.currentTarget.selectedIndex];
@@ -148,10 +150,17 @@ class WhereClausePopulator {
         const whereValueSelect = document.querySelector("#where-value-select");
         const whereValue = document.querySelector("#where-value");
 
-        whereValueSelect.innerHTML = `
-            <option value="true">TRUE</option>
-            <option value="false">FALSE</option>
-        `;
+        while (whereValueSelect.firstChild) {
+            whereValueSelect.removeChild(whereValueSelect.firstChild);
+        }
+        const trueOption = document.createElement("option");
+        trueOption.value = "true";
+        trueOption.textContent = "TRUE";
+        const falseOption = document.createElement("option");
+        falseOption.value = "false";
+        falseOption.textContent = "FALSE";
+        whereValueSelect.appendChild(trueOption);
+        whereValueSelect.appendChild(falseOption);
         whereValueSelect.style.display = "block";
         whereValue.style.display = "none";
     }
