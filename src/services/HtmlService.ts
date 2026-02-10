@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import crypto from "crypto";
+import crypto from "node:crypto";
 import fs from "node:fs";
 
 const LOADING_HTML_PATH = "loading.html";
