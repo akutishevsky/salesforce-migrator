@@ -130,6 +130,12 @@ export class RecordsSelectorView implements vscode.WebviewViewProvider {
     private async _processWebviewMessage(message: any): Promise<void> {
         switch (message.command) {
             case "customObjectSelected":
+                if (
+                    typeof message.customObject !== "string" ||
+                    !message.customObject.trim()
+                ) {
+                    return;
+                }
                 const customObject = message.customObject;
                 const operations = [
                     "Export",
