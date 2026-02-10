@@ -349,7 +349,10 @@ class Query {
                     const escaped = clause.value.replace(/'/g, String.raw`\'`);
                     formattedValue = "'" + escaped + "'";
                 } else if (clause.fieldType === "date") {
-                    if (!/^\d{4}-\d{2}-\d{2}$/.test(clause.value)) {
+                    if (
+                        !/^\d{4}-\d{2}-\d{2}$/.test(clause.value) &&
+                        !/^[A-Z_]+(?::\d+)?$/.test(clause.value)
+                    ) {
                         return null;
                     }
                     formattedValue = clause.value;
@@ -357,7 +360,8 @@ class Query {
                     if (
                         !/^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?Z?)?$/.test(
                             clause.value,
-                        )
+                        ) &&
+                        !/^[A-Z_]+(?::\d+)?$/.test(clause.value)
                     ) {
                         return null;
                     }
@@ -385,6 +389,10 @@ class Query {
             })
             .filter((clause) => clause !== null)
             .join(" AND ");
+
+        if (!whereClause) {
+            return "";
+        }
 
         return `\nWHERE ${whereClause}`;
     }
