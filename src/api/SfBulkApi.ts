@@ -373,8 +373,6 @@ export class SfBulkApi {
 
         if (!response.ok) {
             return this.throwApiError(response);
-        } else {
-            console.log("response", await response.text());
         }
     }
 
