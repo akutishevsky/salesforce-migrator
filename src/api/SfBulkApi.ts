@@ -41,6 +41,8 @@ const INTERVAL = 1000;
 const MAX_POLL_DURATION_MS = 30 * 60 * 1000; // 30 minutes
 const REQUEST_TIMEOUT_MS = 60_000; // 60 seconds per individual request
 const SALESFORCE_ID_PATTERN = /^[a-zA-Z0-9]{15,18}$/;
+const OBJECT_NAME_PATTERN = /^[a-zA-Z]\w*(__[a-z]+)?$/;
+const FIELD_NAME_PATTERN = /^[a-zA-Z]\w*(__[a-z]+)?$/;
 
 /**
  * Service for interacting with Salesforce Bulk API
@@ -49,6 +51,18 @@ export class SfBulkApi {
     private _validateJobId(jobId: string): void {
         if (!SALESFORCE_ID_PATTERN.test(jobId)) {
             throw new Error("Invalid job ID format");
+        }
+    }
+
+    private _validateObjectName(objectName: string): void {
+        if (!OBJECT_NAME_PATTERN.test(objectName)) {
+            throw new Error("Invalid object name format");
+        }
+    }
+
+    private _validateFieldName(fieldName: string): void {
+        if (!FIELD_NAME_PATTERN.test(fieldName)) {
+            throw new Error("Invalid field name format");
         }
     }
 
@@ -82,6 +96,7 @@ export class SfBulkApi {
         if (!SfBulkApi.VALID_DML_OPERATIONS.includes(operation.toLowerCase())) {
             throw new Error(`Invalid DML operation: ${operation}`);
         }
+        this._validateObjectName(objectName);
         const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {
@@ -120,6 +135,8 @@ export class SfBulkApi {
         externalIdFieldName: string,
         lineEnding: string = "NONE",
     ): Promise<BulkDmlJobInfo> {
+        this._validateObjectName(objectName);
+        this._validateFieldName(externalIdFieldName);
         const url = this._buildUrl(org, "/jobs/ingest");
 
         const response = await fetch(url, {

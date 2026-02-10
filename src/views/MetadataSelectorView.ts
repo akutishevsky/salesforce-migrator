@@ -401,6 +401,8 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
         }
     }
 
+    private static readonly METADATA_NAME_PATTERN = /^[\w.\-/]+$/;
+
     private _buildMetadataFlags(): string[] {
         const flags: string[] = [];
         for (const [key, items] of this._selectedItems.entries()) {
@@ -410,6 +412,9 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 : undefined;
 
             for (const item of items) {
+                if (!MetadataSelectorView.METADATA_NAME_PATTERN.test(item)) {
+                    continue;
+                }
                 const fullName = folder ? `${folder}/${item}` : item;
                 flags.push(`${metadataType}:${fullName}`);
             }

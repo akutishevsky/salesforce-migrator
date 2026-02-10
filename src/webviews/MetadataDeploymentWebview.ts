@@ -256,7 +256,8 @@ export class MetadataDeploymentWebview {
                 case "retrieve":
                     if (
                         typeof message.metadataTypeName !== "string" ||
-                        !message.metadataTypeName.trim()
+                        !message.metadataTypeName.trim() ||
+                        !/^[\w.\-/]+$/.test(message.metadataTypeName)
                     ) {
                         return;
                     }
@@ -269,7 +270,8 @@ export class MetadataDeploymentWebview {
                 case "deploy":
                     if (
                         typeof message.metadataTypeName !== "string" ||
-                        !message.metadataTypeName.trim()
+                        !message.metadataTypeName.trim() ||
+                        !/^[\w.\-/]+$/.test(message.metadataTypeName)
                     ) {
                         return;
                     }

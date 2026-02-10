@@ -67,10 +67,19 @@ export class OrgService {
         return type === "source" ? this.getSourceOrg() : this.getTargetOrg();
     }
 
+    private static readonly ORG_ALIAS_PATTERN = /^[\w.\-@]+$/;
+
+    private _validateOrgAlias(orgAlias: string): void {
+        if (!OrgService.ORG_ALIAS_PATTERN.test(orgAlias)) {
+            throw new Error("Invalid org alias format");
+        }
+    }
+
     /**
      * Set the source org
      */
     public setSourceOrg(orgAlias: string): Thenable<void> {
+        this._validateOrgAlias(orgAlias);
         return this._extensionContext.workspaceState.update(
             this._sourceOrgKey,
             orgAlias,
@@ -81,6 +90,7 @@ export class OrgService {
      * Set the target org
      */
     public setTargetOrg(orgAlias: string): Thenable<void> {
+        this._validateOrgAlias(orgAlias);
         return this._extensionContext.workspaceState.update(
             this._targetOrgKey,
             orgAlias,
