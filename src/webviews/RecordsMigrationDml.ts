@@ -142,6 +142,24 @@ export class RecordsMigrationDml {
                         await this._selectSourceFile();
                         break;
                     case "performDmlAction":
+                        if (
+                            !Array.isArray(message.mapping) ||
+                            !message.mapping.every(
+                                (pair: unknown) =>
+                                    Array.isArray(pair) &&
+                                    pair.length === 2 &&
+                                    typeof pair[0] === "string" &&
+                                    typeof pair[1] === "string",
+                            )
+                        ) {
+                            return;
+                        }
+                        if (
+                            message.matchingField !== undefined &&
+                            typeof message.matchingField !== "string"
+                        ) {
+                            return;
+                        }
                         await this._performDmlAction(
                             message.mapping,
                             message.matchingField,
