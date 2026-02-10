@@ -606,7 +606,7 @@ export class MetadataDeploymentWebview {
             if (error.message === "Operation cancelled") {
                 throw error;
             }
-            throw Error(`Error while deploying metadata: ${error}`);
+            throw new Error(`Error while deploying metadata: ${error}`);
         }
     }
 
