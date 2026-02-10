@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { MetadataService } from "../services/MetadataService";
 import { OrgService } from "../services/OrgService";
 import { SfCommandService } from "../services/SfCommandService";
@@ -216,24 +216,19 @@ export class MetadataDeploymentWebview {
             const isChecked = selectedItems.includes(item.fullName)
                 ? "checked"
                 : "";
+            const safeFullName = escapeHtml(item.fullName);
             html += `
                 <tr>
                     <td class="col-select" data-label="Select">
-                        <input type="checkbox" class="item-checkbox" value="${
-                            item.fullName
-                        }" ${isChecked} />
+                        <input type="checkbox" class="item-checkbox" value="${safeFullName}" ${isChecked} />
                     </td>
                     <td data-label="Action">
-                        <button class="btn-action" id="retrieve" value="${
-                            item.fullName
-                        }">Retrieve</button>
-                        <button class="btn-action" id="deploy" value="${
-                            item.fullName
-                        }">Deploy</button>
+                        <button class="btn-action" id="retrieve" value="${safeFullName}">Retrieve</button>
+                        <button class="btn-action" id="deploy" value="${safeFullName}">Deploy</button>
                     </td>
-                    <td data-label="Full Name">${item.fullName}</td>
-                    <td data-label="Created By">${item.createdByName}</td>
-                    <td data-label="Modified By">${item.lastModifiedByName}</td>
+                    <td data-label="Full Name">${safeFullName}</td>
+                    <td data-label="Created By">${escapeHtml(item.createdByName)}</td>
+                    <td data-label="Modified By">${escapeHtml(item.lastModifiedByName)}</td>
                     <td data-label="Created Date">
                         ${new Date(item.createdDate).toLocaleString()}
                     </td>

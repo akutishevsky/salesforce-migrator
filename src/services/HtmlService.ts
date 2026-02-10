@@ -5,6 +5,18 @@ const LOADING_HTML_PATH = "loading.html";
 const NO_SOURCE_ORG_HTML_PATH = "no-source-org-selected.html";
 
 /**
+ * Escapes a string for safe interpolation into HTML.
+ */
+export function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+/**
  * `HtmlService` is a utility class to compose HTML for webview panels in VSCode.
  */
 export class HtmlService {

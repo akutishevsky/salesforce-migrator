@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService } from "../services/OrgService";
 import { MetadataService, MetadataObject } from "../services/MetadataService";
 import { MetadataDeploymentWebview } from "../webviews/MetadataDeploymentWebview";
@@ -201,13 +201,14 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     ): string {
         let html = `<div class="list">`;
         for (const metadataObject of metadataObjects) {
+            const safeName = escapeHtml(metadataObject.xmlName);
             if (metadataObject.inFolder) {
-                html += `<div class="list-item list-item-expandable" data-metadata-type="${metadataObject.xmlName}">
-                    <span class="expand-arrow">&#9654;</span>${metadataObject.xmlName}
+                html += `<div class="list-item list-item-expandable" data-metadata-type="${safeName}">
+                    <span class="expand-arrow">&#9654;</span>${safeName}
                 </div>
-                <div class="folder-children" data-metadata-type="${metadataObject.xmlName}"></div>`;
+                <div class="folder-children" data-metadata-type="${safeName}"></div>`;
             } else {
-                html += `<div class="list-item">${metadataObject.xmlName}</div>`;
+                html += `<div class="list-item">${safeName}</div>`;
             }
         }
         html += `</div>`;

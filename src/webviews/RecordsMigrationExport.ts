@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfBulkApi, BulkQueryJobInfo } from "../api/SfBulkApi";
 import { SfRestApi } from "../api/SfRestApi";
@@ -368,12 +368,12 @@ export class RecordsMigrationExport {
     private _composeWebviewHtml(): string {
         let html = "";
 
+        const safeObject = escapeHtml(this._customObject);
+        const safeOrg = escapeHtml(this._sourceOrg || "");
         html += `
-            <div data-object-name="${this._customObject}" class="sfm-container">
+            <div data-object-name="${safeObject}" class="sfm-container">
                 <div class="sfm-header">
-                    <h1>Export ${this._customObject} records from <span class="org-name">${
-                        this._sourceOrg
-                    }</span> org</h1>
+                    <h1>Export ${safeObject} records from <span class="org-name">${safeOrg}</span> org</h1>
                 </div>
                 <div class="sfm-content">
                     ${this._composeFieldsToQueryHtml()}
@@ -433,13 +433,16 @@ export class RecordsMigrationExport {
         let html = "";
 
         this._fields.forEach((field: any) => {
+            const safeName = escapeHtml(field.name);
+            const safeLabel = escapeHtml(field.label);
+            const safeType = escapeHtml(field.type);
             html += `
                 <div class="sfm-field-item">
-                    <input type="checkbox" data-field-name="${field.name}" />
+                    <input type="checkbox" data-field-name="${safeName}" />
                     <label class="sfm-field-label">
-                        <span class="sfm-field-label-name">${field.label}</span>
-                        <span class="sfm-field-api-name"> • ${field.name}</span>
-                        <span class="sfm-field-type"> • ${field.type}</span>
+                        <span class="sfm-field-label-name">${safeLabel}</span>
+                        <span class="sfm-field-api-name"> • ${safeName}</span>
+                        <span class="sfm-field-type"> • ${safeType}</span>
                     </label>
                 </div>
             `;
@@ -477,9 +480,12 @@ export class RecordsMigrationExport {
         let html = '<select id="where-field-selector" class="sfm-select">';
 
         this._fields.forEach((field: any) => {
+            const safeName = escapeHtml(field.name);
+            const safeLabel = escapeHtml(field.label);
+            const safeType = escapeHtml(field.type);
             html += `
-                <option value="${field.name}" data-field-type="${field.type}">
-                    ${field.label} • ${field.name} • ${field.type}
+                <option value="${safeName}" data-field-type="${safeType}">
+                    ${safeLabel} • ${safeName} • ${safeType}
                 </option>
             `;
         });

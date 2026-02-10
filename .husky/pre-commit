@@ -1,2 +1,2 @@
 npx prettier --write .
-git add -A
+git add -u

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 import { SfRestApi } from "../api/SfRestApi";
 import { SfBulkApi, BulkDmlJobInfo } from "../api/SfBulkApi";
@@ -575,15 +575,16 @@ export class RecordsMigrationDml {
     private _composeWebviewHtml(): string {
         let html = "";
 
+        const safeOperation = escapeHtml(this._operation);
+        const safeObject = escapeHtml(this._customObject);
+        const safeOrg = escapeHtml(this._targetOrg || "");
         const heading =
             this._operation === "Delete"
-                ? `${this._operation} ${this._customObject} records from <span class="org-name">${this._targetOrg}</span> org`
-                : `${this._operation} ${this._customObject} records to <span class="org-name">${this._targetOrg}</span> org`;
+                ? `${safeOperation} ${safeObject} records from <span class="org-name">${safeOrg}</span> org`
+                : `${safeOperation} ${safeObject} records to <span class="org-name">${safeOrg}</span> org`;
 
         html += `
-            <div data-object-name="${this._customObject}" data-dml-operation="${
-                this._operation
-            }" class="sfm-container">
+            <div data-object-name="${safeObject}" data-dml-operation="${safeOperation}" class="sfm-container">
                 <div class="sfm-header">
                     <h1>${heading}</h1>
                 </div>
