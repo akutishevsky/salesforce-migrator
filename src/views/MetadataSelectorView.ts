@@ -297,6 +297,12 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
             case "metadataSelected":
+                if (
+                    typeof message.metadata !== "string" ||
+                    !message.metadata.trim()
+                ) {
+                    return;
+                }
                 if (!this._deploymentWebview) {
                     vscode.window.showErrorMessage(
                         "Deployment webview is not initialized.",
@@ -314,9 +320,27 @@ export class MetadataSelectorView implements vscode.WebviewViewProvider {
                 }
                 break;
             case "expandFolders":
+                if (
+                    typeof message.metadataType !== "string" ||
+                    !message.metadataType.trim()
+                ) {
+                    return;
+                }
                 this._loadFolders(message.metadataType);
                 break;
             case "folderSelected":
+                if (
+                    typeof message.metadataType !== "string" ||
+                    !message.metadataType.trim()
+                ) {
+                    return;
+                }
+                if (
+                    typeof message.folder !== "string" ||
+                    !message.folder.trim()
+                ) {
+                    return;
+                }
                 if (!this._deploymentWebview) {
                     vscode.window.showErrorMessage(
                         "Deployment webview is not initialized.",

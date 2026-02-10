@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { HtmlService } from "../services/HtmlService";
+import { HtmlService, escapeHtml } from "../services/HtmlService";
 import { OrgService, SalesforceOrg } from "../services/OrgService";
 
 export type OrgSelectorType = "source" | "target";
@@ -216,17 +216,18 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
         statusText: string,
     ): string {
         const orgIdentifier = org.alias || org.username;
+        const safeId = escapeHtml(orgIdentifier);
 
         return `
             <div>
-                <input type="radio" 
-                       id="${this._type}-${orgIdentifier}" 
-                       name="${this._type}-org" 
-                       value="${orgIdentifier}" 
-                       data-org-alias="${orgIdentifier}"
+                <input type="radio"
+                       id="${this._type}-${safeId}"
+                       name="${this._type}-org"
+                       value="${safeId}"
+                       data-org-alias="${safeId}"
                        ${isChecked}/>
-                <label for="${this._type}-${orgIdentifier}">
-                    ${orgIdentifier}
+                <label for="${this._type}-${safeId}">
+                    ${safeId}
                     <span class="${statusClass}">
                         ${statusText}
                     </span>
@@ -238,6 +239,12 @@ export class OrgSelectorWebview implements vscode.WebviewViewProvider {
     private _processWebviewMessage(message: any): void {
         switch (message.command) {
             case "orgSelected":
+                if (
+                    typeof message.orgAlias !== "string" ||
+                    !message.orgAlias.trim()
+                ) {
+                    return;
+                }
                 const orgIdentifier = message.orgAlias;
 
                 if (this._type === "source") {
