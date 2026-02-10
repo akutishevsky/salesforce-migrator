@@ -166,12 +166,19 @@ export class SfBulkApi {
         jobId: string,
     ): Promise<string> {
         this._validateJobId(jobId);
+        const MAX_PAGES = 100;
         let allResults = "";
         let hasMore = true;
         let queryLocator: string | null = null;
         let isFirstRequest = true;
+        let pageCount = 0;
 
         while (hasMore) {
+            if (++pageCount > MAX_PAGES) {
+                throw new Error(
+                    `Query exceeded maximum of ${MAX_PAGES} result pages`,
+                );
+            }
             const basePath = `/jobs/query/${jobId}/results`;
             const url: string = queryLocator
                 ? this._buildUrl(

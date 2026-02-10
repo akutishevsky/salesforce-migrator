@@ -1,3 +1,4 @@
 node_modules
 out
 SECURITY_AUDIT.md
+.claude/agent-memory/
