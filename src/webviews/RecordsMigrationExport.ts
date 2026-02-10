@@ -74,6 +74,18 @@ export class RecordsMigrationExport {
                         await this._handleFileDialog(message);
                         break;
                     case "exportRecords":
+                        if (
+                            typeof message.query !== "string" ||
+                            !message.query.trim()
+                        ) {
+                            return;
+                        }
+                        if (
+                            typeof message.destinationFilePath !== "string" ||
+                            !message.destinationFilePath.trim()
+                        ) {
+                            return;
+                        }
                         await this._exportRecords(
                             message.query,
                             message.destinationFilePath,
@@ -90,6 +102,12 @@ export class RecordsMigrationExport {
     }
 
     private _handlePicklistFieldValues(message: any): void {
+        if (
+            typeof message.fieldApiName !== "string" ||
+            !message.fieldApiName.trim()
+        ) {
+            return;
+        }
         const field = this._fields.filter(
             (f: any) => f.name === message.fieldApiName,
         )[0];
