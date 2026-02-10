@@ -119,7 +119,7 @@ class WhereClausePopulator {
                 "#where-value-select",
             );
             while (whereValueSelect.firstChild) {
-                whereValueSelect.removeChild(whereValueSelect.firstChild);
+                whereValueSelect.firstChild.remove();
             }
 
             const selectedOption =
@@ -151,7 +151,7 @@ class WhereClausePopulator {
         const whereValue = document.querySelector("#where-value");
 
         while (whereValueSelect.firstChild) {
-            whereValueSelect.removeChild(whereValueSelect.firstChild);
+            whereValueSelect.firstChild.remove();
         }
         const trueOption = document.createElement("option");
         trueOption.value = "true";
@@ -333,7 +333,7 @@ class Query {
 
         const whereClause = whereClauses
             .map((clause) => {
-                let formattedValue = clause.value;
+                let formattedValue;
 
                 if (
                     clause.fieldType === "string" ||
@@ -345,7 +345,7 @@ class Query {
                     clause.fieldType === "url" ||
                     clause.fieldType === "id"
                 ) {
-                    formattedValue = `'${clause.value.replace(/'/g, "\\'")}'`;
+                    formattedValue = `'${clause.value.replace(/'/g, String.raw`\'`)}'`;
                 } else if (clause.fieldType === "date") {
                     if (!/^\d{4}-\d{2}-\d{2}$/.test(clause.value)) {
                         return null;
