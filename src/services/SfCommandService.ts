@@ -41,7 +41,7 @@ export class SfCommandService {
         try {
             childProcess = this._createChildProcess(command, argsWithJsonFlag);
 
-            const { cancelled, disposable } = this._setupCancellationHandling(
+            const { state, disposable } = this._setupCancellationHandling(
                 childProcess,
                 token,
             );
@@ -49,7 +49,7 @@ export class SfCommandService {
             const { stdout, stderr } = await this._executeChildProcess(
                 childProcess,
                 disposable,
-                cancelled,
+                state,
             );
 
             return this._parseCommandOutput(stdout, stderr);
@@ -82,16 +82,19 @@ export class SfCommandService {
     private _setupCancellationHandling(
         childProcess: ChildProcess,
         token?: vscode.CancellationToken,
-    ): { cancelled: boolean; disposable: vscode.Disposable | undefined } {
-        let cancelled = false;
+    ): {
+        state: { cancelled: boolean };
+        disposable: vscode.Disposable | undefined;
+    } {
+        const state = { cancelled: false };
         const disposable = token?.onCancellationRequested(() => {
             if (childProcess?.pid) {
-                cancelled = true;
+                state.cancelled = true;
                 this._killChildProcess(childProcess);
             }
         });
 
-        return { cancelled, disposable };
+        return { state, disposable };
     }
 
     /**
@@ -104,7 +107,7 @@ export class SfCommandService {
     private _executeChildProcess(
         childProcess: ChildProcess,
         disposable: vscode.Disposable | undefined,
-        cancelled: boolean,
+        state: { cancelled: boolean },
     ): Promise<CommandOutput> {
         return new Promise((resolve, reject) => {
             let stdout = "";
@@ -127,7 +130,7 @@ export class SfCommandService {
                 // Clean up cancellation event listener
                 disposable?.dispose();
 
-                if (cancelled) {
+                if (state.cancelled) {
                     reject(new Error("Operation cancelled"));
                     return;
                 }
