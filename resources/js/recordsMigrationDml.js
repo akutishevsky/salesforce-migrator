@@ -135,30 +135,26 @@ function renderMappingTable(container, csvHeaders, fields) {
 
     window.addEventListener("message", (event) => {
         const message = event.data;
-        switch (message.command) {
-            case "setSourceFile":
-                document.querySelector("#source-file").value = message.filePath;
 
-                if (dmlOperation === "Delete") {
-                    return;
-                }
+        if (message.command === "setSourceFile") {
+            document.querySelector("#source-file").value = message.filePath;
 
-                const sfmMapping = document.querySelector("#sfm-mapping");
-                sfmMapping.classList.remove("sfm-hidden");
+            if (dmlOperation === "Delete") {
+                return;
+            }
 
-                const mappingContainer = document.querySelector(
-                    ".sfm-mapping-container",
-                );
+            const sfmMapping = document.querySelector("#sfm-mapping");
+            sfmMapping.classList.remove("sfm-hidden");
 
-                renderMappingTable(
-                    mappingContainer,
-                    message.csvHeaders,
-                    message.fields,
-                );
+            const mappingContainer = document.querySelector(
+                ".sfm-mapping-container",
+            );
 
-                break;
-            default:
-                break;
+            renderMappingTable(
+                mappingContainer,
+                message.csvHeaders,
+                message.fields,
+            );
         }
     });
 })();
