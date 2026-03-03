@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.3.2] 2026-03-03
+
+### Security
+
+- Fixed high-severity RCE vulnerability in serialize-javascript (override to ^7.0.4)
+- Fixed high-severity ReDoS vulnerabilities in minimatch (updated to patched versions)
+- Updated ajv and diff to patched versions
+
 ## [1.3.1] 2026-02-10
 
 ### Fixed
