@@ -162,6 +162,7 @@
     "overrides": {
         "js-yaml": "^4.1.1",
         "glob": "^10.5.0",
-        "brace-expansion": "^2.0.2"
+        "brace-expansion": "^2.0.2",
+        "serialize-javascript": "^7.0.4"
     }
 }
