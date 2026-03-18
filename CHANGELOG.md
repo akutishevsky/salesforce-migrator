@@ -1,5 +1,11 @@
 # Change Log
 
+## [1.3.3] 2026-03-18
+
+### Security
+
+- Upgraded @vscode/test-cli from 0.0.10 to 0.0.12, resolving high-severity flatted vulnerability (GHSA-25h7-pfq9-p65f)
+
 ## [1.3.2] 2026-03-03
 
 ### Security
